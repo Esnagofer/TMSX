@@ -243,7 +243,7 @@ public class TMS9918A {
 
 	public void paint(Graphics g) {
 		count++;
-		drawPattern();
+		//drawPattern();
 		
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, VDP_WIDTH + 50, VDP_HEIGHT + 50);

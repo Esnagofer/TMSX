@@ -267,25 +267,45 @@ public class MSX { // implements IBaseDevice {
 	}
 	
 	public void startMSX() {
+
+		int cnt = 0;
+		short minAddr = (short)0xffff, maxAddr = (short)0x0000;
 		
 		while (running) {
 			String desc = BIOSDebug.getDesc((short)cpu.getPC());
 			if (!desc.equals("")) System.out.println("Executing BIOS call " + desc);
-			if(breakpoints.contains((short)cpu.getPC())) {
+			if(cnt == 0 || breakpoints.contains((short)cpu.getPC())) {
 				System.out.println("Breakpoint found");
 				debugMode();
 			}
+
+			if (cpu.getPC() == (0x0c4a)) {
+				System.out.println("x");
+			}
+			
 			if (desc.equals("CHKRAM")) {
 				System.out.println("xx");
-				System.out.println("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
+			System.out.println("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 			}
 			if (desc.equals("INIT!")) {
 				System.out.println("xx");
 				System.out.println("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 				debugMode();
 			}
+			
 			//try {
+				System.out.println("ADDR = " + Tools.toHexString4(cpu.getPC()) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.getPC())));
+
 				cpu.execute();
+				if ((cpu.getPC() & 0xffff) < (minAddr & 0xffff)) minAddr = cpu.getPC();
+				if ((cpu.getPC() & 0xffff) > (maxAddr & 0xffff)) maxAddr = cpu.getPC();
+				cnt++;
+				if (cnt > 1000) {
+					System.out.println("Executed " + cnt + " steps between " + Tools.toHexString(minAddr) + " and " + Tools.toHexString(maxAddr));
+					minAddr = (short)0xffff; maxAddr = (short)0x0000;
+					cnt = 1;
+				}
+				
 			//} catch (ProcessorException e) {
 			//	throw new RuntimeException(e.getMessage());
 			//}
@@ -295,9 +315,9 @@ public class MSX { // implements IBaseDevice {
 			//	debugMode();
 			//}
 			if (cpu.ts >= vSyncInterval) {
-				frame.repaint();
-				doVSyncInterrupt();
-				cpu.s = (cpu.s - vSyncInterval);
+				//frame.repaint();
+				//doVSyncInterrupt();
+				//cpu.s = (cpu.s - vSyncInterval);
 			}
 		}
 		
