@@ -16,22 +16,22 @@ public class KeyboardDecoder implements KeyListener {
 			{'8', 1, 0}, {'*', 1, 0}, {'9', 1, 1}, {'(', 1, 1}, {'-', 1, 2}, {'_', 1, 2}, 
 			{'=', 1, 3}, {'+', 1, 3}, {'\\', 1, 4}, {'|', 1, 4}, {'[', 1, 5}, {'{', 1, 5}, 
 			
-			{'A', 1, 6}, {'B', 1, 7}, {'a', 1, 6}, {'b', 1, 7}, 
+			{'A', 2, 6}, {'B', 2, 7}, {'a', 2, 6}, {'b', 2, 7}, 
 
-			{'C', 2, 0}, {'D', 2, 1}, {'E', 2, 2}, {'F', 2, 3}, {'G', 2, 4}, {'H', 2, 5}, 
-			{'I', 2, 6}, {'J', 2, 7}, 
-			{'C', 2, 0}, {'D', 2, 1}, {'E', 2, 2}, {'F', 2, 3}, {'G', 2, 4}, {'H', 2, 5}, 
-			{'I', 2, 6}, {'J', 2, 7}, 
+			{'C', 3, 0}, {'D', 3, 1}, {'E', 3, 2}, {'F', 3, 3}, {'G', 3, 4}, {'H', 3, 5}, 
+			{'I', 3, 6}, {'J', 3, 7}, 
+			{'c', 3, 0}, {'d', 3, 1}, {'e', 3, 2}, {'f', 3, 3}, {'g', 3, 4}, {'h', 3, 5}, 
+			{'i', 3, 6}, {'j', 3, 7}, 
 
-			{'K', 3, 0}, {'L', 3, 1}, {'M', 3, 2}, {'N', 3, 3}, {'O', 3, 4}, {'P', 3, 5}, 
-			{'Q', 3, 6}, {'R', 3, 7}, 
-			{'k', 3, 0}, {'l', 3, 1}, {'m', 3, 2}, {'n', 3, 3}, {'o', 3, 4}, {'p', 3, 5}, 
-			{'q', 3, 6}, {'r', 3, 7}, 
+			{'K', 4, 0}, {'L', 4, 1}, {'M', 4, 2}, {'N', 4, 3}, {'O', 4, 4}, {'P', 4, 5}, 
+			{'Q', 4, 6}, {'R', 4, 7}, 
+			{'k', 4, 0}, {'l', 4, 1}, {'m', 4, 2}, {'n', 4, 3}, {'o', 4, 4}, {'p', 4, 5}, 
+			{'q', 4, 6}, {'r', 4, 7}, 
 
-			{'S', 4, 0}, {'T', 4, 1}, {'U', 4, 2}, {'V', 4, 3}, {'W', 4, 4}, {'X', 4, 5}, 
-			{'Y', 4, 6}, {'Z', 4, 7}, 
-			{'s', 4, 0}, {'t', 4, 1}, {'u', 4, 2}, {'v', 4, 3}, {'w', 4, 4}, {'x', 4, 5}, 
-			{'y', 4, 6}, {'z', 4, 7} 
+			{'S', 5, 0}, {'T', 5, 1}, {'U', 5, 2}, {'V', 5, 3}, {'W', 5, 4}, {'X', 5, 5}, 
+			{'Y', 5, 6}, {'Z', 5, 7}, 
+			{'s', 5, 0}, {'t', 5, 1}, {'u', 5, 2}, {'v', 5, 3}, {'w', 5, 4}, {'x', 5, 5}, 
+			{'y', 5, 6}, {'z', 5, 7} 
 
 	};
 
@@ -85,8 +85,10 @@ public class KeyboardDecoder implements KeyListener {
 			if (c == charMatrix[i][0]) {
 				if (state) {
 					pressKey(charMatrix[i][1], charMatrix[i][2]);
+					System.out.println("Press key   row: " + charMatrix[i][1] + ", bit: " + charMatrix[i][2]);
 				} else {
 					depressKey(charMatrix[i][1], charMatrix[i][2]);
+					System.out.println("Depress key row: " + charMatrix[i][1] + ", bit: " + charMatrix[i][2]);
 				}
 				success = true;
 				break keySearchLoop;
@@ -96,12 +98,14 @@ public class KeyboardDecoder implements KeyListener {
 		/* Try to match key */
 		if (!success) {
 			int k = e.getKeyCode();
-			for (int i = 0; i < charMatrix.length; i++) {
+			for (int i = 0; i < keyMatrix.length; i++) {
 				if (k == keyMatrix[i][0]) {
 					if (state) {
 						pressKey(keyMatrix[i][1], keyMatrix[i][2]);
+						System.out.println("Press key   row: " + keyMatrix[i][1] + ", bit: " + keyMatrix[i][2]);
 					} else {
 						depressKey(keyMatrix[i][1], keyMatrix[i][2]);
+						System.out.println("Depress key row: " + keyMatrix[i][1] + ", bit: " + keyMatrix[i][2]);
 					}
 				}
 			}
