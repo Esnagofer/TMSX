@@ -75,7 +75,7 @@ public class Z802 {
 	}
 
 	public void dbg(String msg) {
-		System.out.println(Tools.toHexString(oldPC) + ": " + msg);
+		//System.out.println(Tools.toHexString(oldPC) + ": " + msg);
 	}
 
 	public void executeRegular() {
@@ -320,7 +320,7 @@ public class Z802 {
 		case 0x2A:	// LD HL,(&HHLL) 16
 			s += 16;
 			ts = fetchWordLH();
-			setHL(mem.rdByte(ts));
+			setHL(mem.readWordLH(ts));
 			dbg("LD HL, (&HHLL) (" + Tools.toHexString(ts) + ")");
 			break; 
 		case 0x2B:	// DEC HL 6
@@ -346,6 +346,8 @@ public class Z802 {
 		case 0x2F:	// CPL 4
 			s += 4;
 			A = (byte) ~A;
+			setHFlag(true);
+			setNFlag(true);
 			dbg("CPL");
 			break; 
 		case 0x30:	// JR NC,&NN 12,7
@@ -1464,6 +1466,7 @@ public class Z802 {
 		case (byte) 0xF9:	// LD SP,HL 10
 			s += 10;
 			setSP(getHL());
+			dbg("LD SP, HL (" + Tools.toHexString(getSP()) + ")");
 			break; 
 		case (byte) 0xFA:	// JP M,&HHLL 10
 			s += 10;
@@ -2002,6 +2005,7 @@ public class Z802 {
 		case (byte) 0xF9: // LD SP, IX (correct?)
 			s += 10;
 			setSP(getIX());
+			dbg("LD SP, IX (" + Tools.toHexString(PC) + ")");
 			break;
 		}
 	}
@@ -2252,6 +2256,7 @@ public class Z802 {
 		case (byte) 0x6B:
 			s += 20;
 			setHL(mem.rdByte(fetchWordLH()));
+			dbg("LD HL, (&HHLL)");
 			break; // LD HL,(&HHLL)
 		case (byte) 0x6F:
 			s += 18;
@@ -2260,7 +2265,7 @@ public class Z802 {
 			A = (byte) ((A & 0xF0) | ((HLC >> 4) & 0x0F));
 			HLC <<= 4;
 			mem.wrtByte(getHL(), (byte) ((HLC & 0xF0) | (AL ^ 0x0F)));
-			dbg("LD HL, (&HHLL)");
+			dbg("RLD");
 			break;
 		case (byte) 0x70:
 			s += 12;
