@@ -14,14 +14,20 @@ import emu.memory.RAMSlot;
 
 public class TMS9918A {
 
-	private int ramSize = 0x3FFF;
+	private static final int MODE0_PN_SIZE = 768;
+	private static final int MODE0_PG_SIZE = 2048;
+	private static final int MODE0_CT_SIZE = 32;
+	private static final int MODE1_PN_SIZE = 960;
+	private static final int MODE1_PG_SIZE = 2048;
+		
+	private int ramSize = 0xFFFF;
 	
 	private BufferedImage img;
 	
-	private RAMSlot mem;
+	public RAMSlot mem;
 		
 	private byte[] registers = new byte[8];
-//	private byte statusRegister = 0;
+	private byte statusRegister = 0;
 	
 	private short readWriteAddr;
 	private byte readAhead;
@@ -30,6 +36,8 @@ public class TMS9918A {
 	private byte ioByte0, ioByte1;
 
 	private int count;
+	
+	private Mode mode = null;
 	
 	public static final int
 		VDP_WIDTH = 256,
@@ -54,61 +62,145 @@ public class TMS9918A {
 		(new Color(255,255,255)).getRGB(),	// F
 		};
 	
-	public static final int
-		MEM_SIZE = 0,		
-		BLK_SCREEN = 1,		
-		IE = 2,				
-		M1 = 3,				
-		M2 = 4,				
-		M3 = 5,				
-		EXT_VID = 6,			
-		SPR_SIZE = 7,		
-		SPR_MAG = 8,		
-		FRAME_FLAG = 9,
-		FIFTH_SPR = 10,
-		C = 11;
-	
-	public static final int reg[] = new int[] {
-		1, 1, 1, 1, 1, 0, 0, 1, 1, 8, 8, 8
-	};
-
-	
-	public static final int pos[] = new int[] {
-		7, 6, 5, 4, 3, 1, 0, 1, 0, 7, 6, 5
-	};
 	public TMS9918A() {
 		mem = new RAMSlot(ramSize);
 	}
-	
-	public Mode getMode() {
-		if (Tools.getBit(registers[0], 6)) return Mode.Graphics2;
-		if (Tools.getBit(registers[1], 4)) return Mode.MultiColor;
-		if (Tools.getBit(registers[1], 3)) return Mode.Text;
-		return Mode.Graphics1;
+		
+	public boolean getStatusBit(int bit) {
+		return Tools.getBit(statusRegister, bit);
 	}
 	
-	public boolean getBit(int bit) {
-		return Tools.getBit(registers[reg[bit]], pos[bit]);
+	public void setStatusBit(int bit, boolean v) {
+		statusRegister = Tools.setBit(statusRegister, bit, v);
+	}
+	
+	public boolean getStatusINT()		{ return getStatusBit(7); }
+	public boolean getStatus5S()		{ return getStatusBit(6); }
+	public boolean getStatusC()			{ return getStatusBit(5); }
+	public boolean getStatusFS4()		{ return getStatusBit(4); }
+	public boolean getStatusFS3()		{ return getStatusBit(3); }
+	public boolean getStatusFS2()		{ return getStatusBit(2); }
+	public boolean getStatusFS1()		{ return getStatusBit(1); }
+	public boolean getStatusFS0()		{ return getStatusBit(0); }
+	
+	public void setStatusINT(boolean v)			{ setStatusBit(7,v); }
+	public void setStatus5S(boolean v)			{ setStatusBit(6,v); }
+	public void setStatusC(boolean v)			{ setStatusBit(5,v); }
+	public void setStatusFS4(boolean v)			{ setStatusBit(4,v); }
+	public void setStatusFS3(boolean v)			{ setStatusBit(3,v); }
+	public void setStatusFS2(boolean v)			{ setStatusBit(2,v); }
+	public void setStatusFS1(boolean v)			{ setStatusBit(1,v); }
+	public void setStatusFS0(boolean v)			{ setStatusBit(0,v); }
+	
+	public boolean getBit(int reg, int bit) {
+		return Tools.getBit(registers[reg],bit);
 	}
 
-	public void setBit(int bit, boolean value) {
-		registers[reg[bit]] = Tools.setBit(registers[reg[bit]], pos[bit], value);
+	public void setBit(int reg, int bit, boolean value) {
+		registers[reg] = Tools.setBit(registers[reg], bit, value);
 	}
 
+	
+	public boolean getEXTVID()	{ return getBit(0, 0); }
+	public boolean getM2()		{ return getBit(0, 1); }
+	
+	public boolean getMAG()		{ return getBit(1, 0); }
+	public boolean getSI()		{ return getBit(1, 1); }
+	public boolean getM3()		{ return getBit(1, 3); }
+	public boolean getM1()		{ return getBit(1, 4); }
+	public boolean getGINT()	{ return getBit(1, 5); }
+	public void setGINT(boolean b)	{ setBit(1, 5, b); }
+	public boolean getBL()		{ return getBit(1, 6); }
+	public boolean get416K()	{ return getBit(1, 7); }
+	
+	public boolean getPN10()	{ return getBit(2, 0); }
+	public boolean getPN11()	{ return getBit(2, 1); }
+	public boolean getPN12()	{ return getBit(2, 2); }
+	public boolean getPN13()	{ return getBit(2, 3); }
+	
+	public boolean getCT6()		{ return getBit(3, 0); }
+	public boolean getCT7()		{ return getBit(3, 1); }
+	public boolean getCT8()		{ return getBit(3, 2); }
+	public boolean getCT9()		{ return getBit(3, 3); }
+	public boolean getCT10()	{ return getBit(3, 4); }
+	public boolean getCT11()	{ return getBit(3, 5); }
+	public boolean getCT12()	{ return getBit(3, 6); }
+	public boolean getCT13()	{ return getBit(3, 7); }
+	
+	public boolean getPG11()	{ return getBit(4, 0); }
+	public boolean getPG12()	{ return getBit(4, 1); }
+	public boolean getPG13()	{ return getBit(4, 2); }
+
+	public boolean getSA7()		{ return getBit(5, 0); }
+	public boolean getSA8()		{ return getBit(5, 1); }
+	public boolean getSA9()		{ return getBit(5, 2); }
+	public boolean getSA10()	{ return getBit(5, 3); }
+	public boolean getSA11()	{ return getBit(5, 4); }
+	public boolean getSA12()	{ return getBit(5, 5); }
+	public boolean getSA13()	{ return getBit(5, 6); }
+
+	public boolean getSG11()	{ return getBit(6, 0); }
+	public boolean getSG12()	{ return getBit(6, 1); }
+	public boolean getSG13()	{ return getBit(6, 2); }
+
+	public boolean getBD0()		{ return getBit(7, 0); }
+	public boolean getBD1()		{ return getBit(7, 1); }
+	public boolean getBD2()		{ return getBit(7, 2); }
+	public boolean getBD3()		{ return getBit(7, 3); }
+	public boolean getTC0()		{ return getBit(7, 4); }
+	public boolean getTC1()		{ return getBit(7, 5); }
+	public boolean getTC2()		{ return getBit(7, 6); }
+	public boolean getTC3()		{ return getBit(7, 7); }
+
+	
 	public short getNameTableAddr() {
-		return (short)(registers[2] * 0x400);
+		int v = 0;
+		if (getPN10()) v+= 1<<10;
+		if (getPN11()) v+= 1<<11;
+		if (getPN12()) v+= 1<<12;
+		if (getPN13()) v+= 1<<13;
+		return (short)v;
 	}
 	
 	public short getColorTableAddr() {
-		return (short)(registers[3] * 0x40);
+		int v = 0;
+		if (getCT6()) v += 1<<6;
+		if (getCT7()) v += 1<<7;
+		if (getCT8()) v += 1<<8;
+		if (getCT9()) v += 1<<9;
+		if (getCT10()) v += 1<<10;
+		if (getCT11()) v += 1<<11;
+		if (getCT12()) v += 1<<12;
+		if (getCT13()) v += 1<<13;
+		return (short)v;	
 	}
 	
 	public short getPatternTableAddr() {
-		return (short)(registers[4] * 0x800);
+		int v = 0;
+		if (getPG11()) v+= 1<<11;
+		if (getPG12()) v+= 1<<12;
+		if (getPG13()) v+= 1<<13;
+		return (short)v;
 	}
 	
 	public short getSpriteAttrTable() {
-		return (short)(registers[5] * 0x80);
+		int v = 0;
+		if (getSA7()) v += 1<<7;
+		if (getSA8()) v += 1<<8;
+		if (getSA9()) v += 1<<9;
+		if (getSA10()) v += 1<<10;
+		if (getSA11()) v += 1<<11;
+		if (getSA12()) v += 1<<12;
+		if (getSA13()) v += 1<<13;
+		return (short)v;	
+	}
+	
+	public short getSpriteGenTable() {
+		int v = 0;
+		if (getSG11()) v += 1<<11;
+		if (getSG12()) v += 1<<12;
+		if (getSG13()) v += 1<<13;
+		return (short)v;	
 	}
 	
 	public int getOnBitColor() {
@@ -131,9 +223,16 @@ public class TMS9918A {
 		secondByteFlag = false;
 		return result;
 	}
+	
+	char prevprev = '.', prev = '.';
 
 	// Port 0 write
 	public final void writeVRAMData(byte value) {
+		if (prevprev == 'M' && prev == 'S' && ((char)(value&0xff)) == 'X') {
+			System.out.println("WRITTEN MSX TO VRAM ADDRESS " + Tools.toHexString(readWriteAddr));
+		}
+		prevprev = prev;
+		prev = (char)value;
 		readAhead = value;
 		mem.wrtByte(readWriteAddr, readAhead);
 		increaseReadWriteAddr();
@@ -150,20 +249,20 @@ public class TMS9918A {
 			ioByte1 = value;
 
 			/* Are we doing memory i/o? */
-			if ((ioByte1 & 0xF0) == 0) {
+			if (((ioByte1 & 0xC0) >> 6) <= 1) {
 				
 				/* If so, set the read/write address to value stored in ioBytes */
-				readWriteAddr = (short)((ioByte0 & 0x00FF) | ((ioByte1 & 0x003F) << 8));
+				readWriteAddr = (short)((ioByte0 & 0xFF) | ((ioByte1 & 0x003F) << 8));
 	
 				/* In case of read: fill read ahead buffer and increase read/write address */
-				if ((ioByte1 & 0x40) == 0) {
+				if (((ioByte1 & 0xC0) >> 6) == 0) {
 					readAhead = mem.rdByte(readWriteAddr);
 					increaseReadWriteAddr();
 				}
 			}
 			
 			/* If not, we're doing register i/o */
-			else {
+			else if (((ioByte1 & 0xC0) >> 6) == 2) {
 				if ((ioByte1 & 0x07) <= 7) {
 					registers[ioByte1 & 0x07] = ioByte0;
 				}
@@ -175,22 +274,21 @@ public class TMS9918A {
 	}
 
 	public final void increaseReadWriteAddr() {
-		readWriteAddr++;
+		readWriteAddr = (short) ((readWriteAddr & 0xffff) + 1);
 		if ((readWriteAddr & 0xFFFF) == 0x3FFF) readWriteAddr = 0;
 	}
 	
 	// Port 1 read
 	public final byte readStatus() {
 		secondByteFlag = false;
-		byte value = registers[8];
-		setBit(FRAME_FLAG, false);
-		setBit(C, false);
+		byte value = statusRegister;
+		setStatusINT(false);
+		setStatusC(false);
 		return value;
 	}
 
 	public void initBuffer() {
 		img = new BufferedImage(VDP_WIDTH, VDP_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-		
 	}
 	
 	public void drawBackPlane() {
@@ -201,35 +299,149 @@ public class TMS9918A {
 		
 	}
 	
+	public void drawNullPattern() {
+		if (img == null) return;
+		boolean f = false;
+		for (int y = 0; y < 24; y++) {
+			for (int x = 0; x < 40; x++) {
+				for (int charLine = 0; charLine < 8; charLine++) {
+					for (int linePos = 0; linePos < 6; linePos++) {
+						int px = 8 + (x * 6) + linePos;
+						int py = (y * 8) + charLine;
+						img.setRGB(px, py, colors[f? 1: 15]);
+						f = !f;
+					}
+				}
+			}
+		}
+
+	}
+	
+	public void drawMode0() {
+		short nameTablePtr = this.getNameTableAddr();
+		short patternTableBase = this.getPatternTableAddr();
+		short colorTableBase = this.getColorTableAddr();
+		if (nameTablePtr + MODE0_PN_SIZE > ramSize) return;
+		if (patternTableBase + MODE0_PG_SIZE > ramSize) return;
+		if (colorTableBase + MODE0_CT_SIZE > ramSize) return;
+		// For all x/y positions
+		for (int y = 0; y < 24; y++) {
+			for (int x = 0; x < 32; x++) {
+				// Read index of pattern from name table address
+				byte patternIdx = mem.rdByte(nameTablePtr);
+				int patternAddr = (patternTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
+				// For all lines of the character
+				for (int charLine = 0; charLine < 8; charLine++) {
+					byte line = mem.rdByte((short)((patternAddr & 0xFFFF) + charLine));
+					// For all pixels of the line
+					for (int linePos = 0; linePos < 8; linePos++) {
+						// Calculate location of pixel
+						int px = 7 + ((x * 8) - linePos);	
+						int py = ((y * 8) + charLine);
+						// Get foreground/background
+						byte color = mem.rdByte((short)((colorTableBase & 0xffff) + ((patternIdx & 0xff)/8)));
+						int fg = colors[(color & 0xf0) >> 4];
+						int bg = colors[(color & 0x0f)];
+						img.setRGB(px, py, Tools.getBit(line, linePos)? fg: bg);
+					}					
+				}
+				nameTablePtr = (short)(nameTablePtr + 1);
+			}
+		}
+	}
+	
+	public void drawMode1() {
+		short nameTablePtr = this.getNameTableAddr();
+		short patternTableBase = this.getPatternTableAddr();
+		if (nameTablePtr + MODE0_PN_SIZE > ramSize) return;
+		if (patternTableBase + MODE0_PG_SIZE > ramSize) return;
+		int offBit = colors[getOffBitColor()];
+		int onBit = colors[getOnBitColor()];
+		// For all x/y positions
+		for (int y = 0; y < 24; y++) {
+			for (int x = 0; x < 40; x++) {
+				// Read index of pattern from name table address
+				byte patternIdx = mem.rdByte(nameTablePtr);
+				int patternAddr = (patternTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
+				// For all lines of the character
+				for (int charLine = 0; charLine < 8; charLine++) {
+					byte line = mem.rdByte((short)((patternAddr & 0xFFFF) + charLine));
+					// For all pixels of the line
+					for (int linePos = 0; linePos < 6; linePos++) {
+						// Calculate location of pixel
+						int px = 5 + ((x * 6) - linePos);	
+						int py = ((y * 8) + charLine);
+						// Set pixel
+						img.setRGB(px, py, Tools.getBit(line, linePos+2)? onBit: offBit);
+					}					
+				}
+				nameTablePtr = (short)(nameTablePtr + 1);
+			}
+		}
+		/*
+		short nameTableAddr = this.getNameTableAddr();
+		short patternTableAddr = this.getPatternTableAddr();
+		if (nameTableAddr + MODE1_PN_SIZE > ramSize) return;
+		if (patternTableAddr + MODE1_PG_SIZE > ramSize) return;
+		int offBit = colors[getOffBitColor()];
+		int onBit = colors[getOnBitColor()];
+		for (int y = 0; y < 24; y++) {
+			for (int x = 0; x < 40; x++) {
+				short characterAddr = (short)((patternTableAddr & 0xffff) + (0xff & mem.rdByte((short)((nameTableAddr & 0xFFFF) + (x + (40 * y)))) * 8));
+				for (int charLine = 0; charLine < 8; charLine++) {
+					byte line = mem.rdByte((short)(characterAddr + charLine));
+					for (int linePos = 2; linePos < 8; linePos++) {
+						int px = ((x * 6) + linePos);
+						int py = ((y * 8) + charLine);
+						img.setRGB(px, py, Tools.getBit(line, linePos)? onBit: offBit);
+						//if (f) {
+						//	img.setRGB(px, py, onBit);
+						//	f = false;
+						//} else {
+						//	img.setRGB(px, py, offBit);
+						//	f = true;
+						//}
+					}
+				}
+			}
+		}
+		*/
+	}
+	
+	public void drawMode2() {
+		System.out.println("drawmode2");
+		
+	}
+
+	public void drawMode3() {
+		System.out.println("drawmode3");
+		
+	}
+
 	public void drawPattern() {
+		
+		if (img == null) return;
+		if (!getM1() && !getM2() && !getM3()) {
+			drawMode0();
+		} else if (getM1()) {
+			drawMode1();
+		} else if (getM2()) {
+			drawMode2();
+		} else if (getM3()) {
+			drawMode3();
+		}
+		
 		//switch (getMode()) {
 		//case Graphics1:
 		//	break;
 		//case Graphics2:
 		//	break;
 		//case Text:
-			short nameTableAddr = this.getNameTableAddr();
-			short patternTableAddr = this.getPatternTableAddr();
-			int offBit = colors[getOffBitColor()];
-			int onBit = colors[getOnBitColor()];
-			for (int y = 0; y < 24; y++) {
-				for (int x = 0; x < 40; x++) {
-					int characterAddr = patternTableAddr + (mem.rdByte((short)((nameTableAddr & 0xFFFF) + (x + (40 * y)))) * 8);
-					for (int charLine = 0; charLine < 8; charLine++) {
-						byte line = mem.rdByte((short)((characterAddr & 0xFFFF) + charLine));
-						for (int linePos = 0; linePos < 6; linePos++) {
-							int px = 8 + (x * 6) + linePos;
-							int py = (y * 8) + charLine;
-							//System.out.println("px = " + px + " py = " + py);
-							img.setRGB(px, py, Tools.getBit(line, linePos)? onBit: offBit);
-						}
-					}
-				}
-			}
 			//break;
 		//case MultiColor:
 		//	break;
 		//}
+		//*/
 	}
 	
 	public void drawSprites() {
@@ -242,17 +454,27 @@ public class TMS9918A {
 	}
 
 	public void paint(Graphics g) {
-		count++;
-		//drawPattern();
 		
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, VDP_WIDTH + 50, VDP_HEIGHT + 50);
+		//if (mode != getMode()) {
+		//	System.out.println("Changed mode to " + getMode());
+		//	mode = getMode();
+		//}
 
-		g.setColor(new Color((int)(Math.random() * 40000)));
-		g.fillRect(0, 0, VDP_WIDTH + 20, VDP_HEIGHT + 20);
+		
+		count++;
+
+		drawNullPattern();
+
+		drawPattern();
+		
+		//g.setColor(Color.WHITE);
+		//g.fillRect(0, 0, VDP_WIDTH + 50, VDP_HEIGHT + 50);
+
+		//g.setColor(new Color((int)(Math.random() * 40000)));
+		//g.fillRect(0, 0, VDP_WIDTH + 20, VDP_HEIGHT + 20);
 		g.drawImage(img, 10, 10, null);
 		
-		g.setColor(Color.BLACK);
+		//g.setColor(Color.BLACK);
 		char[] text = ("Count: " + count).toCharArray();
 		g.drawChars(text, 0, text.length, 50, 50);
 
