@@ -134,6 +134,28 @@ public class BIOSDebug {
 		case 0x01FF: return "CALBAS";
 
 		case 0x2680: return "INIT!";
+		
+		case 0x6678: return "Print message at HL";
+		
+		case 0x411F: return "MAINLOOP";
+
+		case 0x4134: return "Interpreted Mainloop";
+		
+		case 0x4601: return "Runloop";
+
+		case 0x4640: return "Runloop execution point";
+
+		case 0x7304: return "Shut down printer";
+
+		case 0x7374: return "Mainloop: collect line of text";
+
+		case 0x7C76: return "powerup";
+
+		case 0x7D29: return "Power-up: routine (function keys, text mode, id message, bytes free)";
+
+		case 0x7D5D: return "Power-up: find lowest RAM";
+
+		case 0x7D75: return "Power-up: extension ROM search";
 
 		}
 		

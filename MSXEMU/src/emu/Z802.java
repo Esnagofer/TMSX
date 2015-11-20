@@ -1,5 +1,7 @@
 package emu;
 
+import java.util.ArrayList;
+
 import emu.memory.AbstractSlot;
 
 public class Z802 {
@@ -25,7 +27,10 @@ public class Z802 {
 	byte bs = 0, dis = 0;
 
 	/* Debug message */
-	private String debugMessage;
+	private final int stateBufSize = 1000;
+	private String[] stateBuf = new String[stateBufSize];
+	private int stateBufPtr = 0;
+	private boolean stateBufEnable = true;
 	
 	/* Cycle counter */
 	int s;
@@ -40,6 +45,8 @@ public class Z802 {
 
 	private int interruptDelayCount = 0;
 
+	private String lastMsg;
+
 	private static final short INTERRUPT_HOOK = 0x0038;
 	
 	public Z802(AbstractSlot mem) {
@@ -51,33 +58,39 @@ public class Z802 {
 		eff1 = false;
 		eff2 = false;
 		PC = (short)0x0000;
-		setAF((short)0x0000);
-		setBC((short)0x0000);
-		setDE((short)0x0000);
-		setHL((short)0x0000);
-		setIX((short)0x0000);
-		setIY((short)0x0000);
-		AP = (byte)0;
-		BP = (byte)0;
-		CP = (byte)0;
-		DP = (byte)0;
-		FP = (byte)0;
-		HP = (byte)0;
-		LP = (byte)0;
-		FB = (byte)0;
-		AB = (byte)0;
+		setAF((short)0xFFFF);
+		setBC((short)0xFFFF);
+		setDE((short)0xFFFF);
+		setHL((short)0xFFFF);
+		setIX((short)0xFFFF);
+		setIY((short)0xFFFF);
+		AP = (byte)0xFF;
+		BP = (byte)0xFF;
+		CP = (byte)0xFF;
+		DP = (byte)0xFF;
+		FP = (byte)0xFF;
+		HP = (byte)0xFF;
+		LP = (byte)0xFF;
+		FB = (byte)0xFF;
+		AB = (byte)0xFF;
 		s = 0;
 	}
 
 	public void execute() {
-		executeRegular();
 		if (interruptDelayCount > 0) interruptDelayCount--;
+		executeRegular();
+		stateBuf[stateBufPtr] = getState();
+		stateBufPtr = (stateBufPtr + 1) % stateBufSize;
 	}
 
 	public void dbg(String msg) {
-		//System.out.println(Tools.toHexString(oldPC) + ": " + msg);
+		lastMsg = msg;
 	}
 
+	public String getLastMsg() {
+		return lastMsg;
+	}
+	
 	public void executeRegular() {
 		oldPC = PC;
 		//System.out.println("PC = " + Tools.toHexString(PC));
@@ -3100,66 +3113,34 @@ public class Z802 {
 		in[port] = d;
 	}
 	
+	public String getState() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(" PC   A  SZHPNC I  IFF BC   DE   HL   A'F' B'C' D'E' H'L' IX   IY   SP   \n");
+		sb.append(" " + Tools.toHexString(PC) + " ");
+		sb.append(Tools.toHexString(A) + " ");
+		sb.append(getSFlag()?"1":"0");
+		sb.append(getZFlag()?"1":"0");
+		sb.append(getHFlag()?"1":"0");
+		sb.append(getPVFlag()?"1":"0");
+		sb.append(getNFlag()?"1":"0");
+		sb.append(getCFlag()?"1 ":"0 ");
+		sb.append("-- ");
+		sb.append("--  ");
+		sb.append(Tools.toHexString(getBC()) + " ");
+		sb.append(Tools.toHexString(getDE()) + " ");
+		sb.append(Tools.toHexString(getHL()) + " ");
+		sb.append("---- ");
+		sb.append("---- ");
+		sb.append("---- ");
+		sb.append("---- ");
+		sb.append(Tools.toHexString(getIX()) + " ");
+		sb.append(Tools.toHexString(getIY()) + " ");
+		sb.append(Tools.toHexString(getSP()) + " \n"); 
+		return sb.toString();
+	}
+	
 	public void printState() {
-		
-		/*
-		String ads = "|";
-		String values = "|";
-		String ptr = "|";
-		for (short addr = (short)0x7d; addr >= (short)0x68; addr = (short)(addr - 1)) {
-			ads += Tools.toHexString((byte)addr) + " ";
-			byte value = mem.read(addr);
-			values += Tools.toHexString(value) + " ";
-			short ix = getIX(),
-					iy = getIY(),
-					sp = getSP(),
-					hl = getHL(),
-					bc = getBC(),
-					de = getDE();
-			if (addr == ix) {
-				ptr += "IX ";
-			} else if (addr == iy) {
-				ptr += "IY ";
-			} else if (addr == sp) {
-				ptr += "SP ";
-			} else if (addr == hl) {
-				ptr += "HL ";
-			} else if (addr == bc) {
-				ptr += "BC ";
-			} else if (addr == de) {
-				ptr += "DE ";
-			} else {
-				ptr += "   ";
-			}
-		}
-		*/
-		System.out.println("");
-		System.out.println(" PC   A  SZHPNC I  IFF BC   DE   HL   A'F' B'C' D'E' H'L' IX   IY   SP   "); // + ads
-		
-		System.out.print(" " + Tools.toHexString(PC) + " ");
-		System.out.print(Tools.toHexString(A) + " ");
-		System.out.print(getSFlag()?"1":"0");
-		System.out.print(getZFlag()?"1":"0");
-		System.out.print(getHFlag()?"1":"0");
-		System.out.print(getPVFlag()?"1":"0");
-		System.out.print(getNFlag()?"1":"0");
-		System.out.print(getCFlag()?"1 ":"0 ");
-		System.out.print("-- ");
-		System.out.print("--  ");
-		System.out.print(Tools.toHexString(getBC()) + " ");
-		System.out.print(Tools.toHexString(getDE()) + " ");
-		System.out.print(Tools.toHexString(getHL()) + " ");
-		System.out.print("---- ");
-		System.out.print("---- ");
-		System.out.print("---- ");
-		System.out.print("---- ");
-		System.out.print(Tools.toHexString(getIX()) + " ");
-		System.out.print(Tools.toHexString(getIY()) + " ");
-		System.out.println(Tools.toHexString(getSP()) + " "); // + values
-		//System.out.println(".                                                                        " + ptr);
-
-		System.out.println("");
-		System.out.println("");
+		System.out.print(getState() + "\n\n");
 	}
 	
 	public boolean isHalted() {
@@ -3169,15 +3150,14 @@ public class Z802 {
 	public final void doEI() {
 		
 		/* Set flags */
-		eff1 = true;
-		eff2 = true;
+		eff1 = true; eff2 = true;
 
 		/* Interrupts will be enabled after next instruction */
 		interruptDelayCount = 2;
 	}
 
 	public final void doDI() {
-		eff1 = false;
+		eff1 = false; eff2 = false;
 	}
 	
 	public final void doIM(int mode) {
@@ -3187,6 +3167,7 @@ public class Z802 {
 	}
 	
 	public final void doRETI() {
+		eff1 = eff2;
 		PC = popSP();
 	}
 
@@ -3205,12 +3186,13 @@ public class Z802 {
 		
 		/* Reset IFF1, IFF2 */
 		eff1 = false;
+		eff2 = false;
 		
 		/* Push PC */
 		pushSP(PC);
 			
 		/* Call 0x38 */
-		PC = INTERRUPT_HOOK ;
+		PC = INTERRUPT_HOOK;
 	}
 	
 	public final int getCycleCount() {
@@ -3223,5 +3205,11 @@ public class Z802 {
 
 	public short getPC() {
 		return PC;
+	}
+	
+	public ArrayList<String> getStateBuf() {
+		ArrayList<String> res = new ArrayList<String>();
+		for (int i = 0; i < stateBufSize; i++) res.add(stateBuf[(stateBufPtr + i) % stateBufSize]);
+		return res;
 	}
 }

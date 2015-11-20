@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -30,11 +31,12 @@ public class MSX { // implements IBaseDevice {
 	private AbstractSlot[] slots;
 	private KeyboardDecoder keyboard;
 
-	private boolean debugflag = false;
+	private boolean debugMode = false;
+	private boolean startDebug = false;
 	
 	public boolean running = true;
 	
-	public static int vSyncInterval = 70000;
+	public static int vSyncInterval = 3200000;
 	
 	/* PPI A register (primary slot select) */
 	private byte ppiA_SlotSelect;
@@ -45,6 +47,8 @@ public class MSX { // implements IBaseDevice {
 	
 	private final Z80OutDevice[] out = new Z80OutDevice[256];
 	private final Z80InDevice[] in = new Z80InDevice[256];
+
+	private int intCount = 0;
 
 	public static void main(String[] args) {
 		MSX m = new MSX();
@@ -102,6 +106,10 @@ public class MSX { // implements IBaseDevice {
 
 			@Override
 			public void wrtByte(short addr, byte value) {
+				if ((addr & 0xffff) == 0xfc4a) {
+					debug("Writing himem (fc4a));" + Tools.toHexString(value));
+					debug("Slots = (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
+				}
 				if (isWritable(addr)) {
 					if ((addr & 0xffff) <= 0x3fff) slots[getSlotForPage(0)].wrtByte(addr, value);
 					else if ((addr & 0xffff) <= 0x7fff) slots[getSlotForPage(1)].wrtByte(addr, value);
@@ -208,15 +216,16 @@ public class MSX { // implements IBaseDevice {
 		/* PPI register B (keyboard matrix row input register) (port A9) */
 		this.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
-				debug("Reading keyboard matrix");
-				return keyboard.getRowValue(ppiC_Keyboard & 0x0F);
+				byte value = keyboard.getRowValue(ppiC_Keyboard & 0x0F);
+				if (value != 0) System.out.println("Reading keyboard matrix " + value);
+				return value;
 			}
 		}, 0xA9);
 
 		/* PPI register C (keyboard and cassette interface) (port AA) */
 		this.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
-				debug("Reading keyboard matrix row register");
+				//if (ppiC_Keyboard != 0) System.out.println("Reading keyboard matrix row register" + ppiC_Keyboard);
 				return ppiC_Keyboard;
 			}
 		}, 0xAA);
@@ -264,6 +273,23 @@ public class MSX { // implements IBaseDevice {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 		frame.repaint();
+		frame.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				if (e.getKeyChar() == '*') {
+					startDebug = true;
+				}
+				
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {}
+
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			
+		});
 	}
 	
 	public void startMSX() {
@@ -272,60 +298,66 @@ public class MSX { // implements IBaseDevice {
 		short minAddr = (short)0xffff, maxAddr = (short)0x0000;
 		
 		while (running) {
+
+			if (startDebug) {
+				startDebug = false;
+				debugMode();
+			}
+			
 			String desc = BIOSDebug.getDesc((short)cpu.getPC());
-			if (!desc.equals("")) System.out.println("Executing BIOS call " + desc);
-			if(cnt == 0 || breakpoints.contains((short)cpu.getPC())) {
+			
+			//if (cpu.getPC() == 0) {
+			//	debugMode();
+			//}
+			if(breakpoints.contains((short)cpu.getPC())) {
 				System.out.println("Breakpoint found");
 				debugMode();
 			}
-
-			if (cpu.getPC() == (0x0c4a)) {
-				System.out.println("x");
-			}
 			
-			if (desc.equals("CHKRAM")) {
-				System.out.println("xx");
-			System.out.println("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
-			}
-			if (desc.equals("INIT!")) {
-				System.out.println("xx");
+			if (desc.equals("INIT")) {
+				System.out.println("Init called");
 				System.out.println("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 				debugMode();
 			}
-			
-			//try {
-				System.out.println("ADDR = " + Tools.toHexString4(cpu.getPC()) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.getPC())));
 
-				cpu.execute();
-				if ((cpu.getPC() & 0xffff) < (minAddr & 0xffff)) minAddr = cpu.getPC();
-				if ((cpu.getPC() & 0xffff) > (maxAddr & 0xffff)) maxAddr = cpu.getPC();
-				cnt++;
-				if (cnt > 1000) {
-					System.out.println("Executed " + cnt + " steps between " + Tools.toHexString(minAddr) + " and " + Tools.toHexString(maxAddr));
-					minAddr = (short)0xffff; maxAddr = (short)0x0000;
-					cnt = 1;
-				}
+			if (cpu.getPC() == 0) {
+				System.out.println("Executing 0x0000");
+			}
+
+			if (desc.equals("MAINLOOP")) {
+				System.out.println("Main Loop Started");
+			}
+
+			if (desc.equals("powerup")) {
+				System.out.println("Powerup Started");
+			}
+			
+			cpu.execute();
+			System.out.println("pc" + cpu.getPC());
+			//if ((cpu.getPC() & 0xffff) < (minAddr & 0xffff)) minAddr = cpu.getPC();
+			//if ((cpu.getPC() & 0xffff) > (maxAddr & 0xffff)) maxAddr = cpu.getPC();
+			//cnt++;
+			//if (cnt > 100000) {
+			//	System.out.println("Executed " + cnt + " steps between " + Tools.toHexString(minAddr) + " and " + Tools.toHexString(maxAddr));
+			//	minAddr = (short)0xffff; maxAddr = (short)0x0000;
+			//	cnt = 1;
+			//}
 				
-			//} catch (ProcessorException e) {
-			//	throw new RuntimeException(e.getMessage());
-			//}
-			//System.out.println("ADDR = " + Tools.toHexString4(cpu.getPC()) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.getPC())) + ", T = " + cpu.s
-			//			+ " Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
-			//if ("03c8".equals(Tools.toHexString4(core.getProgramCounter()))) {
-			//	debugMode();
-			//}
-			if (cpu.ts >= vSyncInterval) {
-				//frame.repaint();
-				//doVSyncInterrupt();
-				//cpu.s = (cpu.s - vSyncInterval);
+			if (cpu.s >= vSyncInterval) {
+				frame.repaint();
+				doVSyncInterrupt();
+				cpu.s = (cpu.s - vSyncInterval);
 			}
 		}
 		
 	}
 	
 	public void debugMode() {
-
+		
+		debugMode = true;
+		
 		try {
+			System.out.println(cpu.getLastMsg());
 			cpu.printState();
 		
 			BufferedReader bi = new BufferedReader(new InputStreamReader(System.in));
@@ -341,6 +373,15 @@ public class MSX { // implements IBaseDevice {
 					System.out.println("? ");
 					input = bi.readLine();
 				}
+				if (input.equals("step")) {
+					preStep = true;
+					System.out.println("ADDR = " + Tools.toHexString4(cpu.PC) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.PC)) + ", T = " + cpu.s);
+					cpu.execute();
+					System.out.println(cpu.getLastMsg());
+					cpu.printState();
+					continue;
+				}
+				
 				if (input.startsWith("peek")) {
 					preStep = false;
 					String addrString = input.substring(5);
@@ -379,35 +420,82 @@ public class MSX { // implements IBaseDevice {
 					System.out.println("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 					continue;
 				}
-				if (input.equals("step")) {
-					preStep = true;
-					System.out.println("ADDR = " + Tools.toHexString4(cpu.PC) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.PC)) + ", T = " + cpu.s);
-					//try {
-						cpu.execute();
-						cpu.printState();
-					//} catch (ProcessorException e) {
-					//	throw new RuntimeException(e.getMessage());
-					//}
+				if (input.equals("interrupt")) {
+					doVSyncInterrupt();
+					cpu.execute();
+					cpu.printState();
 					continue;
 				}
+				if (input.equals("printstatebuf")) {
+					List<String> stateBuf = cpu.getStateBuf();
+					for (String s: stateBuf) System.out.println(s);
+					continue;
+				}
+				if (input.equals("charbuf")) {
+					System.out.print("Char buf <");
+					for (int i = 0; i < 40; i++) {
+						char c = (char)primarySlot.rdByte((short)(0xFBF0 + i));
+						if (c <= 126 && c >= 32) {
+							System.out.print((char)c);
+						} else {
+							System.out.print(".");
+						}
+					}
+					System.out.print(">");
+					System.out.println();
+					continue;
+				}
+				if (input.equals("vramdump")) {
+					for (int i = 0; i < 0x3fff; i++) {
+						byte b = vdp.mem.rdByte((short)(i&0xffff));
+						char c = 0;
+						if ((b & 0xff) <= 126 && (b & 0xff) >= 32) {
+							c = (char)b;
+						} else {
+							c = '.';
+						}
+						String hb = Tools.toHexString(b);
+						System.out.print(""+c);
+						if (i % 4 == 0) System.out.print(" ");
+						if (i % 16 == 0) System.out.println(" <- " + Tools.toHexString4(i-16));
+					}
+					continue;
+				}
+
 				if (input.equals("continue")) return;
 				System.out.println("Unknown command");
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			debugMode = false;
 		}
 	}
 	
 	private void doVSyncInterrupt() {
+
+		//if (debugMode) return;
+		
+		/* Set status bit (will be reset when read) */
+		vdp.setStatusINT(true);
+
+		/* Return if interrupt disabled ? */
+		if (!vdp.getGINT()) return;
+
 		cpu.interrupt();
-		debug("Interrupt");
+		
+		intCount++;
+		if (intCount == 10) {
+			System.out.println("Interrupt count " + intCount);
+			intCount = 0;
+		}
 	}
 	
 	private void debug(String msg) {
 		if (cpu != null) { 
-			System.out.println("ADDR = " + Tools.toHexString4(cpu.getPC()) + ": " + msg);
+			//System.out.println("ADDR = " + Tools.toHexString4(cpu.getPC()) + ": " + msg);
 		} else {
-			System.out.println(msg);
+			//System.out.println(msg);
 		}
 	}
 

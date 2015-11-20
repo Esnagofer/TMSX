@@ -29,4 +29,8 @@ public class RAMSlot extends AbstractSlot {
 	public boolean isWritable(short addr) {
 		return true;
 	}
+	
+	public int getSize() {
+		return size;
+	}
 }

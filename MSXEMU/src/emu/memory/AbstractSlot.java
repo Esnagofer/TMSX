@@ -48,9 +48,9 @@ public abstract class AbstractSlot { // implements IMemory {
 	 * @param msb MSB of address
 	 * @return value Value
 	 */
-	public final byte rdByte(byte lsb, byte msb) {
-		return rdByte((short)((msb << 8) | (lsb & 0xff)));
-	}
+	//public final byte rdByte(byte lsb, byte msb) {
+	//	return rdByte((short)((msb << 8) | (lsb & 0xff)));
+	//}
 	
 	/**
 	 * Write a byte at given address (provided by lsb and msb bytes)
