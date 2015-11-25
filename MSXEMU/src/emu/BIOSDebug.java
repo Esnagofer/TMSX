@@ -132,6 +132,9 @@ public class BIOSDebug {
 		case 0x1474: return "GETVC2";
 		case 0x0468: return "KILBUF";
 		case 0x01FF: return "CALBAS";
+		
+		case 0x0EF1: return "REQTRP";
+
 
 		case 0x2680: return "INIT!";
 		
