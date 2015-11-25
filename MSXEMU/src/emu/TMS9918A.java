@@ -34,10 +34,6 @@ public class TMS9918A {
 	
 	private boolean secondByteFlag = false;
 	private byte ioByte0, ioByte1;
-
-	private int count;
-	
-	private Mode mode = null;
 	
 	public static final int
 		VDP_WIDTH = 256,
@@ -154,7 +150,7 @@ public class TMS9918A {
 
 	
 	public short getNameTableAddr() {
-		int v = 0;
+		int v = 0;	// TODO: optimize
 		if (getPN10()) v+= 1<<10;
 		if (getPN11()) v+= 1<<11;
 		if (getPN12()) v+= 1<<12;
@@ -163,7 +159,7 @@ public class TMS9918A {
 	}
 	
 	public short getColorTableAddr() {
-		int v = 0;
+		int v = 0; // TODO: optimize
 		if (getCT6()) v += 1<<6;
 		if (getCT7()) v += 1<<7;
 		if (getCT8()) v += 1<<8;
@@ -176,7 +172,7 @@ public class TMS9918A {
 	}
 	
 	public short getPatternTableAddr() {
-		int v = 0;
+		int v = 0; // TODO: optimize
 		if (getPG11()) v+= 1<<11;
 		if (getPG12()) v+= 1<<12;
 		if (getPG13()) v+= 1<<13;
@@ -184,7 +180,7 @@ public class TMS9918A {
 	}
 	
 	public short getSpriteAttrTable() {
-		int v = 0;
+		int v = 0; // TODO: optimize
 		if (getSA7()) v += 1<<7;
 		if (getSA8()) v += 1<<8;
 		if (getSA9()) v += 1<<9;
@@ -196,7 +192,7 @@ public class TMS9918A {
 	}
 	
 	public short getSpriteGenTable() {
-		int v = 0;
+		int v = 0; // TODO: optimize
 		if (getSG11()) v += 1<<11;
 		if (getSG12()) v += 1<<12;
 		if (getSG13()) v += 1<<13;
@@ -224,15 +220,8 @@ public class TMS9918A {
 		return result;
 	}
 	
-	char prevprev = '.', prev = '.';
-
 	// Port 0 write
 	public final void writeVRAMData(byte value) {
-		if (prevprev == 'M' && prev == 'S' && ((char)(value&0xff)) == 'X') {
-			System.out.println("WRITTEN MSX TO VRAM ADDRESS " + Tools.toHexString(readWriteAddr));
-		}
-		prevprev = prev;
-		prev = (char)value;
 		readAhead = value;
 		mem.wrtByte(readWriteAddr, readAhead);
 		increaseReadWriteAddr();
@@ -249,7 +238,7 @@ public class TMS9918A {
 			ioByte1 = value;
 
 			/* Are we doing memory i/o? */
-			if (((ioByte1 & 0xC0) >> 6) <= 1) {
+			if (((ioByte1 & 0x80) >> 7) == 0) {
 				
 				/* If so, set the read/write address to value stored in ioBytes */
 				readWriteAddr = (short)((ioByte0 & 0xFF) | ((ioByte1 & 0x003F) << 8));
@@ -262,7 +251,7 @@ public class TMS9918A {
 			}
 			
 			/* If not, we're doing register i/o */
-			else if (((ioByte1 & 0xC0) >> 6) == 2) {
+			else if (((ioByte1 & 0x80) >> 7) == 1) {
 				if ((ioByte1 & 0x07) <= 7) {
 					registers[ioByte1 & 0x07] = ioByte0;
 				}
@@ -314,7 +303,6 @@ public class TMS9918A {
 				}
 			}
 		}
-
 	}
 	
 	public void drawMode0() {
@@ -378,44 +366,16 @@ public class TMS9918A {
 				nameTablePtr = (short)(nameTablePtr + 1);
 			}
 		}
-		/*
-		short nameTableAddr = this.getNameTableAddr();
-		short patternTableAddr = this.getPatternTableAddr();
-		if (nameTableAddr + MODE1_PN_SIZE > ramSize) return;
-		if (patternTableAddr + MODE1_PG_SIZE > ramSize) return;
-		int offBit = colors[getOffBitColor()];
-		int onBit = colors[getOnBitColor()];
-		for (int y = 0; y < 24; y++) {
-			for (int x = 0; x < 40; x++) {
-				short characterAddr = (short)((patternTableAddr & 0xffff) + (0xff & mem.rdByte((short)((nameTableAddr & 0xFFFF) + (x + (40 * y)))) * 8));
-				for (int charLine = 0; charLine < 8; charLine++) {
-					byte line = mem.rdByte((short)(characterAddr + charLine));
-					for (int linePos = 2; linePos < 8; linePos++) {
-						int px = ((x * 6) + linePos);
-						int py = ((y * 8) + charLine);
-						img.setRGB(px, py, Tools.getBit(line, linePos)? onBit: offBit);
-						//if (f) {
-						//	img.setRGB(px, py, onBit);
-						//	f = false;
-						//} else {
-						//	img.setRGB(px, py, offBit);
-						//	f = true;
-						//}
-					}
-				}
-			}
-		}
-		*/
 	}
 	
 	public void drawMode2() {
-		System.out.println("drawmode2");
-		
+		System.err.println("drawmode2 not implemented");
+		drawMode0();
 	}
 
 	public void drawMode3() {
-		System.out.println("drawmode3");
-		
+		System.err.println("drawmode3 not implemented");
+		drawMode0();
 	}
 
 	public void drawPattern() {
@@ -431,52 +391,14 @@ public class TMS9918A {
 			drawMode3();
 		}
 		
-		//switch (getMode()) {
-		//case Graphics1:
-		//	break;
-		//case Graphics2:
-		//	break;
-		//case Text:
-			//break;
-		//case MultiColor:
-		//	break;
-		//}
-		//*/
 	}
 	
-	public void drawSprites() {
-		
-	}
-
-	public void updateScreen() {
-		// TODO Auto-generated method stub
-		
-	}
-
 	public void paint(Graphics g) {
+		// TODO: draw border, backdrop, and sprite layers
 		
-		//if (mode != getMode()) {
-		//	System.out.println("Changed mode to " + getMode());
-		//	mode = getMode();
-		//}
-
-		
-		count++;
-
-		drawNullPattern();
-
+		// Draw the pattern
 		drawPattern();
-		
-		//g.setColor(Color.WHITE);
-		//g.fillRect(0, 0, VDP_WIDTH + 50, VDP_HEIGHT + 50);
-
-		//g.setColor(new Color((int)(Math.random() * 40000)));
-		//g.fillRect(0, 0, VDP_WIDTH + 20, VDP_HEIGHT + 20);
-		g.drawImage(img, 10, 10, null);
-		
-		//g.setColor(Color.BLACK);
-		char[] text = ("Count: " + count).toCharArray();
-		g.drawChars(text, 0, text.length, 50, 50);
+		g.drawImage(img, 0, 50, null);
 
 	}
 }
