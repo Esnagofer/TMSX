@@ -51,6 +51,7 @@ public class Z802 {
 	
 	public Z802(AbstractSlot mem) {
 		this.mem = mem;
+		reset();
 	}
 	
 	public void reset() {
@@ -407,6 +408,8 @@ public class Z802 {
 		case 0x37:	// SCF 4
 			s += 4;
 			setCFlag(true);
+			setHFlag(false);
+			setNFlag(false);
 			dbg("SCF");
 			break; 
 		case 0x38:	// JR C,&NN 12,7
@@ -451,6 +454,8 @@ public class Z802 {
 		case 0x3F:	// CCF 4
 			s += 4;
 			setCFlag(!getCFlag());
+			setHFlag(!getHFlag());
+			setNFlag(false);
 			dbg("CCF");
 			break; 
 		case 0x40:	// LD B,B 4
@@ -693,7 +698,7 @@ public class Z802 {
 			dbg("LD L, A : " + Tools.toHexString(L));
 			break; 
 
-		case 0x70:	// LD (HL),B 7 TODO check these
+		case 0x70:	// LD (HL),B 7
 			s += 7;
 			s += 4;
 			mem.wrtByte(getHL(), B);
@@ -1117,8 +1122,9 @@ public class Z802 {
 		case (byte) 0xC2:	// JP NZ,&HHLL 10 (TODO check timing)
 			s += 10;
 			ts = fetchWordLH(); 
-			if (!getZFlag())
+			if (!getZFlag()) {
 				PC = ts;
+			}
 			dbg("JP NZ, &HHLL (" + Tools.toHexString(ts) + ")");
 			break;
 		case (byte) 0xC3:	// JP,&HHLL 10 (TODO check timing)
@@ -1258,7 +1264,7 @@ public class Z802 {
 			break; 
 		case (byte) 0xD8:	// RET C 11,15
 			s += 11;
-			if (getZFlag()) {
+			if (getCFlag()) {
 				PC = popSP();
 				s += 4;
 			}
@@ -1532,19 +1538,31 @@ public class Z802 {
 	}
 
 	public byte inc(byte v) {
-		return add(v, (byte)1, false);
+		boolean c = getCFlag(); // dec8 is like sub 1 except that C is unaffected
+		byte res = add(v, (byte)1, false);
+		setCFlag(c);
+		return res;
 	}
 
 	public short inc(short v) {
-		return (short)(v+1);
+		byte flags = F; // inc16 is like sub 1 except that C is unaffected
+		short res = add(v, (short)1, false);
+		F = flags;
+		return res;
 	}
 
 	public byte dec(byte v) {
-		return sub(v, (byte)1, false);
+		boolean c = getCFlag(); // dec8 is like sub 1 except that C is unaffected
+		byte res = sub(v, (byte)1, false);
+		setCFlag(c);
+		return res;
 	}
 
 	public short dec(short v) {
-		return (short)(v-1);
+		byte flags = F; // dec16 is like sub 1 except that C is unaffected
+		short res = sub(v, (short)1, false);
+		F = flags;
+		return res;
 	}
 
 	public void executeDD() {
@@ -1565,7 +1583,7 @@ public class Z802 {
 		case (byte) 0x21: // LD IX,&HHLL
 			s += 14;
 			ts = fetchWordLH();
-			setIX(mem.rdByte(ts));
+			setIX(mem.readWordLH(ts));
 			dbg("LD IX, &LLHH (" + ts + ")");
 			break; 
 		case (byte) 0x22: // LD (&HHLL),IX
@@ -1601,7 +1619,7 @@ public class Z802 {
 			break; 
 		case (byte) 0x2A: // LD IX,(&HHLL)
 			s += 20;
-			setIX(mem.rdByte(fetchWordLH()));
+			setIX(mem.readWordLH(fetchWordLH()));
 			dbg("LD IX, (&HHLL)");
 			break; 
 		case (byte) 0x2B: // DEC IX
@@ -1627,20 +1645,20 @@ public class Z802 {
 		case (byte) 0x34:// INC (IX+NN) TODO: carry?
 			s += 23;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(ts, inc(mem.rdByte(ts)));
 			dbg("INC (IX+" + dis +")");
 			break;
 		case (byte) 0x35: // DEC (IX+NN) TODO: carry?
 			s += 23;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(ts, dec(mem.rdByte(ts)));
 			dbg("DEC (IX+"+dis+")");
 			break;
 		case (byte) 0x36: // LD (IX+NN), nn 
 			s += 19;
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(ts, fetchByte());
 			dbg("LD (IX+NN), nn");
 			break;
@@ -1662,7 +1680,7 @@ public class Z802 {
 		case (byte) 0x46: // LD B,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			B = mem.rdByte(ts);
 			dbg("LD B, (IX+"+dis+")");
 			break; 
@@ -1679,7 +1697,7 @@ public class Z802 {
 		case (byte) 0x4E: // LD C,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			C = mem.rdByte(ts);
 			dbg("LD C, (IX+"+dis+")");
 			break; 
@@ -1696,7 +1714,7 @@ public class Z802 {
 		case (byte) 0x56: // LD D,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			D = mem.rdByte(ts);
 			dbg("LD D,(IX+"+dis+")");
 			break; 
@@ -1790,7 +1808,7 @@ public class Z802 {
 		case (byte) 0x6E: // LD L,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			L = mem.rdByte(addr);
 			dbg("LD L, (IX+"+dis+")");
 			break;  
@@ -1802,49 +1820,49 @@ public class Z802 {
 		case (byte) 0x70: // LD (IX+NN),B
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, B);
 			dbg("LD (IX+"+dis+"),B");
 			break; 
 		case (byte) 0x71: // LD (IX+NN),C
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, C);
 			dbg("LD (IX+"+dis+"),C");
 			break; 
 		case (byte) 0x72: // LD (IX+NN),D
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, D);
 			dbg("LD (IX+"+dis+"),D");
 			break; 
 		case (byte) 0x73: // LD (IX+NN),E
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, E);
 			dbg("LD (IX+"+dis+"),E");
 			break; 
 		case (byte) 0x74: // LD (IX+NN),H
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, H);
 			dbg("LD (IX+"+dis+"),H");
 			break; 
 		case (byte) 0x75: // LD (IX+NN),L
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, L);
 			dbg("LD (IX+"+dis+"),L");
 			break; 
 		case (byte) 0x77: // LD (IX+NN),A
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(addr, A);
 			dbg("LD (IX+"+dis+"),A");
 			break; 
@@ -1861,7 +1879,7 @@ public class Z802 {
 		case (byte) 0x7E: // LD A,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = mem.rdByte(addr);
 			dbg("LD A, (IX+"+dis+")");
 			break; 
@@ -1876,7 +1894,7 @@ public class Z802 {
 		case (byte) 0x86: // ADD A, (IX+NN)
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = add(A, mem.rdByte(addr), false);
 			dbg("ADD A, (IX+"+dis+")");
 			break; 
@@ -1891,7 +1909,7 @@ public class Z802 {
 		case (byte) 0x8E: // ADC A, (IX+NN)
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = add(A, mem.rdByte(addr), true);
 			dbg("ADC A, (IX+"+dis+")");
 			break; 
@@ -1906,7 +1924,7 @@ public class Z802 {
 		case (byte) 0x96:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = sub(A, mem.rdByte(addr), false);
 			dbg("SUB A, (IX+"+dis+")");
 			break; // SUB A, (IX+NN)
@@ -1921,7 +1939,7 @@ public class Z802 {
 		case (byte) 0x9E:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = sub(A, mem.rdByte(addr), true);
 			dbg("SBC A, (IX+"+dis+")");
 			break; // SBC A, (IX+NN)
@@ -1936,7 +1954,7 @@ public class Z802 {
 		case (byte) 0xA6:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = and(A, mem.rdByte(addr));
 			dbg("AND (IX+"+dis+")");
 			break; // AND (IX+NN)
@@ -1951,7 +1969,7 @@ public class Z802 {
 		case (byte) 0xAE:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			xor(mem.rdByte(addr));
 			dbg("XOR (IX+"+dis+")");
 			break; // XOR (IX+NN)
@@ -1966,7 +1984,7 @@ public class Z802 {
 		case (byte) 0xB6:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			A = or(A, mem.rdByte(addr));
 			dbg("OR (IX+"+dis+")");
 			break; // OR (IX+NN)
@@ -1983,7 +2001,7 @@ public class Z802 {
 		case (byte) 0xBE:
 			s += 19;
 			dis = fetchByte();
-			addr = (short)(getIX() + dis);
+			addr = (short)((getIX() & 0xffff) + dis);
 			cp(A, mem.rdByte(addr));
 			dbg("CP (IX+"+dis+")");
 			break; // CP (IX+NN)
@@ -2001,8 +2019,8 @@ public class Z802 {
 			IXL = mem.rdByte(getSP());
 			mem.wrtByte(getSP(), bs);
 			bs = IXH;
-			IXH = mem.rdByte((short) (getSP() + 1));
-			mem.wrtByte((short) (getSP() + 1), bs);
+			IXH = mem.rdByte((short) ((getSP() & 0xffff) + 1));
+			mem.wrtByte((short) ((getSP() & 0xffff) + 1), bs);
 			dbg("EX (SP), IX");
 			break;
 		case (byte) 0xE5: // PUSH IX
@@ -2032,9 +2050,9 @@ public class Z802 {
 		}
 		
 		byte opcode = fetchByte();
-		int x = (opcode >> 6) & 0x03;
-		int y = (opcode >> 3) & 0x07;
-		int z = opcode & 0x07;
+		int x = Bit.and(Bit.rshift(opcode, 6), (byte)0x03);
+		int y = Bit.and(Bit.rshift(opcode, 3), (byte)0x07);
+		int z = Bit.and(opcode, (byte)0x07);
 
 		String dbg = "";
 		
@@ -2156,7 +2174,7 @@ public class Z802 {
 			break; // ADC HL,BC
 		case (byte) 0x4B:
 			s += 20;
-			setBC(mem.rdByte(fetchWordLH()));
+			setBC(mem.readWordLH(fetchWordLH()));
 			dbg("LD BC, (&HHLL)");
 			break; // LD BC,(&HHLL)
 		case (byte) 0x4D:
@@ -2209,7 +2227,7 @@ public class Z802 {
 			break; // ADC HL,DE
 		case (byte) 0x5B:
 			s += 20;
-			setDE(mem.rdByte(fetchWordLH()));
+			setDE(mem.readWordLH(fetchWordLH()));
 			break; // LD DE,(&HHLL)
 		case (byte) 0x5D: // RETN 
 			s += 14;
@@ -2244,11 +2262,8 @@ public class Z802 {
 			break; 
 		case (byte) 0x67:
 			s += 18;
-			byte AL = (byte) (A & 0x0F); // RRD TODO: test
-			byte HLC = mem.rdByte(getHL());
-			A = (byte) ((A & 0xF0) | (HLC & 0x0F));
-			HLC >>= 4;
-			mem.wrtByte(getHL(), (byte) ((HLC & 0x0F) | ((AL << 4) ^ 0xF0)));
+			doRRD();
+			dbg("RRD");
 			break;
 		case (byte) 0x68:
 			s += 12;
@@ -2268,16 +2283,12 @@ public class Z802 {
 			break; // ADC HL,HL
 		case (byte) 0x6B:
 			s += 20;
-			setHL(mem.rdByte(fetchWordLH()));
+			setHL(mem.readWordLH(fetchWordLH()));
 			dbg("LD HL, (&HHLL)");
 			break; // LD HL,(&HHLL)
 		case (byte) 0x6F:
 			s += 18;
-			AL = (byte) (A & 0x0F); // RLD TODO: test
-			HLC = mem.rdByte(getHL());
-			A = (byte) ((A & 0xF0) | ((HLC >> 4) & 0x0F));
-			HLC <<= 4;
-			mem.wrtByte(getHL(), (byte) ((HLC & 0xF0) | (AL ^ 0x0F)));
+			doRLD();
 			dbg("RLD");
 			break;
 		case (byte) 0x70:
@@ -2312,16 +2323,20 @@ public class Z802 {
 			dbg("OUT (C), A)");
 			break; // OUT (C),A
 		case (byte) 0x7A:
+			/*
 			s += 15;
 			setHL(add(getHL(), getSP(), true));
 			dbg("ADC HL, SP");
 			break; // ADC HL,SP
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0x7B:
 			s += 20;
-			setSP(mem.rdByte(fetchWordLH()));
+			setSP(mem.readWordLH(fetchWordLH()));
 			dbg("LD SP, (&HHLL)");
 			break; // LD SP,(&HHLL)
 		case (byte) 0xA0:
+			/*
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL()));
 			setHL((short) (getHL() + 1));
@@ -2330,7 +2345,10 @@ public class Z802 {
 			setHFlag(false); setPVFlag(getBC() != 0); setNFlag(false);
 			dbg("LDI");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA1: // CPI
+			/*
 			s += 16;
 			boolean c = getCFlag();
 			cp(A, mem.rdByte(getHL())); 
@@ -2340,22 +2358,30 @@ public class Z802 {
 			setCFlag(c);
 			dbg("CPI");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA2:
+		/*
 			s += 16;
 			mem.wrtByte(getHL(), in(C)); // INI
 			setHL((short) (getHL() + 1));
 			setBC((short) (getBC() - 1));
 			dbg("INI");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA3:
+			/*
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTI
 			setHL((short) (getHL() + 1));
 			setBC((short) (getBC() - 1));
 			dbg("OTI");
 			break;
-
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA8: // LDD
+			/*
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
 			setHL((short) (getHL() - 1));
@@ -2364,29 +2390,42 @@ public class Z802 {
 			setHFlag(false); setPVFlag(getBC() != 0); setNFlag(false);
 			dbg("LDD");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA9:
+			/*
 			s += 16;
+			boolean tc = getCFlag();
 			cp(A, mem.rdByte(getHL())); // CPD
 			setHL((short) (getHL() - 1));
-			setDE((short) (getDE() - 1));
 			setBC((short) (getBC() - 1));
+			setNFlag(true);
+			setCFlag(tc);
+			setPVFlag((getBC() & 0xffff) - 1 != 0);
 			dbg("CPD");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xAA:
+			/*
 			s += 16;
 			mem.wrtByte(getHL(), in(C)); // IND
 			setHL((short) (getHL() - 1));
 			setBC((short) (getBC() - 1));
 			dbg("IND");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xAB:
+			/*
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTD
 			setHL((short) (getHL() - 1));
 			setBC((short) (getBC() - 1));
 			dbg("OTD");
 			break;
-
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xB0: // LDIR
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
@@ -2403,6 +2442,7 @@ public class Z802 {
 			dbg("LDIR " + xx);
 			break;
 		case (byte) 0xB1: // CPIR
+			/*
 			s += 16;
 			c = getCFlag();
 			cp(A, mem.rdByte(getHL())); 
@@ -2417,7 +2457,10 @@ public class Z802 {
 			setCFlag(c);
 			dbg("CPIR");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xB2:
+			/*
 			s += 16;
 			mem.wrtByte(getHL(), in(C)); // INIR
 			setHL((short) (getHL() + 1));
@@ -2429,7 +2472,10 @@ public class Z802 {
 			}
 			dbg("INIR");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xB3:
+			/*
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTIR
 			setHL((short) (getHL() + 1));
@@ -2441,8 +2487,11 @@ public class Z802 {
 			}
 			dbg("OTIR");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 
 		case (byte) 0xB8: // LDDR
+			/*
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
 			setHL((short) (getHL() - 1));
@@ -2456,22 +2505,40 @@ public class Z802 {
 			setHFlag(false); setPVFlag(false); setNFlag(false);
 			dbg("LDDR");
 			break;
-		case (byte) 0xB9: // CPDR
-			s += 16;
-			c = getCFlag();
-			cp(A, mem.rdByte(getHL())); 
-			setHL((short) (getHL() - 1));
-			setBC((short) (getBC() - 1));
-			if (getBC() != 0 && !getZFlag()) {
-				PC--;
-				PC--;
+			*/
+			throw new RuntimeException("Unsupported instruction");
+		case (byte) 0xB9: // CPDR		TODO: suspicious
+			boolean tc = getCFlag();
+			cp(A, mem.rdByte(getHL())); // CPD
+			setHL((short) ((getHL() & 0xffff) - 1));
+			setBC((short) ((getBC() & 0xffff) - 1));
+			setNFlag(true);
+			setCFlag(tc);
+			setPVFlag((getBC() & 0xffff) != 0); // bc-1 != 0?
+			if (getPVFlag() && !getZFlag()) {
+				PC = (short)((PC & 0xffff) - 2);
 				s += 5;
+			} else {
+				s += 0;
 			}
-			setCFlag(c);
-			setPVFlag(getBC() != 0);
+
+		//	s += 16;
+		//	c = getCFlag();
+		//	cp(A, mem.rdByte(getHL())); 
+		//	setHL((short) ((getHL() & 0xffff) - 1));
+		//	setBC((short) ((getBC() & 0xffff) - 1));
+		//	if ((getBC() & 0xffff) != 0 && getZFlag()) {
+		//		PC--;
+		//		PC--;
+		//		s += 5;
+		//	}
+		//	setCFlag(c);
+		//	setPVFlag(getBC() != 0);
+
 			dbg("CPDR");
 			break;
 		case (byte) 0xBA:
+			/*
 			s += 16;
 			mem.wrtByte(getHL(), in(C)); // INDR
 			setHL((short) (getHL() - 1));
@@ -2483,8 +2550,10 @@ public class Z802 {
 			}
 			dbg("INDR");
 			break;
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xBB:
-			s += 16;
+			/* s += 16;
 			out(C, mem.rdByte(getHL())); // OTDR
 			setHL((short) (getHL() - 1));
 			setBC((short) (getBC() - 1));
@@ -2495,13 +2564,15 @@ public class Z802 {
 			}
 			dbg("OTDR");
 			break;
-			
+			*/
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0x4C: // neg (TODO: correct?)
 		case (byte) 0x5C: 
 		case (byte) 0x6C: 
 		case (byte) 0x7C: 
 		case (byte) 0x54: 
 		case (byte) 0x64: 
+			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0x74: 
 			s += 8;
 			A = sub((byte)0, A, false);
@@ -2509,6 +2580,34 @@ public class Z802 {
 		}
 	}
 
+	private void doRLD() {
+		byte AL = Bit.and(A, (byte)0x0f);
+		byte HLC = mem.rdByte(getHL());
+		A = Bit.or(Bit.and(A, (byte)0xF0), Bit.rshift(HLC, 4));
+		HLC = Bit.lshift(HLC, 4);
+		HLC = Bit.or(HLC, AL);
+		mem.wrtByte(getHL(), HLC);
+		setSFlag(A < 0);
+		setZFlag(A == 0);
+		setHFlag(false);
+		setPVFlag(Tools.getParity(A));
+		setNFlag(false);
+	}
+
+	private void doRRD() {
+		byte AL = Bit.and(A, (byte)0x0f);
+		byte HLC = mem.rdByte(getHL());
+		A = Bit.or(Bit.and(A, (byte)0xF0), Bit.and(HLC, (byte)0x0F));
+		HLC = Bit.rshift(HLC, 4);
+		HLC = Bit.or(HLC, Bit.lshift(AL, 4));
+		mem.wrtByte(getHL(), HLC);
+		setSFlag(A < 0);
+		setZFlag(A == 0);
+		setHFlag(false);
+		setPVFlag(Tools.getParity(A));
+		setNFlag(false);
+	}
+	
 	// Set flag values after IN r (C) operation
 	private void setInFlags(byte val) {
 		setSFlag(val < 0);
@@ -2564,41 +2663,50 @@ public class Z802 {
 		return (short) ((IYL & 0xff) | (IYH << 8));
 	}
 
+
+	private int rShift(short val, int i) {
+		return (val & 0xffff) >> i;
+	}
+	
+	private int rShift(byte val, int i) {
+		return (val & 0xff) >> i;
+	}
+
 	/**
 	 * Set register pair values
 	 */
 	public final void setBC(short val) {
-		B = (byte) ((val >> 8) & 0xff);
+		B = (byte) ((rShift(val, 8)) & 0xff);
 		C = (byte) (val & 0xff);
 	}
 
 	public final void setDE(short val) {
-		D = (byte) ((val >> 8) & 0xff);
+		D = (byte) ((rShift(val, 8)) & 0xff);
 		E = (byte) (val & 0xff);
 	}
 
 	public final void setSP(short val) {
-		S = (byte) ((val >> 8) & 0xff);
+		S = (byte) ((rShift(val, 8)) & 0xff);
 		P = (byte) (val & 0xff);
 	}
 
 	public final void setAF(short val) {
-		A = (byte) ((val >> 8) & 0xff);
+		A = (byte) ((rShift(val, 8)) & 0xff);
 		F = (byte) (val & 0xff);
 	}
 
 	public final void setHL(short val) {
-		H = (byte) ((val >> 8) & 0xff);
+		H = (byte) ((rShift(val, 8)) & 0xff);
 		L = (byte) (val & 0xff);
 	}
 
 	public final void setIX(short val) {
-		IXH = (byte) ((val >> 8) & 0xff);
+		IXH = (byte) ((rShift(val, 8)) & 0xff);
 		IXL = (byte) (val & 0xff);
 	}
 
 	public final void setIY(short val) {
-		IYH = (byte) ((val >> 8) & 0xff);
+		IYH = (byte) ((rShift(val, 8)) & 0xff);
 		IYL = (byte) (val & 0xff);
 	}
 
@@ -2818,7 +2926,7 @@ public class Z802 {
 		a = (byte) (a | b);
 		setSFlag(a < 0);
 		setZFlag(a == 0);
-		setHFlag(true);
+		setHFlag(false);
 		setPVFlag(Tools.getParity(a));
 		setNFlag(false);
 		setCFlag(false);
@@ -2827,7 +2935,7 @@ public class Z802 {
 	}
 
 	public final void xor(byte b) {
-		A = (byte) (A ^ b);
+		A = (byte) ((A & 0xff) ^ (b & 0xff));
 		setSFlag(A < 0);
 		setZFlag(A == 0);
 		setHFlag(false);
@@ -2839,7 +2947,7 @@ public class Z802 {
 
 	// RLCA: rotate A left circular (put rotated bit in carry)
 	public void doRLCA() {
-		A = (byte) (A << 1 | ((A >> 7) & 1));
+		A = (byte) (A << 1 | (rShift(A, 7) & 1));
 		setHFlag(false);
 		setNFlag(false);
 		setCFlag((A % 2) != 0);
@@ -2858,7 +2966,7 @@ public class Z802 {
 	public void doRRCA() { // TODO: test
 		boolean c = (A % 2) != 0;
 		setCFlag(c);
-		A = (byte) (((A >> 1) & 0b01111111) | (c? 0b10000000: 0));
+		A = (byte) ((rShift(A, 1) & 0b01111111) | (c? 0b10000000: 0));
 		setHFlag(false);
 		setNFlag(false);
 	}
@@ -2866,7 +2974,7 @@ public class Z802 {
 	// RRA: rotate A right through carry
 	public void doRRA() {
 		boolean nc = A % 2 != 0;
-		A = (byte) (A >> 1 | (getCFlag()? 0b10000000: 0));
+		A = (byte) (rShift(A, 1) | (getCFlag()? 0b10000000: 0));
 		setHFlag(false);
 		setNFlag(false);
 		setCFlag(nc);
@@ -2874,7 +2982,7 @@ public class Z802 {
 	
 	// rotate left circular (put rotated bit in carry)
 	public byte doRLC(byte val) {
-		val = (byte) (val << 1 | ((val >> 7) & 1));
+		val = (byte) (val << 1 | (rShift(val, 7) & 1));
 		setSFlag(val < 0);
 		setZFlag(val == 0);
 		setHFlag(false);
@@ -2887,7 +2995,7 @@ public class Z802 {
 	// rotate right circular (put rotated bit in carry)
 	public byte doRRC(byte val) { // TODO: test
 		boolean c = (val % 2) != 0;
-		val = (byte) (((val >> 1) & 0b01111111) | (c? 0b10000000: 0));
+		val = (byte) (((rShift(val, 1)) & 0b01111111) | (c? 0b10000000: 0));
 		setSFlag(val < 0);
 		setZFlag(val == 0);
 		setHFlag(false);
@@ -2918,9 +3026,9 @@ public class Z802 {
 	public byte doRR(byte val) {
 		boolean nc = val % 2 != 0;
 		if (getCFlag()) {
-			val = (byte) (val >> 1 | 0b10000000);
+			val = (byte) (rShift(val, 1) | 0b10000000);
 		} else {
-			val = (byte) (val >> 1 & 0b01111111);
+			val = (byte) (rShift(val, 1) & 0b01111111);
 		}
 		setSFlag(val < 0);
 		setZFlag(val == 0);
@@ -2967,7 +3075,7 @@ public class Z802 {
 	// shift right, keep bit 7, copy bit 0 to carry
 	public byte doSRA(byte val) { // TODO: test
 		setCFlag(val % 2 != 0);
-		val = (byte) (val >> 1);
+		val = (byte)rShift(val, 1);
 		setSFlag(val < 0);
 		setZFlag(val == 0);
 		setHFlag(false);
@@ -2987,7 +3095,7 @@ public class Z802 {
 	 */
 	public byte doSRL(byte val) { // TODO: test
 		setCFlag((val & 0b0000001) > 0);
-		val = (byte) ((val >> 1) & 0b01111111);
+		val = (byte) (rShift(val, 1) & 0b01111111);
 		setSFlag(val < 0);
 		setZFlag(val == 0);
 		setHFlag(false);
@@ -3090,7 +3198,6 @@ public class Z802 {
 	}
 
 	private void out(byte port, byte value) {
-		int v = port & 0xff;
 		Z80OutDevice dev = out[port & 0xff];
 		if (dev != null) {
 			dev.out(port, value);
@@ -3102,7 +3209,7 @@ public class Z802 {
 		if (dev != null) {
 			return dev.in(port);
 		}
-		return 0;
+		return (byte)0xff;
 	}
 
 	public void registerOutDevice(Z80OutDevice d, int port) {
