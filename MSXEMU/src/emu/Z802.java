@@ -25,12 +25,6 @@ public class Z802 {
 	/* Temporary variables */
 	short ts = 0, ts2 = 0;
 	byte bs = 0, dis = 0;
-
-	/* Debug message */
-	private final int stateBufSize = 1000;
-	private String[] stateBuf = new String[stateBufSize];
-	private int stateBufPtr = 0;
-	private boolean stateBufEnable = true;
 	
 	/* Cycle counter */
 	int s;
@@ -80,8 +74,6 @@ public class Z802 {
 	public void execute() {
 		if (interruptDelayCount > 0) interruptDelayCount--;
 		executeRegular();
-		stateBuf[stateBufPtr] = getState();
-		stateBufPtr = (stateBufPtr + 1) % stateBufSize;
 	}
 
 	public void dbg(String msg) {
@@ -94,13 +86,7 @@ public class Z802 {
 	
 	public void executeRegular() {
 		oldPC = PC;
-		//System.out.println("PC = " + Tools.toHexString(PC));
 		byte b = fetchByte();
-		if ((oldPC & 0xFFFF) == 0xFFFF) {
-			if (PC == 0) {
-				throw new RuntimeException("PC wrap around");
-			}
-		}
 		switch (b) {
 		case 0x00:	// NOP 4
 			s += 4; 
@@ -2371,15 +2357,14 @@ public class Z802 {
 			*/
 			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA3:
-			/*
+			
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTI
 			setHL((short) (getHL() + 1));
 			setBC((short) (getBC() - 1));
 			dbg("OTI");
 			break;
-			*/
-			throw new RuntimeException("Unsupported instruction");
+			
 		case (byte) 0xA8: // LDD
 			/*
 			s += 16;
@@ -3311,9 +3296,4 @@ public class Z802 {
 		return PC;
 	}
 	
-	public ArrayList<String> getStateBuf() {
-		ArrayList<String> res = new ArrayList<String>();
-		for (int i = 0; i < stateBufSize; i++) res.add(stateBuf[(stateBufPtr + i) % stateBufSize]);
-		return res;
-	}
 }

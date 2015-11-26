@@ -99,6 +99,14 @@ public class KeyboardDecoder implements KeyListener {
 		processKeyEvent(e, false);
 	}
 
+	public void stopKeyPressed() {
+		pressKey(7, 4);
+	}
+	
+	public void stopKeyDepressed() {
+		depressKey(7, 4);
+	}
+
 	/**
 	 * Process key event.
      *

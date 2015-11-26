@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import emu.memory.AbstractSlot;
 import emu.memory.EmptySlot;
@@ -32,7 +33,7 @@ public class MSX { // implements IBaseDevice {
 	private KeyboardDecoder keyboard;
 
 	private boolean debugMode = false;
-	private boolean startDebug = false;
+	private boolean debugEnabled = true;
 	
 	public boolean running = true;
 	
@@ -43,26 +44,16 @@ public class MSX { // implements IBaseDevice {
 
 	/* PPI C register (keyboard and cassette control) */
 	private byte ppiC_Keyboard;
-	private JFrame frame;
 	
-	private final Z80OutDevice[] out = new Z80OutDevice[256];
-	private final Z80InDevice[] in = new Z80InDevice[256];
-
 	private int intCount = 0;
 
-	public static void main(String[] args) {
-		MSX m = new MSX();
-		m.initHardware();
-		m.startMSX();
-	}
-	
+	private JPanel screenPanel;
+		
 	public void initHardware() {
 		debug("Init memory");
 		initMemory();
 		debug("Init CPU");
 		initCPU();
-		debug("Init Frame");
-		initFrame();
 		debug("Init keyboard");
 		initKeyboard();
 		debug("Init PPI");
@@ -145,11 +136,16 @@ public class MSX { // implements IBaseDevice {
 		
 	}
 
+	/**
+	 * Initialize CPU
+	 */
 	public void initCPU() {
-		//core = new Z80Core(primarySlot, this);
 		cpu = new Z802(primarySlot);
 	}
 	
+	/**
+	 * Initialize VDP (including I/O channels)
+	 */
 	public void initVDP() {
 		vdp = new TMS9918A();
 		
@@ -157,26 +153,26 @@ public class MSX { // implements IBaseDevice {
 		// 99 = Status register read port (read only)
 
 		// VRAM data read/write port
-		this.registerInDevice(new Z80InDevice() {
+		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				return vdp.readVRAMData();
 			}
 		}, 0x98);
-		this.registerOutDevice(new Z80OutDevice() {
+		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				vdp.writeVRAMData(value);
 			}
 		}, 0x98);
 		
 		// VDP register write port
-		this.registerOutDevice(new Z80OutDevice() {
+		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				vdp.writeRegister(value);
 			}
 		}, 0x99);
 		
 		// VDP status register read port
-		this.registerInDevice(new Z80InDevice() {
+		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				return vdp.readStatus();
 			}
@@ -184,29 +180,32 @@ public class MSX { // implements IBaseDevice {
 		
 	}
 
+	/**
+	 * Initialize keyboard
+	 */
 	public void initKeyboard() {
-		
 		keyboard = new KeyboardDecoder();
-		frame.addKeyListener(keyboard);
 	}
 	
-	
+	/**
+	 * Initialize PPI (keyboard and slot select I/O)
+	 */
 	public void initPPI() {
 
 		/* PPI register A (slot select) (port A8) */
-		this.registerInDevice(new Z80InDevice() {
+		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				return ppiA_SlotSelect;
 			}
 		}, 0xA8);
-		this.registerOutDevice(new Z80OutDevice() {
+		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				ppiA_SlotSelect = value;
 			}
 		}, 0xA8);
 
 		/* PPI register B (keyboard matrix row input register) (port A9) */
-		this.registerInDevice(new Z80InDevice() {
+		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				byte value = keyboard.getRowValue(ppiC_Keyboard & 0x0F);
 				value = Bit.invert(value);
@@ -215,12 +214,12 @@ public class MSX { // implements IBaseDevice {
 		}, 0xA9);
 
 		/* PPI register C (keyboard and cassette interface) (port AA) */
-		this.registerInDevice(new Z80InDevice() {
+		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				return ppiC_Keyboard;
 			}
 		}, 0xAA);
-		this.registerOutDevice(new Z80OutDevice() {
+		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				ppiC_Keyboard = value;
 				//keyboard.setCapslock((ppiC_Keyboard & 0x40) != 0);
@@ -228,7 +227,7 @@ public class MSX { // implements IBaseDevice {
 		}, 0xAA);
 
 		/* PPI command register (used for setting bit 4-7 of ppi_C) (port AB) */
-		this.registerOutDevice(new Z80OutDevice() {
+		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				if ((value & 0xff) >> 7 == 0) {
 					int bit_no = (value & 0x0E) >> 1;
@@ -245,86 +244,34 @@ public class MSX { // implements IBaseDevice {
 
 	}
 	
-	private void registerInDevice(Z80InDevice inDevice, int port) {
-		cpu.registerInDevice(inDevice, port);
-	}
-
-	private void registerOutDevice(Z80OutDevice outDevice, int port) {
-		cpu.registerOutDevice(outDevice, port);
-	}
-
-	private void initFrame() {
-		frame = new JFrame() {
-			public void paint(Graphics g) {
-				if (vdp != null) vdp.paint(g);
-			}
-		};
-		frame.setSize(400, 400);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
-		frame.repaint();
-		
-		// Key listener to drop into debug mode when * is pressed.
-		frame.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-				if (e.getKeyChar() == '*') {
-					startDebug = true;
-				}
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {}
-
-			@Override
-			public void keyReleased(KeyEvent e) {}
-			
-		});
-	}
-	
+	/**
+	 * Start MSX. Basically a while look that executes CPU instructions,
+	 * triggers VSync interrupts, and stops when halted. 
+	 */
 	public void startMSX() {
 
 		while (running) {
 
-			if (startDebug) {
-				startDebug = false;
-				debugMode();
-			}
+			// If the debugMode flag is set, escape to debug mode
+			if (debugMode) { debugMode(); }
 			
+			// Some debug messages
 			String desc = BIOSDebug.getDesc((short)cpu.getPC());
-			
-			// Enable for default debug
-			//if (cpu.getPC() == 0x0000) {
-			//	debugMode();
-			//}
-			
-			if(breakpoints.contains((short)cpu.getPC())) {
-				debug("Breakpoint found");
-				debugMode();
-			}
-			
-			if (desc.equals("INIT!")) {
+			if(breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode();	}
+			if (desc.equals("INIT!")) {	
 				debug("Init called");
 				debug("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 			}
-
-			if (cpu.getPC() == 0) {
-				debug("Executing 0x0000");
-			}
-
-			if (desc.equals("MAINLOOP")) {
-				debug("Main Loop Started");
-			}
-
-			if (desc.equals("powerup")) {
-				debug("Powerup Started");
-			}
+			if (cpu.getPC() == 0) {	debug("Executing 0x0000"); }
+			if (desc.equals("MAINLOOP")) { debug("Main Loop Started"); }
+			if (desc.equals("powerup")) { debug("Powerup Started"); }
 			
+			// Execute one instruction
 			cpu.execute();
 				
+			// Trigger VSync interrupt every vSyncInterval clock cycles */
 			if (cpu.s >= vSyncInterval) {
-				frame.repaint();
+				updateScreen();
 				triggerVSyncInterrupt();
 				cpu.s = (cpu.s - vSyncInterval);
 			}
@@ -333,6 +280,9 @@ public class MSX { // implements IBaseDevice {
 		
 	}
 	
+	/**
+	 * A very simple debug interface
+	 */
 	public void debugMode() {
 		
 		debugMode = true;
@@ -340,7 +290,7 @@ public class MSX { // implements IBaseDevice {
 		
 		try {
 			preSP = cpu.getSP();
-			System.out.println(cpu.getLastMsg());
+			debug(cpu.getLastMsg());
 			cpu.printState();
 		
 			BufferedReader bi = new BufferedReader(new InputStreamReader(System.in));
@@ -349,18 +299,18 @@ public class MSX { // implements IBaseDevice {
 			while (true) {
 				if (preStep) {
 					preStep = false;
-					System.out.println("Step ?");
+					debug("Step ?");
 					input = bi.readLine();
 					if (input.equals("")) input = "step";
 				} else {
-					System.out.println("? ");
+					debug("? ");
 					input = bi.readLine();
 				}
 				if (input.equals("step")) {
 					preStep = true;
-					System.out.println("ADDR = " + Tools.toHexString4(cpu.PC) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.PC)) + ", T = " + cpu.s);
+					debug("ADDR = " + Tools.toHexString4(cpu.PC) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.PC)) + ", T = " + cpu.s);
 					cpu.execute();
-					System.out.println(cpu.getLastMsg());
+					debug(cpu.getLastMsg());
 					cpu.printState();
 					continue;
 				}
@@ -368,7 +318,7 @@ public class MSX { // implements IBaseDevice {
 					preStep = true;
 					while (preSP != cpu.getSP()) {
 						cpu.execute();
-						frame.repaint();
+						updateScreen();
 					}
 					cpu.printState();
 					continue;
@@ -377,14 +327,14 @@ public class MSX { // implements IBaseDevice {
 					preStep = false;
 					String addrString = input.substring(5);
 					int addrInt = Integer.decode(addrString);
-					System.out.println("Value at addr " + Tools.toHexString((short)addrInt) + " = " + Tools.toHexString(primarySlot.rdByte((short)addrInt)));
+					debug("Value at addr " + Tools.toHexString((short)addrInt) + " = " + Tools.toHexString(primarySlot.rdByte((short)addrInt)));
 					continue;
 				}
 				if (input.startsWith("brpt")) {
 					preStep = false;
 					String addrString = input.substring(5);
 					int addrInt = Integer.decode(addrString);
-					System.out.println("Added break point at " + Tools.toHexString((short)addrInt));
+					debug("Added break point at " + Tools.toHexString((short)addrInt));
 					breakpoints.add((short)addrInt);
 					continue;
 				}
@@ -392,7 +342,7 @@ public class MSX { // implements IBaseDevice {
 					preStep = false;
 					String addrString = input.substring(5);
 					int addrInt = Integer.decode(addrString);
-					System.out.println("Removed break point " + Tools.toHexString((short)addrInt));
+					debug("Removed break point " + Tools.toHexString((short)addrInt));
 					breakpoints.remove((short)addrInt);
 					continue;
 				}
@@ -403,12 +353,12 @@ public class MSX { // implements IBaseDevice {
 					String slotString = input.substring(11,12);
 					int slot = Integer.decode(slotString);
 					setSlotForPage(page, slot);
-					System.out.println("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
+					debug("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 					continue;
 				}
 				if (input.equals("slot info")) {
 					preStep = false;
-					System.out.println("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
+					debug("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
 					continue;
 				}
 				if (input.equals("interrupt")) {
@@ -417,26 +367,8 @@ public class MSX { // implements IBaseDevice {
 					cpu.printState();
 					continue;
 				}
-				if (input.equals("printstatebuf")) {
-					List<String> stateBuf = cpu.getStateBuf();
-					for (String s: stateBuf) System.out.println(s);
-					continue;
-				}
-				if (input.equals("charbuf")) {
-					System.out.print("Char buf <");
-					for (int i = 0; i < 40; i++) {
-						char c = (char)primarySlot.rdByte((short)(0xFBF0 + i));
-						if (c <= 126 && c >= 32) {
-							System.out.print((char)c);
-						} else {
-							System.out.print(".");
-						}
-					}
-					System.out.print(">");
-					System.out.println();
-					continue;
-				}
 				if (input.equals("vramdump")) {
+					String s = "";
 					for (int i = 0; i < 0x3fff; i++) {
 						byte b = vdp.mem.rdByte((short)(i&0xffff));
 						char c = 0;
@@ -445,16 +377,15 @@ public class MSX { // implements IBaseDevice {
 						} else {
 							c = '.';
 						}
-						//System.out.print(""+c);
-						System.out.print(Tools.toHexString(b) + " ");
-						if (i % 4 == 0) System.out.print(" ");
-						if (i % 16 == 0) System.out.println(" <- " + Tools.toHexString4(i-16));
+						s += Tools.toHexString(b) + " ";
+						if (i % 4 == 0) s += " ";
+						if (i % 16 == 0) debug(s + " <- " + Tools.toHexString4(i-16));
 					}
 					continue;
 				}
 
 				if (input.equals("continue")) return;
-				System.out.println("Unknown command");
+				debug("Unknown command");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -463,31 +394,79 @@ public class MSX { // implements IBaseDevice {
 		}
 	}
 	
+	/**
+	 * Register a screen panel, which will be repainted every time
+	 * a VSync interrupt is triggered.
+	 * 
+	 * @param screenPanel The panel to repaint upon VSync interrupt
+	 */
+	public void setScreenPanel(JPanel screenPanel) {
+		this.screenPanel = screenPanel;
+	}
+	
+	/**
+	 * Repaint the screen panel.
+	 */
+	private void updateScreen() {
+		if (screenPanel != null) screenPanel.repaint();
+	}
+
+	/**
+	 * Trigger a VSync interrupt. Will set the relevant status bits in the VDP
+	 * and calls cpu.interrupt() if interrupts are enabled.
+	 */
 	private void triggerVSyncInterrupt() {
 		vdp.setStatusINT(true);
 		if (vdp.getStatusINT() && vdp.getGINT()) {
 			cpu.interrupt();
 			intCount++;
-			if (intCount == 500) {
-				System.out.println("Interrupt count " + intCount + " (" + (intCount/50) + " seconds)");
+			if (intCount == 1000) {
+				debug("Interrupt count " + intCount + " (" + (intCount/50) + " seconds)");
 				intCount = 0;
 			}
 		}
 	}
-		
+	
+	/**
+	 * Print a debug message (only if debug is enabled or if in debug mode)
+	 * 
+	 * @param msg Message to print on console.
+	 */
 	private void debug(String msg) {
-		System.out.println(msg);
+		if (debugEnabled || debugMode) {
+			System.out.println(msg);
+		}
 	}
 
-	//@Override
-	public int IORead(int address) {
-		if (in[address] != null) return in[address].in((byte)address); 
-		return 0;
+	/**
+	 * Reset the MSX (simply resets PC to 0x0000)
+	 */
+	public void reset() {
+		cpu.PC = 0;
 	}
 
-	//@Override
-	public void IOWrite(int address, int data) {
-		if (out[address] != null) out[address].out((byte)address, (byte)data); 
+	/**
+	 * @return The VDP instance of this MSX.
+	 */
+	public TMS9918A getVDP() {
+		return vdp;
+	}
+	
+	/**
+	 * @return The keyboard decoder instance of this MSX.
+	 */
+	public KeyboardDecoder getKeyBoard() {
+		return keyboard;
+	}
+	
+	/**
+	 * Change content of a slot.
+	 * 
+	 * @param slot
+	 * @param s
+	 */
+	public void setSlot(int slot, AbstractSlot s) {
+		slots[slot] = s;
 	}
 	
 }

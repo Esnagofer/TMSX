@@ -20,14 +20,11 @@ public class TMS9918A {
 	private static final int MODE1_PN_SIZE = 960;
 	private static final int MODE1_PG_SIZE = 2048;
 		
-	private static final int IMG_MODE_NORMAL = 0;
-	private static final int IMG_MODE_MAG2X = 1;
+	public static final int 
+		VDP_WIDTH = 256, 
+		VDP_HEIGHT = 512,
+		MODE0_OFFSET = 8;
 	
-	private int imgMode = IMG_MODE_MAG2X;
-	
-	public static final int[]
-			VDP_WIDTH = {256, 512},
-			VDP_HEIGHT = {192, 384};
 	
 	/* VRAM size */
 	private int ramSize = 0xFFFF;
@@ -70,7 +67,7 @@ public class TMS9918A {
 	
 	public TMS9918A() {
 		mem = new RAMSlot(ramSize);
-		setImgMode(IMG_MODE_MAG2X);
+		img = new BufferedImage(VDP_WIDTH*2, VDP_HEIGHT*2, BufferedImage.TYPE_INT_ARGB);
 	}
 		
 	public boolean getStatusBit(int bit) {
@@ -287,36 +284,15 @@ public class TMS9918A {
 		return value;
 	}
 	
-	public void drawBackPlane() {
-		
-	}
-	
 	public void drawBackDrop() {
-		int off = getOffBitColor();
+		int off = colors[5];//getOffBitColor();
 		for (int x = 0; x < 256; x++) {
 			for (int y = 0; y < 192; y++) {
 				setPixel(x, y, off);
 			}
 		}
 	}
-	
-	public void drawNullPattern() {
-		if (img == null) return;
-		boolean f = false;
-		for (int y = 0; y < 24; y++) {
-			for (int x = 0; x < 40; x++) {
-				for (int charLine = 0; charLine < 8; charLine++) {
-					for (int linePos = 0; linePos < 6; linePos++) {
-						int px = 8 + (x * 6) + linePos;
-						int py = (y * 8) + charLine;
-						img.setRGB(px, py, colors[f? 1: 15]);
-						f = !f;
-					}
-				}
-			}
-		}
-	}
-	
+		
 	public void drawMode0() {
 		short nameTablePtr = getNameTableAddr();
 		short patternTableBase = getPatternTableAddr();
@@ -349,19 +325,12 @@ public class TMS9918A {
 	}
 	
 	private final void setPixel(int px, int py, int color) {
-		switch (imgMode) {
-		case IMG_MODE_NORMAL:
-			if (px > img.getWidth() || py > img.getHeight()) return;
-			img.setRGB(px, py, color);
-			break;
-		case IMG_MODE_MAG2X:
-			px <<= 1; py <<= 1;
-			if (px+1 > img.getWidth() || py+1 > img.getHeight()) return;
-			img.setRGB(px, py, color);
-			img.setRGB(px+1, py, color);
-			img.setRGB(px, py+1, color);
-			img.setRGB(px+1, py+1, color);
-		}
+		px <<= 1; py <<= 1;
+		if (px+1 > img.getWidth() || py+1 > img.getHeight()) return;
+		img.setRGB(px, py, color);
+		img.setRGB(px+1, py, color);
+		img.setRGB(px, py+1, color);
+		img.setRGB(px+1, py+1, color);
 	}
 
 	public void drawMode1() {
@@ -384,7 +353,7 @@ public class TMS9918A {
 						int px = 5 + ((x * 6) - linePos);	
 						int py = ((y * 8) + charLine);
 						// Set pixel
-						setPixel(px, py, Tools.getBit(line, linePos+2)? onBit: offBit);
+						setPixel(px + MODE0_OFFSET, py, Tools.getBit(line, linePos+2)? onBit: offBit);
 					}					
 				}
 				nameTablePtr = (short)(nameTablePtr + 1);
@@ -431,7 +400,6 @@ public class TMS9918A {
 	}
 
 	public void drawPattern() {
-		
 		if (img == null) return;
 		if (!getM1() && !getM2() && !getM3()) {
 			drawMode0();
@@ -442,12 +410,6 @@ public class TMS9918A {
 		} else if (getM3()) {
 			drawMode3();
 		}
-		
-	}
-	
-	public void setImgMode(int mode) {
-		img = new BufferedImage(VDP_WIDTH[mode], VDP_HEIGHT[mode], BufferedImage.TYPE_INT_ARGB);
-		imgMode = mode;
 	}
 	
 	public void paint(Graphics g) {
@@ -456,7 +418,7 @@ public class TMS9918A {
 		// Draw the pattern
 		drawBackDrop();
 		drawPattern();
-		g.drawImage(img, 0, 50, null);
+		g.drawImage(img, 0, 0, null);
 
 	}
 }
