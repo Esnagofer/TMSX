@@ -182,8 +182,6 @@ public class MSX { // implements IBaseDevice {
 			}
 		}, 0x99);
 		
-		vdp.initBuffer();
-		
 	}
 
 	public void initKeyboard() {
@@ -447,7 +445,8 @@ public class MSX { // implements IBaseDevice {
 						} else {
 							c = '.';
 						}
-						System.out.print(""+c);
+						//System.out.print(""+c);
+						System.out.print(Tools.toHexString(b) + " ");
 						if (i % 4 == 0) System.out.print(" ");
 						if (i % 16 == 0) System.out.println(" <- " + Tools.toHexString4(i-16));
 					}

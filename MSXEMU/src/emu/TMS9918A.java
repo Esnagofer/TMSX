@@ -20,24 +20,34 @@ public class TMS9918A {
 	private static final int MODE1_PN_SIZE = 960;
 	private static final int MODE1_PG_SIZE = 2048;
 		
+	private static final int IMG_MODE_NORMAL = 0;
+	private static final int IMG_MODE_MAG2X = 1;
+	
+	private int imgMode = IMG_MODE_MAG2X;
+	
+	public static final int[]
+			VDP_WIDTH = {256, 512},
+			VDP_HEIGHT = {192, 384};
+	
+	/* VRAM size */
 	private int ramSize = 0xFFFF;
 	
+	/* Buffered image to hold display contents */
 	private BufferedImage img;
 	
+	/* VRAM */
 	public RAMSlot mem;
 		
+	/* Registers */
 	private byte[] registers = new byte[8];
 	private byte statusRegister = 0;
-	
+
+	/* I/O variables */
 	private short readWriteAddr;
 	private byte readAhead;
-	
 	private boolean secondByteFlag = false;
 	private byte ioByte0, ioByte1;
 	
-	public static final int
-		VDP_WIDTH = 256,
-		VDP_HEIGHT = 192;
 
 	public static final int[] colors = { 
 		(new Color(0,0,0,0)).getRGB(),	// 0
@@ -60,6 +70,7 @@ public class TMS9918A {
 	
 	public TMS9918A() {
 		mem = new RAMSlot(ramSize);
+		setImgMode(IMG_MODE_MAG2X);
 	}
 		
 	public boolean getStatusBit(int bit) {
@@ -198,7 +209,7 @@ public class TMS9918A {
 		if (getSG13()) v += 1<<13;
 		return (short)v;	
 	}
-	
+
 	public int getOnBitColor() {
 		return (registers[7] & 0xFF) >> 4; 
 	}
@@ -275,17 +286,18 @@ public class TMS9918A {
 		setStatusC(false);
 		return value;
 	}
-
-	public void initBuffer() {
-		img = new BufferedImage(VDP_WIDTH, VDP_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-	}
 	
 	public void drawBackPlane() {
 		
 	}
 	
 	public void drawBackDrop() {
-		
+		int off = getOffBitColor();
+		for (int x = 0; x < 256; x++) {
+			for (int y = 0; y < 192; y++) {
+				setPixel(x, y, off);
+			}
+		}
 	}
 	
 	public void drawNullPattern() {
@@ -306,12 +318,9 @@ public class TMS9918A {
 	}
 	
 	public void drawMode0() {
-		short nameTablePtr = this.getNameTableAddr();
-		short patternTableBase = this.getPatternTableAddr();
-		short colorTableBase = this.getColorTableAddr();
-		if (nameTablePtr + MODE0_PN_SIZE > ramSize) return;
-		if (patternTableBase + MODE0_PG_SIZE > ramSize) return;
-		if (colorTableBase + MODE0_CT_SIZE > ramSize) return;
+		short nameTablePtr = getNameTableAddr();
+		short patternTableBase = getPatternTableAddr();
+		short colorTableBase = getColorTableAddr();
 		// For all x/y positions
 		for (int y = 0; y < 24; y++) {
 			for (int x = 0; x < 32; x++) {
@@ -327,10 +336,11 @@ public class TMS9918A {
 						int px = 7 + ((x * 8) - linePos);	
 						int py = ((y * 8) + charLine);
 						// Get foreground/background
-						byte color = mem.rdByte((short)((colorTableBase & 0xffff) + ((patternIdx & 0xff)/8)));
+						int colorTableAddr = ((colorTableBase & 0xffff) + ((patternIdx & 0xff)/8));
+						byte color = mem.rdByte((short)colorTableAddr);
 						int fg = colors[(color & 0xf0) >> 4];
 						int bg = colors[(color & 0x0f)];
-						img.setRGB(px, py, Tools.getBit(line, linePos)? fg: bg);
+						setPixel(px, py, Tools.getBit(line, linePos)? fg: bg);
 					}					
 				}
 				nameTablePtr = (short)(nameTablePtr + 1);
@@ -338,11 +348,25 @@ public class TMS9918A {
 		}
 	}
 	
+	private final void setPixel(int px, int py, int color) {
+		switch (imgMode) {
+		case IMG_MODE_NORMAL:
+			if (px > img.getWidth() || py > img.getHeight()) return;
+			img.setRGB(px, py, color);
+			break;
+		case IMG_MODE_MAG2X:
+			px <<= 1; py <<= 1;
+			if (px+1 > img.getWidth() || py+1 > img.getHeight()) return;
+			img.setRGB(px, py, color);
+			img.setRGB(px+1, py, color);
+			img.setRGB(px, py+1, color);
+			img.setRGB(px+1, py+1, color);
+		}
+	}
+
 	public void drawMode1() {
-		short nameTablePtr = this.getNameTableAddr();
-		short patternTableBase = this.getPatternTableAddr();
-		if (nameTablePtr + MODE0_PN_SIZE > ramSize) return;
-		if (patternTableBase + MODE0_PG_SIZE > ramSize) return;
+		short nameTablePtr = getNameTableAddr();
+		short patternTableBase = getPatternTableAddr();
 		int offBit = colors[getOffBitColor()];
 		int onBit = colors[getOnBitColor()];
 		// For all x/y positions
@@ -360,7 +384,7 @@ public class TMS9918A {
 						int px = 5 + ((x * 6) - linePos);	
 						int py = ((y * 8) + charLine);
 						// Set pixel
-						img.setRGB(px, py, Tools.getBit(line, linePos+2)? onBit: offBit);
+						setPixel(px, py, Tools.getBit(line, linePos+2)? onBit: offBit);
 					}					
 				}
 				nameTablePtr = (short)(nameTablePtr + 1);
@@ -369,8 +393,36 @@ public class TMS9918A {
 	}
 	
 	public void drawMode2() {
-		System.err.println("drawmode2 not implemented");
-		drawMode0();
+		short nameTableBase = getNameTableAddr();
+		int nameTableIdx = 0;
+		short patternTableBase = getPG13()?(short)0x2000:0;
+		short colorTableBase = getCT13()?(short)0x2000:0;
+		// For all x/y positions
+		for (int y = 0; y < 24; y++) {
+			for (int x = 0; x < 32; x++) {
+				// Read index of pattern from name table address
+				byte patternIdx = mem.rdByte((short)((nameTableBase & 0xffff) + nameTableIdx));
+				int patternAddr = (patternTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
+				patternAddr += (2048 * (nameTableIdx / 256));
+				// For all lines of the character
+				for (int charLine = 0; charLine < 8; charLine++) {
+					byte line = mem.rdByte((short)((patternAddr & 0xFFFF) + charLine));
+					int colorTableAddr = (colorTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
+					colorTableAddr += (2048 * (nameTableIdx / 256));
+					byte lineColor = mem.rdByte((short)((colorTableAddr & 0xFFFF) + charLine));
+					int fg = colors[(lineColor & 0xf0) >> 4] ;
+					int bg = colors[(lineColor & 0x0f)] ;
+					// For all pixels of the line
+					int py = ((y * 8) + charLine);
+					for (int linePos = 0; linePos < 8; linePos++) {
+						// Calculate location of pixel
+						int px = 7 + ((x * 8) - linePos);	
+						setPixel(px, py, Tools.getBit(line, linePos)? fg: bg);
+					}					
+				}
+				nameTableIdx += 1;
+			}
+		}
 	}
 
 	public void drawMode3() {
@@ -393,10 +445,16 @@ public class TMS9918A {
 		
 	}
 	
+	public void setImgMode(int mode) {
+		img = new BufferedImage(VDP_WIDTH[mode], VDP_HEIGHT[mode], BufferedImage.TYPE_INT_ARGB);
+		imgMode = mode;
+	}
+	
 	public void paint(Graphics g) {
 		// TODO: draw border, backdrop, and sprite layers
 		
 		// Draw the pattern
+		drawBackDrop();
 		drawPattern();
 		g.drawImage(img, 0, 50, null);
 
