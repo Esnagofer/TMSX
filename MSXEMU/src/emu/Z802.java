@@ -127,10 +127,10 @@ public class Z802 {
 			B = inc(B);
 			dbg("INC B");
 			break;
-		case 0x05:	// SUB B 4
+		case 0x05:	// DEC B 4
 			s += 4; 
-			B = sub(B, (byte) 1, false);
-			dbg("SUB B");
+			B = dec(B);
+			dbg("DEC B");
 			break;
 		case 0x06:	// LD B,&NN 7
 			s += 7; 
@@ -2491,7 +2491,6 @@ public class Z802 {
 			throw new RuntimeException("Unsupported instruction");
 
 		case (byte) 0xB8: // LDDR
-			/*
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
 			setHL((short) (getHL() - 1));
@@ -2505,8 +2504,6 @@ public class Z802 {
 			setHFlag(false); setPVFlag(false); setNFlag(false);
 			dbg("LDDR");
 			break;
-			*/
-			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xB9: // CPDR		TODO: suspicious
 			boolean tc = getCFlag();
 			cp(A, mem.rdByte(getHL())); // CPD
