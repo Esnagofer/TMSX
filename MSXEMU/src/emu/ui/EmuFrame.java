@@ -18,6 +18,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import emu.MSX;
 import emu.memory.ROMSlot;
@@ -29,9 +30,19 @@ public class EmuFrame extends JFrame {
 	public static void main(String[] args) {
 		MSX msx = new MSX();
 		msx.initHardware();
+		
 		EmuFrame frame = new EmuFrame(msx);
-		frame.setVisible(true);
-		msx.startMSX();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(512,435);
+		frame.setResizable(false);
+		frame.pack();
+	    SwingUtilities.invokeLater(new Runnable() {
+	        public void run() {
+	          frame.setVisible(true);
+	        }
+	      });
+		
+	    msx.startMSX();
 	}
 	
 	public EmuFrame(MSX msx) {
@@ -40,10 +51,6 @@ public class EmuFrame extends JFrame {
 	}
 	
 	private void buildFrame() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setVisible(true);
-		setSize(512,435);
-		setResizable(false);
 		
 		// Set up the main panel
 		JPanel msxPanel = new JPanel() {
