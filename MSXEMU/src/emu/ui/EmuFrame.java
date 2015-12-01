@@ -73,13 +73,16 @@ public class EmuFrame extends JFrame {
 		JButton slot1 = new JButton("Slot 1");
 		JButton slot2 = new JButton("Slot 2");
 		JButton reset = new JButton("Reset");
+		JButton pause = new JButton("Debug");
 		JButton bbreak = new JButton("Stop");
 		buttonPanel.add(slot1);
 		buttonPanel.add(slot2);
+		buttonPanel.add(pause);
 		buttonPanel.add(reset);
 		buttonPanel.add(bbreak);
 		slot1.setFocusable(false);
 		slot2.setFocusable(false);
+		pause.setFocusable(false);
 		reset.setFocusable(false);
 		bbreak.setFocusable(false);
 		
@@ -91,6 +94,14 @@ public class EmuFrame extends JFrame {
 			}
 		});
 		
+		// Pause button listener
+		pause.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				msx.debugMode = true;
+			}
+		});
+
 		// Stop button listener (as mouse listener, so we can distinguish pressed/released events)
 		bbreak.addMouseListener(new MouseAdapter() {
 	        @Override
@@ -114,7 +125,7 @@ public class EmuFrame extends JFrame {
 		            File file = fc.getSelectedFile();
 		            ROMSlot s = new ROMSlot(0xffff);
 		    		try {
-		    			s.load(file.getAbsolutePath(), (short)0x4000);
+		    			s.load(file.getAbsolutePath(), (short)0x4000, (int)file.length());
 		    		} catch (IOException ex) {
 		    			ex.printStackTrace();
 		    			System.exit(0);
