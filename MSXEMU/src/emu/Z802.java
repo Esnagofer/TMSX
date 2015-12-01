@@ -59,10 +59,12 @@ public class Z802 {
 		setHL((short)0xFFFF);
 		setIX((short)0xFFFF);
 		setIY((short)0xFFFF);
+		setSP((short)0xFFFF);
 		AP = (byte)0xFF;
 		BP = (byte)0xFF;
 		CP = (byte)0xFF;
 		DP = (byte)0xFF;
+		EP = (byte)0xFF;
 		FP = (byte)0xFF;
 		HP = (byte)0xFF;
 		LP = (byte)0xFF;
@@ -1258,24 +1260,12 @@ public class Z802 {
 			break; 	
 		case (byte) 0xD9:	// EXX 4
 			s += 4;
-			bs = B;
-			B = BP;
-			BP = bs; 
-			bs = C;
-			C = CP;
-			CP = bs;
-			bs = D;
-			D = DP;
-			DP = bs;
-			bs = E;
-			E = EP;
-			EP = bs;
-			bs = H;
-			H = HP;
-			HP = bs;
-			bs = L;
-			L = LP;
-			LP = bs;
+			bs = B;	B = BP;	BP = bs; 
+			bs = C;	C = CP;	CP = bs;
+			bs = D;	D = DP;	DP = bs;
+			bs = E;	E = EP;	EP = bs;
+			bs = H;	H = HP;	HP = bs;
+			bs = L;	L = LP;	LP = bs;
 			dbg("EXX");
 			break;
 		case (byte) 0xDA:	// JP C,&HHLL 10
@@ -2645,6 +2635,21 @@ public class Z802 {
 		return (short) ((IYL & 0xff) | (IYH << 8));
 	}
 
+	public final short getAFP() {
+		return (short) ((FP & 0xff) | (AP << 8));
+	}
+
+	public final short getBCP() {
+		return (short) ((CP & 0xff) | (BP << 8));
+	}
+
+	public final short getDEP() {
+		return (short) ((EP & 0xff) | (DP << 8));
+	}
+
+	public final short getHLP() {
+		return (short) ((LP & 0xff) | (HP << 8));
+	}
 
 	private int rShift(short val, int i) {
 		return (val & 0xffff) >> i;
@@ -3218,10 +3223,10 @@ public class Z802 {
 		sb.append(Tools.toHexString(getBC()) + " ");
 		sb.append(Tools.toHexString(getDE()) + " ");
 		sb.append(Tools.toHexString(getHL()) + " ");
-		sb.append("---- ");
-		sb.append("---- ");
-		sb.append("---- ");
-		sb.append("---- ");
+		sb.append(Tools.toHexString(getAFP()) + " ");
+		sb.append(Tools.toHexString(getBCP()) + " ");
+		sb.append(Tools.toHexString(getDEP()) + " ");
+		sb.append(Tools.toHexString(getHLP()) + " ");
 		sb.append(Tools.toHexString(getIX()) + " ");
 		sb.append(Tools.toHexString(getIY()) + " ");
 		sb.append(Tools.toHexString(getSP()) + " \n"); 
