@@ -93,17 +93,14 @@ public abstract class AbstractSlot { // implements IMemory {
 	 * @param addr
 	 * @throws IOException
 	 */
-	public void load(String fileName, short addr) throws IOException {
+	public void load(String fileName, short start, int xsize) throws IOException {
 		File file=new File(fileName);
-		int size = (int)file.length();
-		byte[] contents=new byte[size];
-		FileInputStream in=new FileInputStream(file);
-		in.read(contents);
+		byte[] contents=new byte[xsize];
+		FileInputStream in = new FileInputStream(file);
+		if (in.read(contents) == -1) throw new RuntimeException("Wrong ROM file size");
+		if (in.read() != -1) throw new RuntimeException("Wrong ROM file size");
 		in.close();
-		for (int i = 0; i < size; i++) {
-			wrtByte(addr, contents[i]);
-			addr++;
-		}
+		for (int i = 0; i < xsize; i++) wrtByte(start++, contents[i]);
 	}
 	
 	//@Override
