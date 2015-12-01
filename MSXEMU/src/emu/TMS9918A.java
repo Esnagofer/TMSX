@@ -14,18 +14,12 @@ import emu.memory.RAMSlot;
 
 public class TMS9918A {
 
-	private static final int MODE0_PN_SIZE = 768;
-	private static final int MODE0_PG_SIZE = 2048;
-	private static final int MODE0_CT_SIZE = 32;
-	private static final int MODE1_PN_SIZE = 960;
-	private static final int MODE1_PG_SIZE = 2048;
-		
 	public static final int 
+		IMG_SCALE = 2,
 		VDP_WIDTH = 256, 
-		VDP_HEIGHT = 512,
+		VDP_HEIGHT = 192,
 		MODE0_OFFSET = 8;
-	
-	
+		
 	/* VRAM size */
 	private int ramSize = 0xFFFF;
 	
@@ -45,29 +39,32 @@ public class TMS9918A {
 	private boolean secondByteFlag = false;
 	private byte ioByte0, ioByte1;
 	
-
-	public static final int[] colors = { 
-		(new Color(0,0,0,0)).getRGB(),	// 0
-		(new Color(0,0,0)).getRGB(),	// 1
-		(new Color(33,200,66)).getRGB(),	// 2
-		(new Color(94,220,120)).getRGB(),	// 3
-		(new Color(84,85,237)).getRGB(),	// 4
-		(new Color(125,118,252)).getRGB(),	// 5
-		(new Color(212,82,77)).getRGB(),	// 6
-		(new Color(66,235,245)).getRGB(),	// 7
-		(new Color(252,85,84)).getRGB(),	// 8
-		(new Color(255,121,120)).getRGB(),	// 9
-		(new Color(212,193,84)).getRGB(),	// A
-		(new Color(230,206,128)).getRGB(),	// B
-		(new Color(33,176,59)).getRGB(),	// C
-		(new Color(201,91,186)).getRGB(),	// D
-		(new Color(204,204,204)).getRGB(),	// E
-		(new Color(255,255,255)).getRGB(),	// F
+	private int[] spriteLineCount = new int[VDP_HEIGHT+16];
+	private boolean[][] spritePriorityMatrix = new boolean[VDP_WIDTH+16][VDP_HEIGHT+16];
+	private boolean[][] spriteCollisionMatrix = new boolean[VDP_WIDTH+16][VDP_HEIGHT+16];
+	
+	public static final Color[] colors = { 
+		(new Color(0,0,0,0)),		// 0
+		(new Color(0,0,0)),			// 1
+		(new Color(33,200,66)),		// 2
+		(new Color(94,220,120)),	// 3
+		(new Color(84,85,237)),		// 4
+		(new Color(125,118,252)),	// 5
+		(new Color(212,82,77)),		// 6
+		(new Color(66,235,245)),	// 7
+		(new Color(252,85,84)),		// 8
+		(new Color(255,121,120)),	// 9
+		(new Color(212,193,84)),	// A
+		(new Color(230,206,128)),	// B
+		(new Color(33,176,59)),		// C
+		(new Color(201,91,186)),	// D
+		(new Color(204,204,204)),	// E
+		(new Color(255,255,255)),	// F
 		};
 	
 	public TMS9918A() {
 		mem = new RAMSlot(ramSize);
-		img = new BufferedImage(VDP_WIDTH*2, VDP_HEIGHT*2, BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(VDP_WIDTH*IMG_SCALE, VDP_HEIGHT*IMG_SCALE, BufferedImage.TYPE_INT_ARGB);
 	}
 		
 	public boolean getStatusBit(int bit) {
@@ -219,6 +216,26 @@ public class TMS9918A {
 		return (registers[7] & 0x0F); 
 	}
 
+	public byte getSpriteX(int sprite) {
+		int attrTable = getSpriteAttrTable();
+		return mem.rdByte((short)((attrTable & 0xffff) + (sprite * 4) + 1));
+	}
+
+	public byte getSpriteY(int sprite) {
+		int attrTable = getSpriteAttrTable();
+		return mem.rdByte((short)((attrTable & 0xffff) + (sprite * 4) + 0));
+	}
+
+	public byte getSpritePattern(int sprite) {
+		int attrTable = getSpriteAttrTable();
+		return mem.rdByte((short)((attrTable & 0xffff) + (sprite * 4) + 2));
+	}
+
+	public byte getSpriteColour(int sprite) {
+		int attrTable = getSpriteAttrTable();
+		return mem.rdByte((short)((attrTable & 0xffff) + (sprite * 4) + 3));
+	}
+
 	// Port 0 read
 	public final byte readVRAMData() {
 		byte result = readAhead;
@@ -285,7 +302,7 @@ public class TMS9918A {
 	}
 	
 	public void drawBackDrop() {
-		int off = colors[5];//getOffBitColor();
+		Color off = colors[1];//getOffBitColor();
 		for (int x = 0; x < 256; x++) {
 			for (int y = 0; y < 192; y++) {
 				setPixel(x, y, off);
@@ -314,30 +331,33 @@ public class TMS9918A {
 						// Get foreground/background
 						int colorTableAddr = ((colorTableBase & 0xffff) + ((patternIdx & 0xff)/8));
 						byte color = mem.rdByte((short)colorTableAddr);
-						int fg = colors[(color & 0xf0) >> 4];
-						int bg = colors[(color & 0x0f)];
+						Color fg = colors[(color & 0xf0) >> 4];
+						Color bg = colors[(color & 0x0f)];
 						setPixel(px, py, Tools.getBit(line, linePos)? fg: bg);
 					}					
 				}
+				// Update name table pointer
 				nameTablePtr = (short)(nameTablePtr + 1);
 			}
 		}
 	}
 	
-	private final void setPixel(int px, int py, int color) {
-		px <<= 1; py <<= 1;
-		if (px+1 > img.getWidth() || py+1 > img.getHeight()) return;
-		img.setRGB(px, py, color);
-		img.setRGB(px+1, py, color);
-		img.setRGB(px, py+1, color);
-		img.setRGB(px+1, py+1, color);
+	private final void setPixel(int px, int py, Color color) {
+		if (color.getAlpha() == 0) return;
+		px <<= IMG_SCALE-1; py <<= IMG_SCALE-1;
+		if (px+1 >= VDP_WIDTH*IMG_SCALE || py+1 >= VDP_HEIGHT*IMG_SCALE || px < 0 || py < 0) return;
+		for (int xs = 0; xs < IMG_SCALE; xs++) {
+			for (int ys = 0; ys < IMG_SCALE; ys++) {
+				img.setRGB(px + xs, py + ys, color.getRGB());
+			}
+		}
 	}
 
 	public void drawMode1() {
 		short nameTablePtr = getNameTableAddr();
 		short patternTableBase = getPatternTableAddr();
-		int offBit = colors[getOffBitColor()];
-		int onBit = colors[getOnBitColor()];
+		Color offBit = colors[getOffBitColor()];
+		Color onBit = colors[getOnBitColor()];
 		// For all x/y positions
 		for (int y = 0; y < 24; y++) {
 			for (int x = 0; x < 40; x++) {
@@ -379,8 +399,8 @@ public class TMS9918A {
 					int colorTableAddr = (colorTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
 					colorTableAddr += (2048 * (nameTableIdx / 256));
 					byte lineColor = mem.rdByte((short)((colorTableAddr & 0xFFFF) + charLine));
-					int fg = colors[(lineColor & 0xf0) >> 4] ;
-					int bg = colors[(lineColor & 0x0f)] ;
+					Color fg = colors[(lineColor & 0xf0) >> 4] ;
+					Color bg = colors[(lineColor & 0x0f)] ;
 					// For all pixels of the line
 					int py = ((y * 8) + charLine);
 					for (int linePos = 0; linePos < 8; linePos++) {
@@ -390,6 +410,67 @@ public class TMS9918A {
 					}					
 				}
 				nameTableIdx += 1;
+			}
+		}
+	}
+	
+	public void drawSprites() {
+		short patternTableAddr = getSpriteGenTable();
+		boolean siFlag = getSI();
+		
+		// Clear sprite per line count array
+		for (int i = 0; i < VDP_HEIGHT; i++) spriteLineCount[i] = 0;
+		
+		// Clear priority array
+		for (int x = 0; x < VDP_WIDTH; x++) for (int y = 0; y < VDP_HEIGHT; y++) spritePriorityMatrix[x][y] = false;
+		
+		// Clear collision array
+		for (int x = 0; x < VDP_WIDTH; x++) for (int y = 0; y < VDP_HEIGHT; y++) spriteCollisionMatrix[x][y] = false;
+		
+		// For each sprite
+		for (int i = 0; i < 32; i++) {
+			
+			// Break if 0xD0 encountered
+			if ((getSpriteY(i) & 0xff) == 0xD0) break;
+			
+			// Get sprite info
+			int sx = getSpriteX(i) & 0xff;
+			int sy = (getSpriteY(i) & 0xff) + 1;
+			int patternIdx = getSpritePattern(i) & 0xff;
+			byte colour = getSpriteColour(i);
+						
+			// EC bit: place sprite 32 pixels to the left
+			if ((colour & 0x80) != 0) sx -= 32;
+			
+			// Keep track of number of sprites per line
+			for (int yPos = sy; yPos < sy + (siFlag? 16: 8) && yPos < VDP_HEIGHT; yPos++) spriteLineCount[yPos]++;
+
+			// If sprite is transparent then skip
+			if ((colour & 0x0f) == 0) continue;
+			
+			// Draw sprite (qx/qy range over quadrants for 16x16 mode. In 8x8 mode, qx = qy = 0)
+			for (int qx = 0; qx < (siFlag? 2: 1); qx++) {
+				for (int qy = 0; qy < (siFlag? 2: 1); qy++) {
+					int quadrantNumber = (2 * qx) + qy;
+					for (int y = 0; y < 8; y++) {
+						for (int x = 0; x < 8; x++) {
+							int xPos = sx + x + (qx * 8), yPos = sy + y + (qy * 8);
+							if (xPos >= VDP_WIDTH || yPos >= VDP_HEIGHT || xPos < 0 || yPos < 0) continue; // Out of bounds, skip
+							if (spriteCollisionMatrix[xPos][yPos]) setStatusC(true); // Mark coincidence (TODO: is this correct timing-wise?)
+							spriteCollisionMatrix[xPos][yPos] = true;
+							boolean fill = (mem.rdByte((short)(patternTableAddr + (8*(patternIdx + quadrantNumber) + y))) & (1 << (7-x))) != 0;
+							if (!fill) continue;
+							if (spriteLineCount[yPos] > 4) {	// No more than 4 sprites per line
+								setStatus5S(true);				// Mark 5th sprite flag 	(TODO: is this correct timing-wise?)
+								statusRegister = (byte)((statusRegister & 0xE0) | (i & 0x1F)); // Set status register 5th sprite number
+								continue;
+							}
+							if (spritePriorityMatrix[xPos][yPos]) continue; // Higher priority sprite already drawn
+							setPixel(xPos, yPos, colors[colour & 0x0f]);
+							spritePriorityMatrix[xPos][yPos] = true;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -404,9 +485,11 @@ public class TMS9918A {
 		if (!getM1() && !getM2() && !getM3()) {
 			drawMode0();
 		} else if (getM1()) {
-			drawMode1();
+			//drawMode1();
+			drawSprites();
 		} else if (getM2()) {
 			drawMode2();
+			drawSprites();
 		} else if (getM3()) {
 			drawMode3();
 		}
