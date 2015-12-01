@@ -25,6 +25,9 @@ public class MSX { // implements IBaseDevice {
 
 	private HashSet<Short> breakpoints = new HashSet<Short>();
 	
+	public static final int INTERRUPT_RATE = 50;
+	public static final double SPEED = 3.5;
+	
 	//private Z80Core core;
 	private Z802 cpu;
 	private TMS9918A vdp;
@@ -32,12 +35,12 @@ public class MSX { // implements IBaseDevice {
 	private AbstractSlot[] slots;
 	private KeyboardDecoder keyboard;
 
-	private boolean debugMode = false;
+	public boolean debugMode = false;
 	private boolean debugEnabled = true;
 	
 	public boolean running = true;
 	
-	public static int vSyncInterval = 150000;
+	public static int vSyncInterval = 70000, interruptRate = 50;
 	
 	/* PPI A register (primary slot select) */
 	private byte ppiA_SlotSelect = 0;
@@ -45,8 +48,6 @@ public class MSX { // implements IBaseDevice {
 	/* PPI C register (keyboard and cassette control) */
 	private byte ppiC_Keyboard;
 	
-	private int intCount = 0;
-
 	private JPanel screenPanel;
 		
 	public void initHardware() {
@@ -117,22 +118,37 @@ public class MSX { // implements IBaseDevice {
 			
 		};
 		
+		///* Slot 0 is BASIC ROM (at page 0/1) */
+		//slots[0] = new ROMSlot(0x8000);
+		//try {
+		//	//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
+		//	slots[0].load("/MSX.rom", (short)0x0000);
+		//} catch (IOException e) {
+		//	e.printStackTrace();
+		//	System.exit(0);
+		//}
+		///* We fill slot 1 and 3 with empty ROM */
+		//slots[1] = new EmptySlot();
+		//slots[3] = new EmptySlot();
+		///* Slot 2 is RAM */
+		//slots[2] = new RAMSlot();
+		
 		/* Slot 0 is BASIC ROM (at page 0/1) */
-		slots[0] = new ROMSlot(0x8000);
+		slots[0] = new ROMSlot(0xC000);
 		try {
-			//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
-			slots[0].load("/MSX.rom", (short)0x0000);
+			slots[0].load("/cbios_main_msx1.rom", (short)0x0000, 0x8000);
+			slots[0].load("/cbios_logo_msx1.rom", (short)0x8000, 0x4000);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 
-		/* We fill slot 1 and 3 with empty ROM */
+		/* We fill slot 1 and 2 with empty ROM */
 		slots[1] = new EmptySlot();
-		slots[3] = new EmptySlot();
+		slots[2] = new EmptySlot();
 
-		/* Slot 2 is RAM */
-		slots[2] = new RAMSlot();
+		/* Slot 3 is RAM */
+		slots[3] = new RAMSlot();
 		
 	}
 
@@ -250,30 +266,67 @@ public class MSX { // implements IBaseDevice {
 	 */
 	public void startMSX() {
 
-		while (running) {
+		long previousInterruptCycle = System.currentTimeMillis();
+		int intCount = 0;
+		int delay = 20;
+		
+		debugMode = true;
+		
+		while (true) {
 
-			// If the debugMode flag is set, escape to debug mode
-			if (debugMode) { debugMode(); }
-			
-			// Some debug messages
-			String desc = BIOSDebug.getDesc((short)cpu.getPC());
-			if(breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode();	}
-			if (desc.equals("INIT!")) {	
-				debug("Init called");
-				debug("Slot config: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
+			// Not running? Sleep an continue
+			if (!running) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				continue;
 			}
-			if (cpu.getPC() == 0) {	debug("Executing 0x0000"); }
-			if (desc.equals("MAINLOOP")) { debug("Main Loop Started"); }
-			if (desc.equals("powerup")) { debug("Powerup Started"); }
+			
+			// Go into debug mode
+			if(debugMode || breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode();	}
 			
 			// Execute one instruction
 			cpu.execute();
-				
+			
 			// Trigger VSync interrupt every vSyncInterval clock cycles */
-			if (cpu.s >= vSyncInterval) {
-				updateScreen();
+			if (cpu.s >= ((SPEED * 1000000.0)/INTERRUPT_RATE)) {
+				long now = System.currentTimeMillis();
+								
+				// Delay
+				try {
+					Thread.sleep(delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				// Do interrupt, update screen and update cycle counter
 				triggerVSyncInterrupt();
+				updateScreen();
 				cpu.s = (cpu.s - vSyncInterval);
+
+				// Keep track of interrupt rate and correct delay if necessary
+				int checkInterval = 1;
+				intCount++;
+				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
+					if (Math.abs(intCount - (interruptRate / checkInterval)) > 1) {
+						if (intCount < INTERRUPT_RATE) {
+							if (delay > 0) { 
+								delay -= 1;
+								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Decreasing delay ("+delay+" ms).");
+							} else {
+								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Delay is already 0 ms.");
+							}
+						}
+						if (intCount > INTERRUPT_RATE) {
+							delay += 1;
+							//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
+						}
+					}
+					previousInterruptCycle = System.currentTimeMillis();
+					intCount = 0;
+				}
 			}
 
 		}
@@ -419,11 +472,6 @@ public class MSX { // implements IBaseDevice {
 		vdp.setStatusINT(true);
 		if (vdp.getStatusINT() && vdp.getGINT()) {
 			cpu.interrupt();
-			intCount++;
-			if (intCount == 1000) {
-				debug("Interrupt count " + intCount + " (" + (intCount/50) + " seconds)");
-				intCount = 0;
-			}
 		}
 	}
 	
@@ -467,6 +515,14 @@ public class MSX { // implements IBaseDevice {
 	 */
 	public void setSlot(int slot, AbstractSlot s) {
 		slots[slot] = s;
+	}
+
+	public boolean isPaused() {
+		return !running;
+	}
+	
+	public void pause(boolean f) {
+		running = !f;
 	}
 	
 }
