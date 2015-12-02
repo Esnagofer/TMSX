@@ -2323,30 +2323,25 @@ public class Z802 {
 			dbg("LD SP, (&HHLL)");
 			break; // LD SP,(&HHLL)
 		case (byte) 0xA0:
-			/*
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL()));
-			setHL((short) (getHL() + 1));
-			setDE((short) (getDE() + 1));
-			setBC((short) (getBC() - 1));
-			setHFlag(false); setPVFlag(getBC() != 0); setNFlag(false);
+			setHL(inc(getHL()));
+			setDE(inc(getDE()));
+			setBC(dec(getBC()));
+			setHFlag(false); setPVFlag((getBC() & 0xffff) - 1 != 0); setNFlag(false);
 			dbg("LDI");
 			break;
-			*/
-			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA1: // CPI
-			/*
 			s += 16;
 			boolean c = getCFlag();
 			cp(A, mem.rdByte(getHL())); 
-			setHL((short) (getHL() + 1));
-			setBC((short) (getBC() - 1));
-			setPVFlag(getBC() != 0);
+			setHL(inc(getHL()));
+			setBC(dec(getBC()));
+			setPVFlag((getBC() & 0xffff) - 1 != 0);
+			setNFlag(true);
 			setCFlag(c);
 			dbg("CPI");
 			break;
-			*/
-			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA2:
 		/*
 			s += 16;
@@ -2478,12 +2473,9 @@ public class Z802 {
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
 			setHL(dec(getHL()));
-			setHL(dec(getDE()));
-			setHL(dec(getBC()));
-			//setHL((short) (getHL() - 1));	 TODO: check this correction
-			//setDE((short) (getDE() - 1));
-			//setBC((short) (getBC() - 1));
-			if (!getZFlag()) {
+			setDE(dec(getDE()));
+			setBC(dec(getBC()));
+			if (getBC() != 0) {
 				PC--; // B8
 				PC--; // ED
 				s += 5;
