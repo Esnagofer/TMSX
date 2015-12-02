@@ -27,16 +27,15 @@ public class MSX { // implements IBaseDevice {
 	
 	public static final int INTERRUPT_RATE = 50;
 	public static final double SPEED = 3.5;
+	public static final int INITIAL_DELAY = 20;
 	
-	//private Z80Core core;
 	private Z802 cpu;
 	private TMS9918A vdp;
 	private AbstractSlot primarySlot;
 	private AbstractSlot[] slots;
 	private KeyboardDecoder keyboard;
 
-	public boolean debugMode = false;
-	private boolean debugEnabled = true;
+	public boolean debugMode = false, debugEnabled = true;
 	
 	public boolean running = true;
 	
@@ -117,38 +116,6 @@ public class MSX { // implements IBaseDevice {
 			}
 			
 		};
-		
-		/* Slot 0 is BASIC ROM (at page 0/1) */
-		//slots[0] = new ROMSlot(0x8000);
-		//try {
-			//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
-		//	slots[0].load("/MSX.rom", (short)0x0000, 0x8000);
-		//} catch (IOException e) {
-		//	e.printStackTrace();
-		//	System.exit(0);
-		//}
-		/* We fill slot 1 and 3 with empty ROM */
-		//slots[1] = new EmptySlot();
-		//slots[3] = new EmptySlot();
-		/* Slot 2 is RAM */
-		//slots[2] = new RAMSlot();
-		
-		/* Slot 0 is BASIC ROM (at page 0/1) */
-		//slots[0] = new ROMSlot(0xC000);
-		//try {
-		//	slots[0].load("/cbios_main_msx1.rom", (short)0x0000, 0x8000);
-		//} catch (IOException e) {
-		//	e.printStackTrace();
-		//	System.exit(0);
-		//}
-
-		/* We fill slot 1 and 2 with empty ROM */
-		//slots[1] = new EmptySlot();
-		//slots[2] = new EmptySlot();
-
-		/* Slot 3 is RAM */
-		//slots[3] = new RAMSlot();
-		
 	}
 
 	/**
@@ -267,14 +234,9 @@ public class MSX { // implements IBaseDevice {
 
 		/* Values used for delay and automatic correction of delay */
 		long previousInterruptCycle = System.currentTimeMillis();
-		int intCount = 0;
-		int delay = 20;
+		int intCount = 0, delay = INITIAL_DELAY;
 		
-		/* Previous status of bit 5 of control register #1 (triggers interrupt) */
-		boolean previousBit5State = false;
-		
-		//debugMode = true;
-		
+		/* Main loop */
 		while (true) {
 
 			/* Not running? Sleep and continue */
@@ -291,7 +253,7 @@ public class MSX { // implements IBaseDevice {
 			if (debugMode) debugMode();
 			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
 			
-			/* Trigger interrupt */
+			/* Trigger interrupt if GINT and INT are both set */
 			if (vdp.getGINT() && vdp.getStatusINT()) {
 				cpu.interrupt();
 			}
@@ -301,6 +263,7 @@ public class MSX { // implements IBaseDevice {
 			
 			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
 			if (cpu.s >= ((SPEED * 1000000.0)/INTERRUPT_RATE)) {
+				cpu.s = (cpu.s - vSyncInterval);
 				long now = System.currentTimeMillis();
 								
 				/* Execute delay */
@@ -312,7 +275,6 @@ public class MSX { // implements IBaseDevice {
 				
 				/* Trigger interrupt */
 				vdp.setStatusINT(true);
-				cpu.s = (cpu.s - vSyncInterval);
 
 				updateScreen();
 

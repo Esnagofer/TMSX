@@ -174,6 +174,11 @@ public class KeyboardDecoder implements KeyListener {
 		return rows[row];
 	}
 
+	/**
+	 * This doesn't seem to work.
+	 * 
+	 * @param state
+	 */
 	public void setCapslock(boolean state) {
 		if (state != Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK)) {
 			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, state);
