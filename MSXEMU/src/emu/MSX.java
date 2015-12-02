@@ -223,7 +223,7 @@ public class MSX { // implements IBaseDevice {
 		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				byte value = keyboard.getRowValue(ppiC_Keyboard & 0x0F);
-				value = Bit.invert(value);
+				value = Tools.invert(value);
 				return value;
 			}
 		}, 0xA9);

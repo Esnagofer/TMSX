@@ -2037,9 +2037,9 @@ public class Z802 {
 		}
 		
 		byte opcode = fetchByte();
-		int x = Bit.and(Bit.rshift(opcode, 6), (byte)0x03);
-		int y = Bit.and(Bit.rshift(opcode, 3), (byte)0x07);
-		int z = Bit.and(opcode, (byte)0x07);
+		int x = Tools.and(Tools.rshift(opcode, 6), (byte)0x03);
+		int y = Tools.and(Tools.rshift(opcode, 3), (byte)0x07);
+		int z = Tools.and(opcode, (byte)0x07);
 
 		String dbg = "";
 		
@@ -2557,11 +2557,11 @@ public class Z802 {
 	}
 
 	private void doRLD() {
-		byte AL = Bit.and(A, (byte)0x0f);
+		byte AL = Tools.and(A, (byte)0x0f);
 		byte HLC = mem.rdByte(getHL());
-		A = Bit.or(Bit.and(A, (byte)0xF0), Bit.rshift(HLC, 4));
-		HLC = Bit.lshift(HLC, 4);
-		HLC = Bit.or(HLC, AL);
+		A = Tools.or(Tools.and(A, (byte)0xF0), Tools.rshift(HLC, 4));
+		HLC = Tools.lshift(HLC, 4);
+		HLC = Tools.or(HLC, AL);
 		mem.wrtByte(getHL(), HLC);
 		setSFlag(A < 0);
 		setZFlag(A == 0);
@@ -2571,11 +2571,11 @@ public class Z802 {
 	}
 
 	private void doRRD() {
-		byte AL = Bit.and(A, (byte)0x0f);
+		byte AL = Tools.and(A, (byte)0x0f);
 		byte HLC = mem.rdByte(getHL());
-		A = Bit.or(Bit.and(A, (byte)0xF0), Bit.and(HLC, (byte)0x0F));
-		HLC = Bit.rshift(HLC, 4);
-		HLC = Bit.or(HLC, Bit.lshift(AL, 4));
+		A = Tools.or(Tools.and(A, (byte)0xF0), Tools.and(HLC, (byte)0x0F));
+		HLC = Tools.rshift(HLC, 4);
+		HLC = Tools.or(HLC, Tools.lshift(AL, 4));
 		mem.wrtByte(getHL(), HLC);
 		setSFlag(A < 0);
 		setZFlag(A == 0);
