@@ -43,6 +43,8 @@ public class TMS9918A {
 	private boolean[][] spritePriorityMatrix = new boolean[VDP_WIDTH+16][VDP_HEIGHT+16];
 	private boolean[][] spriteCollisionMatrix = new boolean[VDP_WIDTH+16][VDP_HEIGHT+16];
 	
+	private volatile boolean writeDisabled = false; // Disable changing registers/vram
+	
 	public static final Color[] colors = { 
 		(new Color(0,0,0,0)),		// 0
 		(new Color(0,0,0)),			// 1
@@ -72,6 +74,7 @@ public class TMS9918A {
 	}
 	
 	public void setStatusBit(int bit, boolean v) {
+		if (writeDisabled) return;
 		statusRegister = Tools.setBit(statusRegister, bit, v);
 	}
 	
@@ -98,9 +101,9 @@ public class TMS9918A {
 	}
 
 	public void setBit(int reg, int bit, boolean value) {
+		if (writeDisabled) return;
 		registers[reg] = Tools.setBit(registers[reg], bit, value);
 	}
-
 	
 	public boolean getEXTVID()	{ return getBit(0, 0); }
 	public boolean getM2()		{ return getBit(0, 1); }
@@ -153,7 +156,6 @@ public class TMS9918A {
 	public boolean getTC2()		{ return getBit(7, 6); }
 	public boolean getTC3()		{ return getBit(7, 7); }
 
-	
 	public short getNameTableAddr() {
 		int v = 0;	// TODO: optimize
 		if (getPN10()) v+= 1<<10;
@@ -247,6 +249,7 @@ public class TMS9918A {
 	
 	// Port 0 write
 	public final void writeVRAMData(byte value) {
+		if (writeDisabled) return;
 		readAhead = value;
 		mem.wrtByte(readWriteAddr, readAhead);
 		increaseReadWriteAddr();
@@ -256,6 +259,8 @@ public class TMS9918A {
 	// Port 1 write
 	public final void writeRegister(byte value) {
 
+		if (writeDisabled) return;
+		
 		if (!secondByteFlag) {
 			ioByte0 = value;
 			secondByteFlag = true;
@@ -380,11 +385,14 @@ public class TMS9918A {
 			}
 		}
 	}
-	
+	// screen 2/graphic 2
 	public void drawMode2() {
 		short nameTableBase = getNameTableAddr();
 		int nameTableIdx = 0;
 		short patternTableBase = getPG13()?(short)0x2000:0;
+		//byte b = registers[4];
+		//String s = Tools.toBinString(b);
+
 		short colorTableBase = getCT13()?(short)0x2000:0;
 		// For all x/y positions
 		for (int y = 0; y < 24; y++) {
@@ -480,17 +488,28 @@ public class TMS9918A {
 		drawMode0();
 	}
 
+	public int debugCount = 0;
+	
 	public void drawPattern() {
 		if (img == null) return;
 		if (!getM1() && !getM2() && !getM3()) {
+			//System.out.println("mode0");
 			drawMode0();
 		} else if (getM1()) {
-			//drawMode1();
+			System.out.println("mode1");
+			drawMode1();
 			drawSprites();
 		} else if (getM2()) {
+			//debugCount++;
+			//if (debugCount == 10) {
+			//	writeDisabled = true;
+			//	System.out.println("stop");
+			//}
+			//System.out.println("mode2 " + debugCount);
 			drawMode2();
 			drawSprites();
 		} else if (getM3()) {
+			System.out.println("mode3");
 			drawMode3();
 		}
 	}
