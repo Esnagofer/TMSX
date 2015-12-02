@@ -238,7 +238,11 @@ public class TMS9918A {
 		return mem.rdByte((short)((attrTable & 0xffff) + (sprite * 4) + 3));
 	}
 
-	// Port 0 read
+	/**
+	 * Port 0 read.
+	 * 
+	 * @return
+	 */
 	public final byte readVRAMData() {
 		byte result = readAhead;
 		readAhead = mem.rdByte(readWriteAddr);
@@ -247,7 +251,11 @@ public class TMS9918A {
 		return result;
 	}
 	
-	// Port 0 write
+	/**
+	 * Port 0 write.
+	 * 
+	 * @param value
+	 */
 	public final void writeVRAMData(byte value) {
 		if (writeDisabled) return;
 		readAhead = value;
@@ -256,7 +264,11 @@ public class TMS9918A {
 		secondByteFlag = false;
 	}
 
-	// Port 1 write
+	/**
+	 * Write port one. See documentation.
+	 * 
+	 * @param value
+	 */
 	public final void writeRegister(byte value) {
 
 		if (writeDisabled) return;
@@ -297,7 +309,11 @@ public class TMS9918A {
 		if ((readWriteAddr & 0xFFFF) == 0x3FFF) readWriteAddr = 0;
 	}
 	
-	// Port 1 read
+	/*
+	 * Return value of status bit. The side-effects of doing this is
+	 * that the INT and C flags are reset, and that the second byte
+	 * flag is reset, which affects the writeRegister behaviour.
+	 */
 	public final byte readStatus() {
 		secondByteFlag = false;
 		byte value = statusRegister;
@@ -306,15 +322,22 @@ public class TMS9918A {
 		return value;
 	}
 	
+	/**
+	 * Draw the backdrop
+	 */
 	public void drawBackDrop() {
-		Color off = colors[1];//getOffBitColor();
+		Color off = colors[getOffBitColor()];
 		for (int x = 0; x < 256; x++) {
 			for (int y = 0; y < 192; y++) {
-				setPixel(x, y, off);
+				setPixel(x, y, colors[1]);
+				//setPixel(x, y, off);
 			}
 		}
 	}
-		
+	
+	/**
+	 * Draw pattern according to mode 0 (screen 1 / graphic 1)
+	 */
 	public void drawMode0() {
 		short nameTablePtr = getNameTableAddr();
 		short patternTableBase = getPatternTableAddr();
@@ -358,6 +381,9 @@ public class TMS9918A {
 		}
 	}
 
+	/**
+	 * Draw pattern according to mode 1 (screen 0 / text 1)
+	 */
 	public void drawMode1() {
 		short nameTablePtr = getNameTableAddr();
 		short patternTableBase = getPatternTableAddr();
@@ -385,14 +411,17 @@ public class TMS9918A {
 			}
 		}
 	}
-	// screen 2/graphic 2
+	
+	/**
+	 * Draw pattern according to mode 1 (screen 2 / graphic 2)
+	 */
 	public void drawMode2() {
 		short nameTableBase = getNameTableAddr();
 		int nameTableIdx = 0;
 		short patternTableBase = getPG13()?(short)0x2000:0;
-		//byte b = registers[4];
-		//String s = Tools.toBinString(b);
-
+		boolean bit0 = this.getBit(4,0);
+		boolean bit1 = this.getBit(4,1);
+		int patternMask = ((bit0?0:(1 << 7)) | (bit1?0:(1 << 8)));
 		short colorTableBase = getCT13()?(short)0x2000:0;
 		// For all x/y positions
 		for (int y = 0; y < 24; y++) {
@@ -400,12 +429,16 @@ public class TMS9918A {
 				// Read index of pattern from name table address
 				byte patternIdx = mem.rdByte((short)((nameTableBase & 0xffff) + nameTableIdx));
 				int patternAddr = (patternTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
-				patternAddr += (2048 * (nameTableIdx / 256));
+				//patternAddr += (2048 * (nameTableIdx / 256));
+				if (bit0 && (nameTableIdx / 256) == 1) patternAddr += 2048;
+				if (bit1 && (nameTableIdx / 256) == 2) patternAddr += 4096;
 				// For all lines of the character
 				for (int charLine = 0; charLine < 8; charLine++) {
-					byte line = mem.rdByte((short)((patternAddr & 0xFFFF) + charLine));
+					byte line = mem.rdByte((short)((patternAddr & 0xffff) + charLine));
 					int colorTableAddr = (colorTableBase & 0xffff) + ((patternIdx & 0xff) * 8);
-					colorTableAddr += (2048 * (nameTableIdx / 256));
+					//colorTableAddr += (2048 * (nameTableIdx / 256));
+					if (bit0 && (nameTableIdx / 256) == 1) colorTableAddr += 2048;
+					if (bit1 && (nameTableIdx / 256) == 2) colorTableAddr += 4096;
 					byte lineColor = mem.rdByte((short)((colorTableAddr & 0xFFFF) + charLine));
 					Color fg = colors[(lineColor & 0xf0) >> 4] ;
 					Color bg = colors[(lineColor & 0x0f)] ;
@@ -435,7 +468,7 @@ public class TMS9918A {
 		// Clear collision array
 		for (int x = 0; x < VDP_WIDTH; x++) for (int y = 0; y < VDP_HEIGHT; y++) spriteCollisionMatrix[x][y] = false;
 		
-		// For each sprite
+		// For each sprite ...
 		for (int i = 0; i < 32; i++) {
 			
 			// Break if 0xD0 encountered
@@ -447,7 +480,7 @@ public class TMS9918A {
 			int patternIdx = getSpritePattern(i) & 0xff;
 			byte colour = getSpriteColour(i);
 						
-			// EC bit: place sprite 32 pixels to the left
+			// If EC bit set: place sprite 32 pixels to the left
 			if ((colour & 0x80) != 0) sx -= 32;
 			
 			// Keep track of number of sprites per line
@@ -464,18 +497,28 @@ public class TMS9918A {
 						for (int x = 0; x < 8; x++) {
 							int xPos = sx + x + (qx * 8), yPos = sy + y + (qy * 8);
 							if (xPos >= VDP_WIDTH || yPos >= VDP_HEIGHT || xPos < 0 || yPos < 0) continue; // Out of bounds, skip
-							if (spriteCollisionMatrix[xPos][yPos]) setStatusC(true); // Mark coincidence (TODO: is this correct timing-wise?)
+							
+							// Mark coincidence (TODO: is this correct timing-wise?)
+							if (spriteCollisionMatrix[xPos][yPos]) setStatusC(true); 
 							spriteCollisionMatrix[xPos][yPos] = true;
+							
+							// Do we need to fill this pixel?
 							boolean fill = (mem.rdByte((short)(patternTableAddr + (8*(patternIdx + quadrantNumber) + y))) & (1 << (7-x))) != 0;
 							if (!fill) continue;
-							if (spriteLineCount[yPos] > 4) {	// No more than 4 sprites per line
-								setStatus5S(true);				// Mark 5th sprite flag 	(TODO: is this correct timing-wise?)
-								statusRegister = (byte)((statusRegister & 0xE0) | (i & 0x1F)); // Set status register 5th sprite number
+
+							// Are there already 4 sprites drawn on the current line? I so, mark 5th sprite flag and status register, and skip
+							if (spriteLineCount[yPos] > 4) {	
+								setStatus5S(true);
+								statusRegister = (byte)((statusRegister & 0xE0) | (i & 0x1F)); 
 								continue;
 							}
-							if (spritePriorityMatrix[xPos][yPos]) continue; // Higher priority sprite already drawn
-							setPixel(xPos, yPos, colors[colour & 0x0f]);
+							
+							// We iterate from high priority to low priority. Skip if a higher priority sprite was already drawn here.
+							if (spritePriorityMatrix[xPos][yPos]) continue; 
 							spritePriorityMatrix[xPos][yPos] = true;
+
+							// Draw the pixel
+							setPixel(xPos, yPos, colors[colour & 0x0f]);
 						}
 					}
 				}
@@ -491,35 +534,30 @@ public class TMS9918A {
 	public int debugCount = 0;
 	
 	public void drawPattern() {
-		if (img == null) return;
-		if (!getM1() && !getM2() && !getM3()) {
-			//System.out.println("mode0");
-			drawMode0();
-		} else if (getM1()) {
-			System.out.println("mode1");
-			drawMode1();
-			drawSprites();
-		} else if (getM2()) {
-			//debugCount++;
-			//if (debugCount == 10) {
-			//	writeDisabled = true;
-			//	System.out.println("stop");
-			//}
-			//System.out.println("mode2 " + debugCount);
-			drawMode2();
-			drawSprites();
-		} else if (getM3()) {
-			System.out.println("mode3");
-			drawMode3();
-		}
 	}
 	
 	public void paint(Graphics g) {
-		// TODO: draw border, backdrop, and sprite layers
+		if (img == null) return;
 		
-		// Draw the pattern
+		// Draw backdrop
 		drawBackDrop();
-		drawPattern();
+
+		// Draw pattern
+		if (!getM1() && !getM2() && !getM3()) {
+			drawMode0();
+		} else if (getM1()) {
+			drawMode1();
+		} else if (getM2()) {
+			drawMode2();
+		} else if (getM3()) {
+			drawMode3();
+		}
+
+		// Draw sprites
+		if (!getM1() && getBL()) {
+			drawSprites();
+		}
+		
 		g.drawImage(img, 0, 0, null);
 
 	}
