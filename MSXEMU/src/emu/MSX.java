@@ -119,36 +119,35 @@ public class MSX { // implements IBaseDevice {
 		};
 		
 		/* Slot 0 is BASIC ROM (at page 0/1) */
-		slots[0] = new ROMSlot(0x8000);
-		try {
+		//slots[0] = new ROMSlot(0x8000);
+		//try {
 			//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
-			slots[0].load("/MSX.rom", (short)0x0000, 0x8000);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
+		//	slots[0].load("/MSX.rom", (short)0x0000, 0x8000);
+		//} catch (IOException e) {
+		//	e.printStackTrace();
+		//	System.exit(0);
+		//}
 		/* We fill slot 1 and 3 with empty ROM */
-		slots[1] = new EmptySlot();
-		slots[3] = new EmptySlot();
+		//slots[1] = new EmptySlot();
+		//slots[3] = new EmptySlot();
 		/* Slot 2 is RAM */
-		slots[2] = new RAMSlot();
+		//slots[2] = new RAMSlot();
 		
 		/* Slot 0 is BASIC ROM (at page 0/1) */
 		//slots[0] = new ROMSlot(0xC000);
 		//try {
 		//	slots[0].load("/cbios_main_msx1.rom", (short)0x0000, 0x8000);
-		//	slots[0].load("/cbios_logo_msx1.rom", (short)0x8000, 0x4000);
 		//} catch (IOException e) {
 		//	e.printStackTrace();
 		//	System.exit(0);
 		//}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		slots[1] = new EmptySlot();
-		slots[2] = new EmptySlot();
+		//slots[1] = new EmptySlot();
+		//slots[2] = new EmptySlot();
 
 		/* Slot 3 is RAM */
-		slots[3] = new RAMSlot();
+		//slots[3] = new RAMSlot();
 		
 	}
 
@@ -274,7 +273,7 @@ public class MSX { // implements IBaseDevice {
 		/* Previous status of bit 5 of control register #1 (triggers interrupt) */
 		boolean previousBit5State = false;
 		
-		debugMode = true;
+		//debugMode = true;
 		
 		while (true) {
 
@@ -292,12 +291,10 @@ public class MSX { // implements IBaseDevice {
 			if (debugMode) debugMode();
 			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
 			
-			/* Trigger interrupt if bit 5 of control register is set, while bit 7 of status register is set */
-			if (!previousBit5State && vdp.getBit(1, 5) && vdp.getStatusBit(7)) {
-				triggerVSyncInterrupt();
-				updateScreen();
+			/* Trigger interrupt */
+			if (vdp.getGINT() && vdp.getStatusINT()) {
+				cpu.interrupt();
 			}
-			previousBit5State = vdp.getBit(1, 5);
 			
 			/* Execute one instruction */
 			cpu.execute();
@@ -313,10 +310,11 @@ public class MSX { // implements IBaseDevice {
 					e.printStackTrace();
 				}
 				
-				/* Do interrupt, update screen and update cycle counter */
-				triggerVSyncInterrupt();
-				updateScreen();
+				/* Trigger interrupt */
+				vdp.setStatusINT(true);
 				cpu.s = (cpu.s - vSyncInterval);
+
+				updateScreen();
 
 				/* Keep track of interrupt rate and correct delay if necessary */
 				int checkInterval = 1;
@@ -338,9 +336,7 @@ public class MSX { // implements IBaseDevice {
 					intCount = 0;
 				}
 			}
-
 		}
-		
 	}
 	
 	/**
@@ -533,6 +529,10 @@ public class MSX { // implements IBaseDevice {
 	
 	public void pause(boolean f) {
 		running = !f;
+	}
+
+	public AbstractSlot[] getSlots() {
+		return slots;
 	}
 	
 }
