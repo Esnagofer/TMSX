@@ -118,30 +118,30 @@ public class MSX { // implements IBaseDevice {
 			
 		};
 		
-		///* Slot 0 is BASIC ROM (at page 0/1) */
-		//slots[0] = new ROMSlot(0x8000);
-		//try {
-		//	//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
-		//	slots[0].load("/MSX.rom", (short)0x0000);
-		//} catch (IOException e) {
-		//	e.printStackTrace();
-		//	System.exit(0);
-		//}
-		///* We fill slot 1 and 3 with empty ROM */
-		//slots[1] = new EmptySlot();
-		//slots[3] = new EmptySlot();
-		///* Slot 2 is RAM */
-		//slots[2] = new RAMSlot();
-		
 		/* Slot 0 is BASIC ROM (at page 0/1) */
-		slots[0] = new ROMSlot(0xC000);
+		slots[0] = new ROMSlot(0x8000);
 		try {
-			slots[0].load("/cbios_main_msx1.rom", (short)0x0000, 0x8000);
-			slots[0].load("/cbios_logo_msx1.rom", (short)0x8000, 0x4000);
+			//slots[0].load("/cbios_main_msx1.rom", (short)0x0000);
+			slots[0].load("/MSX.rom", (short)0x0000, 0x8000);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
+		/* We fill slot 1 and 3 with empty ROM */
+		slots[1] = new EmptySlot();
+		slots[3] = new EmptySlot();
+		/* Slot 2 is RAM */
+		slots[2] = new RAMSlot();
+		
+		/* Slot 0 is BASIC ROM (at page 0/1) */
+		//slots[0] = new ROMSlot(0xC000);
+		//try {
+		//	slots[0].load("/cbios_main_msx1.rom", (short)0x0000, 0x8000);
+		//	slots[0].load("/cbios_logo_msx1.rom", (short)0x8000, 0x4000);
+		//} catch (IOException e) {
+		//	e.printStackTrace();
+		//	System.exit(0);
+		//}
 
 		/* We fill slot 1 and 2 with empty ROM */
 		slots[1] = new EmptySlot();
@@ -266,15 +266,19 @@ public class MSX { // implements IBaseDevice {
 	 */
 	public void startMSX() {
 
+		/* Values used for delay and automatic correction of delay */
 		long previousInterruptCycle = System.currentTimeMillis();
 		int intCount = 0;
 		int delay = 20;
+		
+		/* Previous status of bit 5 of control register #1 (triggers interrupt) */
+		boolean previousBit5State = false;
 		
 		debugMode = true;
 		
 		while (true) {
 
-			// Not running? Sleep an continue
+			/* Not running? Sleep and continue */
 			if (!running) {
 				try {
 					Thread.sleep(100);
@@ -284,29 +288,37 @@ public class MSX { // implements IBaseDevice {
 				continue;
 			}
 			
-			// Go into debug mode
-			if(debugMode || breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode();	}
+			/* Check whether we should go into debug mode */
+			if (debugMode) debugMode();
+			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
 			
-			// Execute one instruction
+			/* Trigger interrupt if bit 5 of control register is set, while bit 7 of status register is set */
+			if (!previousBit5State && vdp.getBit(1, 5) && vdp.getStatusBit(7)) {
+				triggerVSyncInterrupt();
+				updateScreen();
+			}
+			previousBit5State = vdp.getBit(1, 5);
+			
+			/* Execute one instruction */
 			cpu.execute();
 			
-			// Trigger VSync interrupt every vSyncInterval clock cycles */
+			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
 			if (cpu.s >= ((SPEED * 1000000.0)/INTERRUPT_RATE)) {
 				long now = System.currentTimeMillis();
 								
-				// Delay
+				/* Execute delay */
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				
-				// Do interrupt, update screen and update cycle counter
+				/* Do interrupt, update screen and update cycle counter */
 				triggerVSyncInterrupt();
 				updateScreen();
 				cpu.s = (cpu.s - vSyncInterval);
 
-				// Keep track of interrupt rate and correct delay if necessary
+				/* Keep track of interrupt rate and correct delay if necessary */
 				int checkInterval = 1;
 				intCount++;
 				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
@@ -315,8 +327,6 @@ public class MSX { // implements IBaseDevice {
 							if (delay > 0) { 
 								delay -= 1;
 								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Decreasing delay ("+delay+" ms).");
-							} else {
-								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Delay is already 0 ms.");
 							}
 						}
 						if (intCount > INTERRUPT_RATE) {
