@@ -74,7 +74,15 @@ public class Z802 {
 	}
 
 	public void execute() {
+		/* Decrease interruptDelayCount (see doEI() and interrupt()) */
 		if (interruptDelayCount > 0) interruptDelayCount--;
+		
+		/* If CPU is halted, we do nothing until interrupt is triggered. */
+		if (isHalted()) {
+			s += 4; // Increase cycle count as if we are executing a halt instruction
+			return;
+		}
+		
 		executeRegular();
 	}
 
@@ -177,8 +185,8 @@ public class Z802 {
 		case 0x10:	// DJNZ &NN 13,8
 			s += 8;
 			bs = fetchByte();
-			B--;
-			if (B != 0) {
+			B = dec(B);
+			if (!getZFlag()) {
 				PC = (short) (PC + bs);
 				s += 5;
 			}
@@ -1444,7 +1452,9 @@ public class Z802 {
 			break; 
 		case (byte) 0xF6:	// OR &NN 7
 			s += 7;
-			A = or(A, fetchByte());
+			bs = fetchByte();
+			A = or(A, bs);
+			dbg("AND &NN (" + Tools.toHexString(bs) + ")");
 			break; 
 		case (byte) 0xF7:	// RST &30 11
 			s += 11;
@@ -1472,6 +1482,7 @@ public class Z802 {
 		case (byte) 0xFB:	// EI 4
 			s += 4;
 			doEI();
+			dbg("EI");
 			break; 
 		case (byte) 0xFC:	// CALL M,&HHLL 17,10
 			s += 10;
@@ -1559,8 +1570,8 @@ public class Z802 {
 		case (byte) 0x21: // LD IX,&HHLL
 			s += 14;
 			ts = fetchWordLH();
-			setIX(mem.readWordLH(ts));
-			dbg("LD IX, &LLHH (" + ts + ")");
+			setIX(ts);
+			dbg("LD IX, &LLHH ("+Tools.toHexString(ts)+")");
 			break; 
 		case (byte) 0x22: // LD (&HHLL),IX
 			s += 20;
@@ -2347,14 +2358,12 @@ public class Z802 {
 			*/
 			throw new RuntimeException("Unsupported instruction");
 		case (byte) 0xA3:
-			
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTI
 			setHL((short) (getHL() + 1));
-			setBC((short) (getBC() - 1));
+			B = dec(B);
 			dbg("OTI");
 			break;
-			
 		case (byte) 0xA8: // LDD
 			/*
 			s += 16;
@@ -2468,10 +2477,13 @@ public class Z802 {
 		case (byte) 0xB8: // LDDR
 			s += 16;
 			mem.wrtByte(getDE(), mem.rdByte(getHL())); 
-			setHL((short) (getHL() - 1));
-			setDE((short) (getDE() - 1));
-			setBC((short) (getBC() - 1));
-			if (getBC() != 0) {
+			setHL(dec(getHL()));
+			setHL(dec(getDE()));
+			setHL(dec(getBC()));
+			//setHL((short) (getHL() - 1));	 TODO: check this correction
+			//setDE((short) (getDE() - 1));
+			//setBC((short) (getBC() - 1));
+			if (!getZFlag()) {
 				PC--; // B8
 				PC--; // ED
 				s += 5;
@@ -3272,6 +3284,9 @@ public class Z802 {
 
 	public void interrupt() {
 
+		/* An interrupt will un-halt the CPU */
+		halt = false;
+		
 		/* Ignore if interrupt disabled */
 		if (!eff1) return;
 		
