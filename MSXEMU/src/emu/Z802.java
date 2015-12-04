@@ -1532,7 +1532,7 @@ public class Z802 {
 	}
 
 	public short inc(short v) {
-		byte flags = F; // inc16 is like sub 1 except that C is unaffected
+		byte flags = F; // inc16 is like add 1 except that flags are unaffected
 		short res = add(v, (short)1, false);
 		F = flags;
 		return res;
@@ -1546,8 +1546,9 @@ public class Z802 {
 	}
 
 	public short dec(short v) {
-		byte flags = F; // dec16 is like sub 1 except that C is unaffected
+		byte flags = F; // dec16 is like sub 1 except that flags unaffected
 		short res = sub(v, (short)1, false);
+		if (v == res) throw new RuntimeException();
 		F = flags;
 		return res;
 	}
@@ -1645,6 +1646,7 @@ public class Z802 {
 			break;
 		case (byte) 0x36: // LD (IX+NN), nn 
 			s += 19;
+			dis = fetchByte();
 			ts = (short)((getIX() & 0xffff) + dis);
 			mem.wrtByte(ts, fetchByte());
 			dbg("LD (IX+NN), nn");
@@ -1754,7 +1756,7 @@ public class Z802 {
 		case (byte) 0x66: // LD H,(IX+NN)
 			s += 19;
 			dis = fetchByte();
-			ts = (short)(getIX() + dis);
+			ts = (short)((getIX() & 0xffff) + dis);
 			H = mem.rdByte(ts);
 			dbg("LD H,(IX+"+dis+")");
 			break; 
