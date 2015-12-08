@@ -2841,40 +2841,34 @@ public class Z802 {
 		return Tools.combine(res_lsb, res_msb);
 	}
 
+	/**
+	 * Perform Decimal Adjust Accumulator instruction.
+	 * See http://www.worldofspectrum.org/faq/reference/z80reference.htm
+	 */
 	public final void doDAA() {
-
-		// This provides a simple pattern for the instruction:
-		// if the lower 4 bits form a number greater than 9 or H is set, add $06
-		// to the accumulator
-		// if the upper 4 bits form a number greater than 9 or C is set, add $60
-		// to the accumulator
-
-		int l = A & 0x0F;
-		if (l > 9 || getHFlag()) {
-			if (getNFlag()) {
-				A = (byte) (A - 0x06);
-			} else {
-				A = (byte) (A + 0x06);
-			}
-		}
-		int h = (A & 0xF0) >> 4;
-		if (h > 9 || getCFlag()) {
-			if (getNFlag()) {
-				A = (byte) (A - 0x60);
-			} else {
-				A = (byte) (A + 0x60);
-			}
+		byte oldA = A;
+		byte correction = 0;
+		if ((A & 0xFF) > 0x99 || getCFlag()) {
+			correction = (byte)((correction & 0xff) | 0x60);
 			setCFlag(true);
 		} else {
 			setCFlag(false);
 		}
-		
+		if ((A & 0x0F) > 9 || getHFlag()) {
+			correction = (byte)((correction & 0xff) | 0x06);
+			setCFlag(true);
+		} else {
+			setCFlag(false);
+		}
+		if (getNFlag()) {
+			A = (byte)((A & 0xff) + (correction & 0xff));
+		} else {
+			A = (byte)((A & 0xff) - (correction & 0xff));	
+		}
+		setHFlag(((A ^ oldA) & 0x10) != 0);
+		setSFlag(A < 0);
+		setZFlag(A == 0);
 		setPVFlag(Tools.getParity(A));
-
-		// A = 00, carry = true
-		
-		//dbg("* DAA : " + Tools.toHexString(bs) + " > " + Tools.toHexString(A));
-
 	}
 
 	/**
