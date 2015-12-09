@@ -2357,8 +2357,10 @@ public class Z802 {
 		case (byte) 0xA3:
 			s += 16;
 			out(C, mem.rdByte(getHL())); // OTI
-			setHL((short) (getHL() + 1));
+			setHL((short) ((getHL() & 0xffff) + 1));
 			B = dec(B);
+			setZFlag((B & 0xff) == 0);
+			setNFlag(true);
 			dbg("OTI");
 			break;
 		case (byte) 0xA8: // LDD
@@ -2847,19 +2849,56 @@ public class Z802 {
 	 */
 	public final void doDAA() {
 		byte oldA = A;
+
+		int hn = (A & 0xF0) >> 4;
+		int ln = (A & 0x0F);
+		boolean cf = getCFlag();
+		boolean hf = getHFlag();
+		boolean nf = getHFlag();
+		byte diff = 0;
+		if (!cf && hn < 10 && !hf && ln < 10) diff = 0x00;
+		if (!cf && hn < 10 &&  hf && ln < 10) diff = 0x06;
+		if (!cf && hn < 9  &&        ln > 9 ) diff = 0x06;
+		if (!cf && hn > 9  && !hf && ln < 10) diff = 0x60;
+		if ( cf &&            !hf && ln < 10) diff = 0x60;
+		if ( cf &&             hf && ln < 10) diff = 0x66;
+		if ( cf &&                   ln > 9 ) diff = 0x66;
+		if (!cf && hn > 8  &&        ln > 9 ) diff = 0x66;
+		if (!cf && hn > 9  &&  hf && ln < 10) diff = 0x66;
+		if (nf) {
+			A = (byte)(A - diff);
+		} else {
+			A = (byte)(A + diff);
+		}
+		
+		if (!cf && hn < 10 && ln < 10) setCFlag(false);
+		if (!cf && hn <  9 && ln > 9 ) setCFlag(false);
+		if (!cf && hn >  8 && ln > 9 ) setCFlag(true);
+		if (!cf && hn >  9 && ln < 10) setCFlag(true);
+		if ( cf                      ) setCFlag(true);
+		
+		if (!nf &&        ln < 10) setHFlag(false);
+		if (!nf &&        ln > 9 ) setHFlag(true);
+		if ( nf && !hf           ) setHFlag(false);
+		if ( nf &&  hf && ln > 5 ) setHFlag(false);
+		if ( nf &&  hf && ln < 6 ) setHFlag(true);
+		
+		setZFlag(A == 0);
+
+		/*
 		byte correction = 0;
-		if ((A & 0xFF) > 0x99 || getCFlag()) {
+		if ((A & 0xF0) > 0x90 || getCFlag()) {
 			correction = (byte)((correction & 0xff) | 0x60);
 			setCFlag(true);
-		} else {
-			setCFlag(false);
-		}
+		}// else {
+		//	setCFlag(false);
+		//}
 		if ((A & 0x0F) > 9 || getHFlag()) {
 			correction = (byte)((correction & 0xff) | 0x06);
 			setCFlag(true);
-		} else {
-			setCFlag(false);
-		}
+		} //else {
+		//	setCFlag(false);
+		//}
 		if (getNFlag()) {
 			A = (byte)((A & 0xff) + (correction & 0xff));
 		} else {
@@ -2869,6 +2908,8 @@ public class Z802 {
 		setSFlag(A < 0);
 		setZFlag(A == 0);
 		setPVFlag(Tools.getParity(A));
+		*/
+		System.out.println("PC = " + Tools.toHexString(PC) + ": DAA " + Tools.toHexString(oldA) + " -> " + Tools.toHexString(A));
 	}
 
 	/**
