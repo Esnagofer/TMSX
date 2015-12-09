@@ -10,13 +10,16 @@ import emu.Tools;
  * 
  * An object of this class holds a 64 KB memory space.
  * It provides read/write operations as well as some
- * management functionality.
+ * management functionality. It is abstract and can
+ * be extended to provide specific functionality, such
+ * as RAM, ROM, or a memory space with underlying page
+ * switching mechanism.
  * 
  * @author tjitze
  *
  */
 
-public abstract class AbstractSlot { // implements IMemory {
+public abstract class AbstractSlot {
 
 	/**
 	 * Abstract method for reading a byte at given address.
@@ -40,18 +43,7 @@ public abstract class AbstractSlot { // implements IMemory {
 	 * @param addr
 	 */
 	public abstract boolean isWritable(short addr);
-	
-	/**
-	 * Read a byte from given address (provided by lsb and msb bytes)
-	 * 
-	 * @param lsb LSB of address
-	 * @param msb MSB of address
-	 * @return value Value
-	 */
-	//public final byte rdByte(byte lsb, byte msb) {
-	//	return rdByte((short)((msb << 8) | (lsb & 0xff)));
-	//}
-	
+
 	/**
 	 * Write a byte at given address (provided by lsb and msb bytes)
 	 * 
@@ -87,7 +79,9 @@ public abstract class AbstractSlot { // implements IMemory {
 	}
 
 	/**
-	 * Load given file into memory, starting at given address
+	 * Load given file into memory, starting at given address. Note
+	 * that this only works if this concrete class provides a writeable
+	 * memory space.
 	 * 
 	 * @param fileName
 	 * @param addr
@@ -95,36 +89,13 @@ public abstract class AbstractSlot { // implements IMemory {
 	 */
 	public void load(String fileName, short start, int xsize) throws IOException {
 		File file=new File(fileName);
-		byte[] contents=new byte[xsize];
+		byte[] contents = new byte[xsize];
 		FileInputStream in = new FileInputStream(file);
 		if (in.read(contents) == -1) throw new RuntimeException("Wrong ROM file size");
 		if (in.read() != -1) throw new RuntimeException("Wrong ROM file size");
 		in.close();
 		for (int i = 0; i < xsize; i++) wrtByte(start++, contents[i]);
 	}
-	
-	//@Override
-	public int readByte(int address) {
-		return this.rdByte((short)(address & 0xffff)) & 0xff;
-	}
-
-	//@Override
-	public int readWord(int address) {
-		return this.readWordLH((short)(address & 0xffff)) & 0xffff;
-	}
-
-	//@Override
-	public void writeByte(int address, int data) {
-		this.wrtByte((short)(address & 0xffff), (byte)(data & 0xff));
-	}
-
-	//@Override
-	public void writeWord(int address, int data) {
-		this.writeShortLH((short)(address & 0xffff), (short)(data & 0xffff));
-	}
-
-	//public abstract byte[] getArray();
-
 
 }
 
