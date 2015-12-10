@@ -400,7 +400,10 @@ public class MSX { // implements IBaseDevice {
 						}
 						s += Tools.toHexString(b) + " ";
 						if (i % 4 == 0) s += " ";
-						if (i % 16 == 0) debug(s + " <- " + Tools.toHexString4(i-16));
+						if (i % 16 == 0) {
+							debug(s + " <- " + Tools.toHexString4(i-16));
+							s = "";
+						}
 					}
 					continue;
 				}
