@@ -1,11 +1,11 @@
-#MSXEMU
+#TMSX
 
-MSXEMU is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the early eighties that was popular mainly in Europe and Japan.
+TMSX is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the early eighties that was popular mainly in Europe and Japan.
 All parts (Z80, VDP, etcetera) were written from scratch.
 This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably http://openmsx.org.
-That said, I believe the source code of MSXEMU is much simpler and therefore easier to understand than 
+That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
   some of the other MSX emulators out there.
-So, if you're interested in learning how an MSX emulator works, MSXEMU might be of interest.
+So, if you're interested in learning how an MSX emulator works, TMSX might be of interest.
 
 ##The current status
 
@@ -30,14 +30,14 @@ and create a JAR file as follows. Make sure you're in the root directory (contai
 
 ```
 mkdir build
-javac -d build -cp src src/emu/ui/EmuFrame.java
-jar cvfe MSXEMU.jar emu/ui/EmuFrame -C build. .
+javac -d build -cp src src/emu/ui/TMSX.java
+jar cvfe TMSX.jar emu/ui/TMSX -C build. .
 ```
 
 Start the JAR file as usual:
 
 ```
-java -jar MSXEMU.jar
+java -jar TMSX.jar
 ```
 
 ####Setting the system ROM
