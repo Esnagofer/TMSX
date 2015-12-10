@@ -1,7 +1,7 @@
 #MSXEMU
 
-MSXEMU is an emulator for the Z80-based MSX computer written in Java. 
-I wrote all parts (Z80, VDP, etcetera) from scratch.
+MSXEMU is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the early eighties that was popular mainly in Europe and Japan.
+All parts (Z80, VDP, etcetera) were written from scratch.
 This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably http://openmsx.org.
 That said, I believe the source code of MSXEMU is much simpler and therefore easier to understand than 
   some of the other MSX emulators out there.
