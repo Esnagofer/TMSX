@@ -28,7 +28,7 @@ import emu.memory.EmptySlot;
 import emu.memory.RAMSlot;
 import emu.memory.ROMSlot;
 
-public class EmuFrame extends JFrame {
+public class TMSX extends JFrame {
 
 	private MSX msx;
 	private JButton cartridgeButton;
@@ -44,7 +44,8 @@ public class EmuFrame extends JFrame {
 		msx.initHardware();
 		
 		/* Build frame */
-		EmuFrame frame = new EmuFrame(msx);
+		TMSX frame = new TMSX(msx);
+		frame.setTitle("TMSX - MSX Emulator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(512,435);
 		frame.setResizable(false);
@@ -107,7 +108,7 @@ public class EmuFrame extends JFrame {
 		breakButton.setEnabled(true);
 	}
 	
-	public EmuFrame(MSX msx) {
+	public TMSX(MSX msx) {
 		this.msx = msx;
 		buildFrame();
 	}
@@ -185,7 +186,7 @@ public class EmuFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(EmuFrame.this);
+				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 		            ROMSlot s = new ROMSlot(0xffff);
@@ -209,7 +210,7 @@ public class EmuFrame extends JFrame {
 			    Preferences prefs = Preferences.userRoot().node("MSXEMU");
 				JFileChooser fc = new JFileChooser();
 				fc.setSelectedFile(new File(prefs.get("msx_system_rom", "~/")));
-				int returnVal = fc.showOpenDialog(EmuFrame.this);
+				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 				    msx.getSlots()[0] = new ROMSlot(0xC000);

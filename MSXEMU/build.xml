@@ -10,15 +10,15 @@
     </target>
 
     <target name="jar" depends="compile">
-        <jar destfile="MSXEMU.jar" basedir="build/classes">
+        <jar destfile="TMSX.jar" basedir="build/classes">
             <manifest>
-                <attribute name="Main-Class" value="emu.ui.EmuFrame"/>
+                <attribute name="Main-Class" value="emu.ui.TMSX"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="run" depends=“jar”>
-        <java jar="MSXEMU.jar" fork="true"/>
+    <target name="run" depends="jar">
+        <java jar="TMSX.jar" fork="true"/>
     </target>
 
 </project>
