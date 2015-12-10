@@ -1,8 +1,8 @@
 #TMSX
 
-TMSX is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the eighties that was popular mainly in mainland Europe and Japan.
-All parts of the emulator (Z80, video processor, etcetera) were written from scratch.
-This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably http://openmsx.org.
+TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer from the eighties that was popular mainly in mainland Europe and Japan.
+All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80), the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch.
+This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably [OpenMSX](http://openmsx.org).
 That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
   some of the other MSX emulators out there.
 So, if you're interested in learning how an MSX emulator works, TMSX might be of interest.
@@ -42,8 +42,8 @@ java -jar TMSX.jar
 
 ####Setting the system ROM
 
-To use the emulator, you need to set the system ROM. You can use either the free C-BIOS (http://cbios.sourceforge.net) or a ROM image of an
-actual MSX1 computer. If you use C-BIOS, use the cbios_main_msx1.rom file which is included in the dowload on the C-BIOS website.
+To use the emulator, you need to set the system ROM. You can use either the free [C-BIOS](http://cbios.sourceforge.net) or a ROM image of an
+actual MSX1 computer. If you use C-BIOS, use the cbios_main_msx1.rom file which is included in the dowload that you can find on the [C-BIOS website](http://cbios.sourceforge.net).
 ROM images of actual MSX computers can be found at various places on the web. The emulator was developed using a ROM image of a 
 Toshiba HX-10 MSX1 computer with international keyboard layout, but ROM images of other MSX1 computers should work too. Upon starting 
 the emulator for the first time, only the "Set System ROM" button is enabled. Click it and select the system ROM file that you want to 
