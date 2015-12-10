@@ -75,4 +75,8 @@ Konami Kings Valley
 
 ![Kings Valley](/MSXEMU/screenshots/kingsvalley.tiff?raw=true)
 
+Konami Ping Pong
+
+![Kings Valley](/MSXEMU/screenshots/pingpong.tiff?raw=true)
+
 *Author: Tjitze Rienstra (tjitze@gmail.com).*
