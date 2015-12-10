@@ -10,8 +10,8 @@ So, if you're interested in learning how an MSX emulator works, MSXEMU might be 
 ##The current status
 
 - Almost full MSX1 emulation.
-- Runs many Konami ROMs (Antarctic Adventure, Frogger, Konami Tennis, Kings Valley and many more).
-- Doesn't yet run all Konami ROMs (Knightmare, Konami Soccer and a couple of others).
+- Runs many Konami games (Antarctic Adventure, Frogger, Konami Tennis, Kings Valley and many more).
+- Doesn't yet run all Konami games (Knightmare, Konami Soccer and a couple of others).
 - Only support for 16K/32K ROMs. Need to figure out how to map bigger ROMs.
 - For the moment no PSG emulation, no music.
 
