@@ -1,7 +1,7 @@
 #TMSX
 
 TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer from the eighties that was popular mainly in mainland Europe and Japan.
-All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80), the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch.
+All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch.
 This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably [OpenMSX](http://openmsx.org).
 That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
   some of the other MSX emulators out there.
