@@ -32,24 +32,33 @@ public class Z802 {
 	/* Memory instance */
 	private final AbstractSlot mem;
 
+	/* Arrays to keep registered I/O devices */
 	private final Z80OutDevice[] out = new Z80OutDevice[256];
 	private final Z80InDevice[] in = new Z80InDevice[256];
 
-	short one = (short) 1;
-
+	/* Interrupt used for delay after EI instruction */
 	private int interruptDelayCount = 0;
 
 	private String lastMsg;
 
+	/* Interrupt hook address */
 	private static final short INTERRUPT_HOOK = 0x0038;
 	
+	/**
+	 * Create instance of Z80 emulator with given memory slot.
+	 * 
+	 * @param mem Memory slot to run.
+	 */
 	public Z802(AbstractSlot mem) {
 		this.mem = mem;
 		reset();
 	}
-	
+
+	/**
+	 * Reset CPU.
+	 * Initializes all registers to 0xff or 0xffff and resets PC to 0x0000.
+	 */
 	public void reset() {
-		/* Initialize flags and registers */
 		eff1 = false;
 		eff2 = false;
 		PC = (short)0x0000;
@@ -73,6 +82,16 @@ public class Z802 {
 		s = 0;
 	}
 
+	/**
+	 * Execute one instruction. The instruction that is executed is the
+	 * instruction that starts at the current PC address. The resulting 
+	 * PC increase depends on the instruction. After calling this method,
+	 * the PC will point at the next instruction. The cycle count increase
+	 * also depends on the instruction.
+	 * 
+	 * If the CPU is halted, calling this method causes only a cycle count
+	 * increase. 
+	 */
 	public void execute() {
 		/* Decrease interruptDelayCount (see doEI() and interrupt()) */
 		if (interruptDelayCount > 0) interruptDelayCount--;
@@ -93,8 +112,11 @@ public class Z802 {
 	public String getLastMsg() {
 		return lastMsg;
 	}
-	
-	public void executeRegular() {
+
+		/**
+		 * Execute a regular instruction
+		 */
+	private void executeRegular() {
 		oldPC = PC;
 		byte b = fetchByte();
 		switch (b) {
@@ -592,7 +614,7 @@ public class Z802 {
 		case 0x5B:	// LD E,E 4
 			s += 4;
 			dbg("LD E, E : " + Tools.toHexString(E));
-		break; 
+			break; 
 		case 0x5C:	// LD E,H 4
 			s += 4;
 			E = H;
@@ -1524,28 +1546,28 @@ public class Z802 {
 		}
 	}
 
-	public byte inc(byte v) {
+	private byte inc(byte v) {
 		boolean c = getCFlag(); // dec8 is like sub 1 except that C is unaffected
 		byte res = add(v, (byte)1, false);
 		setCFlag(c);
 		return res;
 	}
 
-	public short inc(short v) {
+	private short inc(short v) {
 		byte flags = F; // inc16 is like add 1 except that flags are unaffected
 		short res = add(v, (short)1, false);
 		F = flags;
 		return res;
 	}
 
-	public byte dec(byte v) {
+	private byte dec(byte v) {
 		boolean c = getCFlag(); // dec8 is like sub 1 except that C is unaffected
 		byte res = sub(v, (byte)1, false);
 		setCFlag(c);
 		return res;
 	}
 
-	public short dec(short v) {
+	private short dec(short v) {
 		byte flags = F; // dec16 is like sub 1 except that flags unaffected
 		short res = sub(v, (short)1, false);
 		if (v == res) throw new RuntimeException();
@@ -1553,7 +1575,10 @@ public class Z802 {
 		return res;
 	}
 
-	public void executeDD() {
+	/**
+	 * Execute a DD instruction.
+	 */
+	private void executeDD() {
 
 		short addr = 0;
 		byte b = fetchByte();
@@ -2030,6 +2055,9 @@ public class Z802 {
 		}
 	}
 
+	/**
+	 * Execute a CB instruction.
+	 */
 	public void executeCB(boolean afterDD) {
 
 		// Read displacement
@@ -2596,10 +2624,6 @@ public class Z802 {
 		setPVFlag(Tools.getParity(val));
 		setNFlag(false);
 	}
-
-	//private final short readIXNN() {
-	//	return (short) (getIX() + fetchByte());
-//	}
 
 	private final short fetchWordLH() {
 		short value = (short) mem.readWordLH(PC);
