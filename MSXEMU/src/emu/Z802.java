@@ -2885,31 +2885,7 @@ public class Z802 {
 		
 		setZFlag(A == 0);
 
-		/*
-		byte correction = 0;
-		if ((A & 0xF0) > 0x90 || getCFlag()) {
-			correction = (byte)((correction & 0xff) | 0x60);
-			setCFlag(true);
-		}// else {
-		//	setCFlag(false);
-		//}
-		if ((A & 0x0F) > 9 || getHFlag()) {
-			correction = (byte)((correction & 0xff) | 0x06);
-			setCFlag(true);
-		} //else {
-		//	setCFlag(false);
-		//}
-		if (getNFlag()) {
-			A = (byte)((A & 0xff) + (correction & 0xff));
-		} else {
-			A = (byte)((A & 0xff) - (correction & 0xff));	
-		}
-		setHFlag(((A ^ oldA) & 0x10) != 0);
-		setSFlag(A < 0);
-		setZFlag(A == 0);
-		setPVFlag(Tools.getParity(A));
-		*/
-		System.out.println("PC = " + Tools.toHexString(PC) + ": DAA " + Tools.toHexString(oldA) + " -> " + Tools.toHexString(A));
+		//System.out.println("PC = " + Tools.toHexString(PC) + ": DAA " + Tools.toHexString(oldA) + " -> " + Tools.toHexString(A));
 	}
 
 	/**
