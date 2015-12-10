@@ -1,45 +1,44 @@
 package emu;
 
-import java.awt.Graphics;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
-import java.util.List;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import emu.memory.AbstractSlot;
-import emu.memory.EmptySlot;
-import emu.memory.RAMSlot;
-import emu.memory.ROMSlot;
 
-public class MSX { // implements IBaseDevice {
+/**
+ * The main class that ties all the elements of an MSX computer together: CPU, VDP,
+ * and keyboard decoder. All the relevant I/O ports are set up, as well as the 
+ * 'primary slot' memory space with the underlying page switching mechanism.
+ * 
+ * @author tjitze.rienstra
+ */
+public class MSX {
 
 	private HashSet<Short> breakpoints = new HashSet<Short>();
 	
+	/** Interrupt rate (interrupts per second) */
 	public static final int INTERRUPT_RATE = 50;
-	public static final double SPEED = 3.5;
+
+	/** CPU emulation speed (in Hz) */
+	public static final int SPEED = 3500000;
+
+	/** Initial delay value (will be adjusted to match desired speed) */
 	public static final int INITIAL_DELAY = 20;
-	
+
 	private Z802 cpu;
 	private TMS9918A vdp;
+	
 	private AbstractSlot primarySlot;
-	private AbstractSlot[] slots;
+	private AbstractSlot[] secondarySlots;
+
 	private KeyboardDecoder keyboard;
 
 	public boolean debugMode = false, debugEnabled = true;
 	
 	public boolean running = true;
-	
-	public static int vSyncInterval = 70000, interruptRate = 50;
 	
 	/* PPI A register (primary slot select) */
 	private byte ppiA_SlotSelect = 0;
@@ -49,6 +48,10 @@ public class MSX { // implements IBaseDevice {
 	
 	private JPanel screenPanel;
 		
+	/**
+	 * This method must be called after construction, to set up all parts of the emulation 
+	 * (memory, cpu, keyboard, ppi, vdp).
+	 */
 	public void initHardware() {
 		debug("Init memory");
 		initMemory();
@@ -62,6 +65,9 @@ public class MSX { // implements IBaseDevice {
 		initVDP();
 	}
 	
+	/**
+	 * Return the secondary slot that is selected for the given page.
+	 */
 	public final int getSlotForPage(int page) {
 		switch (page) {
 		case 0:	return ppiA_SlotSelect & 0x03;
@@ -72,6 +78,11 @@ public class MSX { // implements IBaseDevice {
 		}
 	}	
 
+	/**
+	 * Set the secondary slot that is selected for the given page. Setting 
+	 * page 0 (resp. 1, 2, 3) will cause the address space 0000-4000 (resp.
+	 * 4000-8000, 8000-B000, B000-FFFF) to be mapped to the given secondary slot.
+	 */
 	public final void setSlotForPage(int page, int slot) {
 		switch (page) {
 		case 0:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x03) | slot); break;
@@ -80,9 +91,17 @@ public class MSX { // implements IBaseDevice {
 		case 3:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0xC0) | slot << 6); break;
 		}
 	}	
+	
+	/**
+	 * Initialize memory system. A 'Primary Slot' address space is created with an underlying
+	 * page switching mechanism. The selected secondary slot for each page is determined by the 
+	 * ppiA_SlotSect value, which is accessed via I/O ports (see initPPI()) or, indirectly, via 
+	 * the convenient getSlotForPage(...) and setSlotForPage(...) methods.
+	 *  
+	 */
 	public void initMemory() {
 		
-		slots = new AbstractSlot[4];
+		secondarySlots = new AbstractSlot[4];
 		
 		/* Create primary slot object */
 		primarySlot = new AbstractSlot() {
@@ -90,31 +109,30 @@ public class MSX { // implements IBaseDevice {
 			@Override
 			public byte rdByte(short addr) {
 				byte val = 0;
-				if ((addr & 0xffff) <= 0x3fff) val = slots[getSlotForPage(0)].rdByte(addr);
-				else if ((addr & 0xffff) <= 0x7fff) val = slots[getSlotForPage(1)].rdByte(addr);
-				else if ((addr & 0xffff) <= 0xb3ff) val = slots[getSlotForPage(2)].rdByte(addr);
-				else val = slots[getSlotForPage(3)].rdByte(addr);
+				if ((addr & 0xffff) <= 0x3fff) val = secondarySlots[getSlotForPage(0)].rdByte(addr);
+				else if ((addr & 0xffff) <= 0x7fff) val = secondarySlots[getSlotForPage(1)].rdByte(addr);
+				else if ((addr & 0xffff) <= 0xb3ff) val = secondarySlots[getSlotForPage(2)].rdByte(addr);
+				else val = secondarySlots[getSlotForPage(3)].rdByte(addr);
 				return val;
 			}
 
 			@Override
 			public void wrtByte(short addr, byte value) {
 				if (isWritable(addr)) {
-					if ((addr & 0xffff) <= 0x3fff) slots[getSlotForPage(0)].wrtByte(addr, value);
-					else if ((addr & 0xffff) <= 0x7fff) slots[getSlotForPage(1)].wrtByte(addr, value);
-					else if ((addr & 0xffff) <= 0xb3ff) slots[getSlotForPage(2)].wrtByte(addr, value);
-					else slots[getSlotForPage(3)].wrtByte(addr, value);
+					if ((addr & 0xffff) <= 0x3fff) secondarySlots[getSlotForPage(0)].wrtByte(addr, value);
+					else if ((addr & 0xffff) <= 0x7fff) secondarySlots[getSlotForPage(1)].wrtByte(addr, value);
+					else if ((addr & 0xffff) <= 0xb3ff) secondarySlots[getSlotForPage(2)].wrtByte(addr, value);
+					else secondarySlots[getSlotForPage(3)].wrtByte(addr, value);
 				}
 			}
 
 			@Override
 			public boolean isWritable(short addr) {
-				if ((addr & 0xffff) <= 0x3fff) return slots[getSlotForPage(0)].isWritable(addr);
-				else if ((addr & 0xffff) <= 0x7fff) return slots[getSlotForPage(1)].isWritable(addr);
-				else if ((addr & 0xffff) <= 0xb3ff) return slots[getSlotForPage(2)].isWritable(addr);
-				else return slots[getSlotForPage(3)].isWritable(addr);
+				if ((addr & 0xffff) <= 0x3fff) return secondarySlots[getSlotForPage(0)].isWritable(addr);
+				else if ((addr & 0xffff) <= 0x7fff) return secondarySlots[getSlotForPage(1)].isWritable(addr);
+				else if ((addr & 0xffff) <= 0xb3ff) return secondarySlots[getSlotForPage(2)].isWritable(addr);
+				else return secondarySlots[getSlotForPage(3)].isWritable(addr);
 			}
-			
 		};
 	}
 
@@ -126,14 +144,12 @@ public class MSX { // implements IBaseDevice {
 	}
 	
 	/**
-	 * Initialize VDP (including I/O channels)
+	 * Initialize VDP. This method also sets up teh I/O ports that connect the VDP to the CPU
+	 * (i.e., port 0x98 for VRAM data read/write and port 0x99 for status register I/O).
 	 */
 	public void initVDP() {
 		vdp = new TMS9918A();
 		
-		// 98 = VRAM data read/write port
-		// 99 = Status register read port (read only)
-
 		// VRAM data read/write port
 		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
@@ -163,14 +179,16 @@ public class MSX { // implements IBaseDevice {
 	}
 
 	/**
-	 * Initialize keyboard
+	 * Initialize keyboard.
 	 */
 	public void initKeyboard() {
 		keyboard = new KeyboardDecoder();
 	}
 	
 	/**
-	 * Initialize PPI (keyboard and slot select I/O)
+	 * Initialize PPI. At the emulation level, this amounts to setting up a number 
+	 * of I/O ports, namely those for keyboard I/O (0xA9, 0xAA and 0xAB) and slot select
+	 * I/O (port 0xA8).
 	 */
 	public void initPPI() {
 
@@ -227,8 +245,8 @@ public class MSX { // implements IBaseDevice {
 	}
 	
 	/**
-	 * Start MSX. Basically a while look that executes CPU instructions,
-	 * triggers VSync interrupts, and stops when halted. 
+	 * Start MSX. Basically a while loop that executes CPU instructions,
+	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
 	 */
 	public void startMSX() {
 
@@ -262,8 +280,8 @@ public class MSX { // implements IBaseDevice {
 			cpu.execute();
 			
 			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
-			if (cpu.s >= ((SPEED * 1000000.0)/INTERRUPT_RATE)) {
-				cpu.s = (cpu.s - vSyncInterval);
+			if (cpu.s >= (SPEED/INTERRUPT_RATE)) {
+				cpu.s = (cpu.s - (SPEED/INTERRUPT_RATE));
 				long now = System.currentTimeMillis();
 								
 				/* Execute delay */
@@ -282,7 +300,7 @@ public class MSX { // implements IBaseDevice {
 				int checkInterval = 1;
 				intCount++;
 				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
-					if (Math.abs(intCount - (interruptRate / checkInterval)) > 1) {
+					if (Math.abs(intCount - (INTERRUPT_RATE / checkInterval)) > 1) {
 						if (intCount < INTERRUPT_RATE) {
 							if (delay > 0) { 
 								delay -= 1;
@@ -291,7 +309,7 @@ public class MSX { // implements IBaseDevice {
 						}
 						if (intCount > INTERRUPT_RATE) {
 							delay += 1;
-							//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
+							//System.out.println("Running too fast: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
 						}
 					}
 					previousInterruptCycle = System.currentTimeMillis();
@@ -458,7 +476,7 @@ public class MSX { // implements IBaseDevice {
 	}
 
 	/**
-	 * Reset the MSX (simply resets PC to 0x0000)
+	 * Reset the MSX (simply resets PC to 0x0000).
 	 */
 	public void reset() {
 		cpu.PC = 0;
@@ -479,13 +497,13 @@ public class MSX { // implements IBaseDevice {
 	}
 	
 	/**
-	 * Change content of a slot.
+	 * Change content of a secondary slot.
 	 * 
 	 * @param slot
 	 * @param s
 	 */
 	public void setSlot(int slot, AbstractSlot s) {
-		slots[slot] = s;
+		secondarySlots[slot] = s;
 	}
 
 	public boolean isPaused() {
@@ -496,8 +514,11 @@ public class MSX { // implements IBaseDevice {
 		running = !f;
 	}
 
+	/**
+	 * @return Secondary slots.
+	 */
 	public AbstractSlot[] getSlots() {
-		return slots;
+		return secondarySlots;
 	}
 	
 }
