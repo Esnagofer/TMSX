@@ -1,7 +1,7 @@
 #TMSX
 
-TMSX is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the early eighties that was popular mainly in Europe and Japan.
-All parts (Z80, VDP, etcetera) were written from scratch.
+TMSX is an emulator, written in Java, for the Z80-based MSX computer, a home computer from the eighties that was popular mainly in mainland Europe and Japan.
+All parts of the emulator (Z80, video processor, etcetera) were written from scratch.
 This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably http://openmsx.org.
 That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
   some of the other MSX emulators out there.
@@ -12,7 +12,7 @@ So, if you're interested in learning how an MSX emulator works, TMSX might be of
 - Almost full MSX1 emulation.
 - Runs many Konami games (Antarctic Adventure, Frogger, Konami Tennis, Kings Valley and many more).
 - Doesn't yet run all Konami games (Knightmare, Konami Soccer and a couple of others).
-- Only support for 16K/32K ROMs. Need to figure out how to map bigger ROMs.
+- Only support for 16K (and 32K?) ROMs. Need to figure out how to map bigger ROMs.
 - For the moment no PSG emulation, no music.
 
 This project is work in progress. At the moment, things that need to be done are:
