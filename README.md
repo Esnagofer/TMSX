@@ -1,6 +1,8 @@
 #TMSX
 
-TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer from the eighties that was popular mainly in mainland Europe and Japan.
+TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer standard from the eighties that was popular mainly in mainland Europe and Japan.
+Like many home computers from that era, the MSX came with a built-in BASIC interpreter. What makes the MSX great is that it has a huge library of games. Many of these games are early installments of games that later became famous for their game console versions (Metal Gear, Nemesis, Contra, Bubble Bobble).
+
 All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch.
 This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably [OpenMSX](http://openmsx.org).
 That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
@@ -44,8 +46,9 @@ java -jar TMSX.jar
 
 To use the emulator, you need to set the system ROM. You can use either the free [C-BIOS](http://cbios.sourceforge.net) or a ROM image of an
 actual MSX1 computer. If you use C-BIOS, use the cbios_main_msx1.rom file which is included in the dowload that you can find on the [C-BIOS website](http://cbios.sourceforge.net).
-ROM images of actual MSX computers can be found at various places on the web. The emulator was developed using a ROM image of a 
-Toshiba HX-10 MSX1 computer with international keyboard layout, but ROM images of other MSX1 computers should work too. Upon starting 
+ROM images of actual MSX computers can be found at various places on the web ([here](http://bluemsx.msxblue.com/resource.html) for example). The emulator was developed using a ROM image of a 
+Toshiba HX-10 MSX1 computer with international keyboard layout, but ROM images of other MSX1 computers should work too, as long as they assume an international keyboard layout.
+Upon starting 
 the emulator for the first time, only the "Set System ROM" button is enabled. Click it and select the system ROM file that you want to 
 use.
 
