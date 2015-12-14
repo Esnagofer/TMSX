@@ -21,6 +21,12 @@ import emu.Tools;
 
 public abstract class AbstractSlot {
 
+	private final String name;
+	
+	public AbstractSlot(String name) {
+		this.name = name;
+	}
+	
 	/**
 	 * Abstract method for reading a byte at given address.
 	 * 
@@ -77,24 +83,9 @@ public abstract class AbstractSlot {
 		byte snd = rdByte((short)(addr+1));
 		return (short) ((fst & 0xff) | (snd << 8));
 	}
-
-	/**
-	 * Load given file into memory, starting at given address. Note
-	 * that this only works if this concrete class provides a writeable
-	 * memory space.
-	 * 
-	 * @param fileName
-	 * @param addr
-	 * @throws IOException
-	 */
-	public void load(String fileName, short start, int xsize) throws IOException {
-		File file=new File(fileName);
-		byte[] contents = new byte[xsize];
-		FileInputStream in = new FileInputStream(file);
-		if (in.read(contents) == -1) throw new RuntimeException("Wrong ROM file size");
-		if (in.read() != -1) throw new RuntimeException("Wrong ROM file size");
-		in.close();
-		for (int i = 0; i < xsize; i++) wrtByte(start++, contents[i]);
+	
+	public String getName() {
+		return name;
 	}
 
 }

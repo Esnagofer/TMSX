@@ -10,11 +10,9 @@ package emu.memory;
  */
 public class EmptySlot extends AbstractSlot {
 
-	public EmptySlot() { }
+	public EmptySlot(String name) { super(name); }
 	
-	public EmptySlot(int s) { }
-	
-	public byte rdByte(short addr) { return (byte)0xff; }
+	public byte rdByte(short addr) { return (byte)0x00; }
 	
 	public final void wrtByte(short addr, byte value) { }
 

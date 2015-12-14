@@ -61,20 +61,21 @@ public class TMSX extends JFrame {
 	    String romFile = prefs.get("msx_system_rom", "-");
 	    boolean romLoadOK = false;
 	    
-	    msx.getSlots()[0] = new ROMSlot(0xC000);
+	    ROMSlot bios = new ROMSlot(0xC000, "system");
 		try {
-			msx.getSlots()[0].load(romFile, (short)0x0000, 0x8000);
+			bios.load(romFile, (short)0x0000, 0x8000);
+			msx.getSlots()[0] = bios;
 			romLoadOK = true;
 		} catch (IOException e) {
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		msx.getSlots()[1] = new EmptySlot();
-		msx.getSlots()[2] = new EmptySlot();
+		msx.getSlots()[1] = new EmptySlot("cart1 (empty)");
+		msx.getSlots()[2] = new EmptySlot("cart2 (empty)");
 
 		/* Slot 3 is RAM */
-		msx.getSlots()[3] = new RAMSlot();
+		msx.getSlots()[3] = new RAMSlot("ram");
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
@@ -189,9 +190,12 @@ public class TMSX extends JFrame {
 				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-		            ROMSlot s = new ROMSlot(0xffff);
+		            ROMSlot s = new ROMSlot(0x10000, "cart1");
 		    		try {
 		    			s.load(file.getAbsolutePath(), (short)0x4000, (int)file.length());
+		    			//for (int i = 0xB000; i < 0x10000; i++) s.wrtByte((short)i, s.rdByte((short)(i - 0x8000)));
+		    			//for (int i = 0x0000; i < 0x4000; i++) s.wrtByte((short)i, s.rdByte((short)(i + 0x8000)));
+		    			//for (int i = 0x8000; i < 0xC000; i++) msx.getSlots()[3].wrtByte((short)i, s.rdByte((short)(i)));
 		    		} catch (IOException ex) {
 		    			ex.printStackTrace();
 		    		}
@@ -213,10 +217,11 @@ public class TMSX extends JFrame {
 				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-				    msx.getSlots()[0] = new ROMSlot(0xC000);
+		            ROMSlot bios = new ROMSlot(0xC000, "system");
 					boolean romLoadOK = false;
 				    try {
-						msx.getSlots()[0].load(file.getAbsolutePath(), (short)0x0000, 0x8000);
+				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);
+					    msx.getSlots()[0] = bios;
 						romLoadOK = true;
 					} catch (IOException ex) {
 						System.out.println("Could not load system rom \"" + file.getAbsolutePath() + "\": " + ex.getMessage());

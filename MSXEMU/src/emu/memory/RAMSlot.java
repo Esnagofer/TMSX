@@ -6,15 +6,17 @@ public class RAMSlot extends AbstractSlot {
 	
 	public final byte[] mem;
 	
-	public RAMSlot() {
+	public RAMSlot(String name) {
+		super(name);
 		mem = new byte[size];
-		for (int i = 0; i < size; i++) mem[i] = (byte)0xff;
+		//for (int i = 0; i < size; i++) mem[i] = (byte)0xf0;
 	}
 	
-	public RAMSlot(int s) {
+	public RAMSlot(int s, String name) {
+		super(name);
 		this.size = s;
 		mem = new byte[size];
-		for (int i = 0; i < size; i++) mem[i] = (byte)0xff;
+		//for (int i = 0; i < size; i++) mem[i] = (byte)0xf0;
 	}
 	
 	public byte rdByte(short addr) {

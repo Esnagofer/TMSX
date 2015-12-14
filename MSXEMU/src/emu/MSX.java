@@ -104,7 +104,7 @@ public class MSX {
 		secondarySlots = new AbstractSlot[4];
 		
 		/* Create primary slot object */
-		primarySlot = new AbstractSlot() {
+		primarySlot = new AbstractSlot("primary") {
 
 			@Override
 			public byte rdByte(short addr) {
