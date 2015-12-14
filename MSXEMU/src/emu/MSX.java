@@ -109,9 +109,9 @@ public class MSX {
 			@Override
 			public byte rdByte(short addr) {
 				byte val = 0;
-				if ((addr & 0xffff) <= 0x3fff) val = secondarySlots[getSlotForPage(0)].rdByte(addr);
-				else if ((addr & 0xffff) <= 0x7fff) val = secondarySlots[getSlotForPage(1)].rdByte(addr);
-				else if ((addr & 0xffff) <= 0xb3ff) val = secondarySlots[getSlotForPage(2)].rdByte(addr);
+				if ((addr & 0xffff) < 0x4000) val = secondarySlots[getSlotForPage(0)].rdByte(addr);
+				else if ((addr & 0xffff) < 0x8000) val = secondarySlots[getSlotForPage(1)].rdByte(addr);
+				else if ((addr & 0xffff) < 0xc000) val = secondarySlots[getSlotForPage(2)].rdByte(addr);
 				else val = secondarySlots[getSlotForPage(3)].rdByte(addr);
 				return val;
 			}
@@ -119,18 +119,18 @@ public class MSX {
 			@Override
 			public void wrtByte(short addr, byte value) {
 				if (isWritable(addr)) {
-					if ((addr & 0xffff) <= 0x3fff) secondarySlots[getSlotForPage(0)].wrtByte(addr, value);
-					else if ((addr & 0xffff) <= 0x7fff) secondarySlots[getSlotForPage(1)].wrtByte(addr, value);
-					else if ((addr & 0xffff) <= 0xb3ff) secondarySlots[getSlotForPage(2)].wrtByte(addr, value);
+					if ((addr & 0xffff) < 0x4000) secondarySlots[getSlotForPage(0)].wrtByte(addr, value);
+					else if ((addr & 0xffff) < 0x8000) secondarySlots[getSlotForPage(1)].wrtByte(addr, value);
+					else if ((addr & 0xffff) < 0xc000) secondarySlots[getSlotForPage(2)].wrtByte(addr, value);
 					else secondarySlots[getSlotForPage(3)].wrtByte(addr, value);
 				}
 			}
 
 			@Override
 			public boolean isWritable(short addr) {
-				if ((addr & 0xffff) <= 0x3fff) return secondarySlots[getSlotForPage(0)].isWritable(addr);
-				else if ((addr & 0xffff) <= 0x7fff) return secondarySlots[getSlotForPage(1)].isWritable(addr);
-				else if ((addr & 0xffff) <= 0xb3ff) return secondarySlots[getSlotForPage(2)].isWritable(addr);
+				if ((addr & 0xffff) < 0x4000) return secondarySlots[getSlotForPage(0)].isWritable(addr);
+				else if ((addr & 0xffff) < 0x8000) return secondarySlots[getSlotForPage(1)].isWritable(addr);
+				else if ((addr & 0xffff) < 0xc000) return secondarySlots[getSlotForPage(2)].isWritable(addr);
 				else return secondarySlots[getSlotForPage(3)].isWritable(addr);
 			}
 		};

@@ -193,9 +193,6 @@ public class TMSX extends JFrame {
 		            ROMSlot s = new ROMSlot(0x10000, "cart1");
 		    		try {
 		    			s.load(file.getAbsolutePath(), (short)0x4000, (int)file.length());
-		    			//for (int i = 0xB000; i < 0x10000; i++) s.wrtByte((short)i, s.rdByte((short)(i - 0x8000)));
-		    			//for (int i = 0x0000; i < 0x4000; i++) s.wrtByte((short)i, s.rdByte((short)(i + 0x8000)));
-		    			//for (int i = 0x8000; i < 0xC000; i++) msx.getSlots()[3].wrtByte((short)i, s.rdByte((short)(i)));
 		    		} catch (IOException ex) {
 		    			ex.printStackTrace();
 		    		}
