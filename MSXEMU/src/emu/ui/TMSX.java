@@ -20,10 +20,15 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import emu.MSX;
+import emu.cartridgeloaders.BlockMapper;
+import emu.cartridgeloaders.CartridgeLoader;
+import emu.cartridgeloaders.CartridgeLoaderRegistry;
+import emu.cartridgeloaders.Konami5Mapper;
 import emu.memory.EmptySlot;
 import emu.memory.RAMSlot;
 import emu.memory.ROMSlot;
@@ -186,17 +191,24 @@ public class TMSX extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				/* Select file */
 				JFileChooser fc = new JFileChooser();
 				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-		            ROMSlot s = new ROMSlot(0x10000, "cart1");
+
+		            /* Select loader */
+		            String input = (String) JOptionPane.showInputDialog(null, "Choose cartridge loader",
+		                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
+		            CartridgeLoader loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
 		    		try {
-		    			s.load(file.getAbsolutePath(), (short)0x4000, (int)file.length());
+		    			loader.load(file.getAbsolutePath(), (int)file.length());
 		    		} catch (IOException ex) {
 		    			ex.printStackTrace();
 		    		}
-		    		msx.setSlot(1, s);
+		    		
+		    		/* Set slot and reset */
+		    		msx.setSlot(1, loader.getSlot());
 					msx.reset();
 		        }
 			}
