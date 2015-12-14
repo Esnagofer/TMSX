@@ -65,7 +65,7 @@ public class TMS9918A {
 		};
 	
 	public TMS9918A() {
-		mem = new RAMSlot(ramSize);
+		mem = new RAMSlot(ramSize, "vram");
 		img = new BufferedImage(VDP_WIDTH*IMG_SCALE, VDP_HEIGHT*IMG_SCALE, BufferedImage.TYPE_INT_ARGB);
 	}
 		

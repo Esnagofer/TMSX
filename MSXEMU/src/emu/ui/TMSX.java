@@ -20,10 +20,16 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import emu.MSX;
+import emu.cartridgeloaders.BlockMapper;
+import emu.cartridgeloaders.CartridgeLoader;
+import emu.cartridgeloaders.CartridgeLoaderRegistry;
+import emu.cartridgeloaders.FlatMapper;
+import emu.cartridgeloaders.Konami5Mapper;
 import emu.memory.EmptySlot;
 import emu.memory.RAMSlot;
 import emu.memory.ROMSlot;
@@ -61,20 +67,21 @@ public class TMSX extends JFrame {
 	    String romFile = prefs.get("msx_system_rom", "-");
 	    boolean romLoadOK = false;
 	    
-	    msx.getSlots()[0] = new ROMSlot(0xC000);
+	    ROMSlot bios = new ROMSlot(0xC000, "system");
 		try {
-			msx.getSlots()[0].load(romFile, (short)0x0000, 0x8000);
+			bios.load(romFile, (short)0x0000, 0x8000);
+			msx.getSlots()[0] = bios;
 			romLoadOK = true;
 		} catch (IOException e) {
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		msx.getSlots()[1] = new EmptySlot();
-		msx.getSlots()[2] = new EmptySlot();
+		msx.getSlots()[1] = new EmptySlot("cart1 (empty)");
+		msx.getSlots()[2] = new EmptySlot("cart2 (empty)");
 
 		/* Slot 3 is RAM */
-		msx.getSlots()[3] = new RAMSlot();
+		msx.getSlots()[3] = new RAMSlot("ram");
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
@@ -185,18 +192,39 @@ public class TMSX extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				/* Select file */
 				JFileChooser fc = new JFileChooser();
 				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-		            ROMSlot s = new ROMSlot(0xffff);
+
+		            /* Select cartridge loader */
+		            CartridgeLoader loader;
+		            if (file.length() <= 0x8000) {
+		            	/* We default to flat mapper for roms < 32K */
+		            	loader = new FlatMapper("cart1");
+		            } else {
+			            /* Manually select loader */
+			            String input = (String) JOptionPane.showInputDialog(TMSX.this, "Choose cartridge loader",
+			                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
+			            loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
+		            }
+		            
+		            /* Load */
 		    		try {
-		    			s.load(file.getAbsolutePath(), (short)0x4000, (int)file.length());
+		    			loader.load(file.getAbsolutePath(), (int)file.length());
+
+			    		/* Set slot and reset */
+			    		msx.setSlot(1, loader.getSlot());
+						msx.reset();
+
 		    		} catch (IOException ex) {
-		    			ex.printStackTrace();
+		    			JOptionPane.showMessageDialog(TMSX.this,
+		    				    ex.getMessage(),
+		    				    "Error loading ROM",
+		    				    JOptionPane.ERROR_MESSAGE);
 		    		}
-		    		msx.setSlot(1, s);
-					msx.reset();
+			    		
 		        }
 			}
 			
@@ -213,10 +241,11 @@ public class TMSX extends JFrame {
 				int returnVal = fc.showOpenDialog(TMSX.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-				    msx.getSlots()[0] = new ROMSlot(0xC000);
+		            ROMSlot bios = new ROMSlot(0xC000, "system");
 					boolean romLoadOK = false;
 				    try {
-						msx.getSlots()[0].load(file.getAbsolutePath(), (short)0x0000, 0x8000);
+				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);
+					    msx.getSlots()[0] = bios;
 						romLoadOK = true;
 					} catch (IOException ex) {
 						System.out.println("Could not load system rom \"" + file.getAbsolutePath() + "\": " + ex.getMessage());
