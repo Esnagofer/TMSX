@@ -12,9 +12,8 @@ So, if you're interested in learning how an MSX emulator works, TMSX might be of
 ##The current status
 
 - Almost full MSX1 emulation.
-- Runs many Konami games (Antarctic Adventure, Frogger, Konami Tennis, Kings Valley and many more).
-- Doesn't yet run all Konami games (Knightmare, Konami Soccer and a couple of others).
-- Only support for 16K (and 32K?) ROMs. Need to figure out how to map bigger ROMs.
+- Runs many Konami games (Penguin Adventure, Nemesis I/II/III, Frogger, Knightmare, Kings Valley 2 and many more).
+- Some games don't work (F1 Spirit) or are buggy (Goonies).
 - For the moment no PSG emulation, no music.
 
 This project is work in progress. At the moment, things that need to be done are:
@@ -52,15 +51,19 @@ Upon starting
 the emulator for the first time, only the "Set System ROM" button is enabled. Click it and select the system ROM file that you want to 
 use.
 
+####Running games
+
+ROM images of cartridges can be downloaded at various places on the web. Different cartridges require a different mapping mechanism. By default, 16/32K roms are mapped directly, which should work for most games. Roms larger than 32K require a more complicated mapping mechanism. Two of these are implemented, the so called "Konami4" and "Konami5" mappers. The choice has to be selected manually after loading a cartridge (automatic detection is not yet implemented). Games that require the Konami4 mapper include Nemesis I and Penguin Adventure. Games that require the Konami5 mapper include Nemesis II/III, Parodius and King's Valley II. For other games you might want to try out both and see which one works. 
+
 ##Screenshots
 
 MSX BASIC
 
 ![MSX BASIC](/MSXEMU/screenshots/msxbasic.tiff?raw=true)
 
-Konami Antarctic Adventure
+Konami Panguin Adventure
 
-![Antarctic Adventure](/MSXEMU/screenshots/antarctic.tiff?raw=true)
+![Antarctic Adventure](/MSXEMU/screenshots/penguin adventure.tiff?raw=true)
 
 Konami Frogger
 
@@ -74,12 +77,16 @@ Konami Tennis
 
 ![Konami Tennis](/MSXEMU/screenshots/tennis.tiff?raw=true)
 
-Konami Kings Valley
+Konami Nemesis II
 
-![Kings Valley](/MSXEMU/screenshots/kingsvalley.tiff?raw=true)
+![Konami Tennis](/MSXEMU/screenshots/nemesis 2.tiff?raw=true)
 
-Konami Ping Pong
+Konami King's Valley 2
 
-![Kings Valley](/MSXEMU/screenshots/pingpong.tiff?raw=true)
+![Kings Valley](/MSXEMU/screenshots/King's Valley 2.tiff?raw=true)
+
+Konami Knightmare
+
+![Kings Valley](/MSXEMU/screenshots/knightmare.tiff?raw=true)
 
 *Author: Tjitze Rienstra (tjitze@gmail.com).*
