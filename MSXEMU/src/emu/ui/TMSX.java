@@ -28,6 +28,7 @@ import emu.MSX;
 import emu.cartridgeloaders.BlockMapper;
 import emu.cartridgeloaders.CartridgeLoader;
 import emu.cartridgeloaders.CartridgeLoaderRegistry;
+import emu.cartridgeloaders.FlatMapper;
 import emu.cartridgeloaders.Konami5Mapper;
 import emu.memory.EmptySlot;
 import emu.memory.RAMSlot;
@@ -197,19 +198,33 @@ public class TMSX extends JFrame {
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 
-		            /* Select loader */
-		            String input = (String) JOptionPane.showInputDialog(null, "Choose cartridge loader",
-		                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
-		            CartridgeLoader loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
+		            /* Select cartridge loader */
+		            CartridgeLoader loader;
+		            if (file.length() <= 0x8000) {
+		            	/* We default to flat mapper for roms < 32K */
+		            	loader = new FlatMapper("cart1");
+		            } else {
+			            /* Manually select loader */
+			            String input = (String) JOptionPane.showInputDialog(TMSX.this, "Choose cartridge loader",
+			                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
+			            loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
+		            }
+		            
+		            /* Load */
 		    		try {
 		    			loader.load(file.getAbsolutePath(), (int)file.length());
+
+			    		/* Set slot and reset */
+			    		msx.setSlot(1, loader.getSlot());
+						msx.reset();
+
 		    		} catch (IOException ex) {
-		    			ex.printStackTrace();
+		    			JOptionPane.showMessageDialog(TMSX.this,
+		    				    ex.getMessage(),
+		    				    "Error loading ROM",
+		    				    JOptionPane.ERROR_MESSAGE);
 		    		}
-		    		
-		    		/* Set slot and reset */
-		    		msx.setSlot(1, loader.getSlot());
-					msx.reset();
+			    		
 		        }
 			}
 			
