@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import emu.memory.AbstractSlot;
 
-public class Z802 {
+public class Z80 {
 
 	boolean eff1 = false, eff2 = false;
 
@@ -49,7 +49,7 @@ public class Z802 {
 	 * 
 	 * @param mem Memory slot to run.
 	 */
-	public Z802(AbstractSlot mem) {
+	public Z80(AbstractSlot mem) {
 		this.mem = mem;
 		reset();
 	}

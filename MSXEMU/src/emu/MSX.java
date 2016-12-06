@@ -35,7 +35,7 @@ public class MSX {
 	/** Initial delay value (will be adjusted to match desired speed) */
 	public static final int INITIAL_DELAY = 20;
 
-	private Z802 cpu;
+	private Z80 cpu;
 	private TMS9918A vdp;
 	private AY38910 psg;
 	
@@ -153,7 +153,7 @@ public class MSX {
 	 * Initialize CPU
 	 */
 	public void initCPU() {
-		cpu = new Z802(primarySlot);
+		cpu = new Z80(primarySlot);
 	}
 	
 	/**
