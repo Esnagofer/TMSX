@@ -1,9 +1,16 @@
 package emu;
 
+import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashSet;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import javax.swing.JPanel;
 
 import emu.memory.AbstractSlot;
@@ -30,23 +37,27 @@ public class MSX {
 
 	private Z802 cpu;
 	private TMS9918A vdp;
+	private AY38910 psg;
 	
 	private AbstractSlot primarySlot;
 	private AbstractSlot[] secondarySlots;
 
 	private KeyboardDecoder keyboard;
 
-	public boolean debugMode = false, debugEnabled = true;
-	
-	public boolean running = true;
+	public boolean debugMode = false, debugEnabled = true, running = true;
 	
 	/* PPI A register (primary slot select) */
 	private byte ppiA_SlotSelect = 0;
 
 	/* PPI C register (keyboard and cassette control) */
 	private byte ppiC_Keyboard;
-	
-	private JPanel screenPanel;
+
+	/* PSG write register value */
+	protected byte psg_RegisterSelect;
+
+	/* Component to repaint after vSync interrupt */
+	private Component screenComponent;
+
 		
 	/**
 	 * This method must be called after construction, to set up all parts of the emulation 
@@ -63,6 +74,8 @@ public class MSX {
 		initPPI();
 		debug("Init VDP");
 		initVDP();
+		debug("Init PSG");
+		initPSG();
 	}
 	
 	/**
@@ -244,6 +257,49 @@ public class MSX {
 
 	}
 	
+	/**
+	 * Initialize PSG
+	 */
+	public void initPSG() {
+
+		/* Construct PSG */
+		psg = new AY38910();
+		
+		/* PSG register write port (port 0xA0) */
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return psg_RegisterSelect;
+			}
+		}, 0xA0);
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				//System.out.println("Set psg register" + value);
+				psg_RegisterSelect = value;
+			}
+		}, 0xA0);
+
+		/* PSG value write port (port 0xA1) */
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				//if (psg_RegisterSelect != 15 && psg_RegisterSelect != 14) {
+				//	System.out.println("Writing port " + (psg_RegisterSelect & 0xff) + " value " + (value & 0xff));
+				//};
+				psg.out(psg_RegisterSelect & 0xff, value & 0xff);
+			}
+		}, 0xA1);
+
+		/* PSG value write read (port 0xA2) */
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return (byte)psg.in(psg_RegisterSelect & 0xff);
+			}
+		}, 0xA2);
+		
+		psg.init();
+		psg.start();
+		
+	}
+
 	/**
 	 * Start MSX. Basically a while loop that executes CPU instructions,
 	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
@@ -442,15 +498,15 @@ public class MSX {
 	 * 
 	 * @param screenPanel The panel to repaint upon VSync interrupt
 	 */
-	public void setScreenPanel(JPanel screenPanel) {
-		this.screenPanel = screenPanel;
+	public void setScreenPanel(Component screenComponent) {
+		this.screenComponent = screenComponent;
 	}
 	
 	/**
-	 * Repaint the screen panel.
+	 * Repaint the screen component.
 	 */
 	private void updateScreen() {
-		if (screenPanel != null) screenPanel.repaint();
+		if (screenComponent != null) screenComponent.repaint();
 	}
 
 	/**
@@ -520,5 +576,5 @@ public class MSX {
 	public AbstractSlot[] getSlots() {
 		return secondarySlots;
 	}
-	
+
 }
