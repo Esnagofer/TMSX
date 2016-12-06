@@ -1,12 +1,12 @@
 #TMSX
 
 TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer standard from the eighties that was popular mainly in mainland Europe and Japan.
-Like many home computers from that era, the MSX came with a built-in BASIC interpreter. What makes the MSX great is that it has a huge library of games. Many of these games are early installments of games that later became famous for their game console versions (Metal Gear, Nemesis, Contra, Bubble Bobble).
+Like many home computers from that era, the MSX came with a built-in BASIC interpreter. What makes the MSX great is that it has a huge library of games, many of these games are early varsions of games that later became famous for their game console versions (Metal Gear, Nemesis, Contra, Bubble Bobble).
 
-All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch.
-This project is undertaken purely for personal recreational purposes—other and much better emulators exist, most notably [OpenMSX](http://openmsx.org).
-That said, I believe the source code of TMSX is much simpler and therefore easier to understand than 
-  some of the other MSX emulators out there.
+All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch, except for the PSG sound emulatio (see [here](MSXEMU/src/emu/AY38910.java)).
+This project was undertaken mainly for personal recreational purposes. 
+Other emulators exist that are much better (such as[OpenMSX](http://openmsx.org)).
+That said, I believe the source code of TMSX is much simpler and therefore easier to understand than some of the other MSX emulators out there.
 So, if you're interested in learning how an MSX emulator works, TMSX might be of interest.
 
 ##The current status
@@ -14,12 +14,10 @@ So, if you're interested in learning how an MSX emulator works, TMSX might be of
 - Almost full MSX1 emulation.
 - Runs many Konami games (Penguin Adventure, Nemesis I/II/III, Frogger, Knightmare, Kings Valley 2 and many more).
 - Some games don't work (F1 Spirit) or are buggy (Goonies).
-- For the moment no PSG emulation, no music.
 
 This project is work in progress. At the moment, things that need to be done are:
 
 - Fix incompatibilities.
-- Add PSG emulation.
 - Possibly: MSX2 Emulation and disk emulation.
 
 ##How to use
