@@ -1,6 +1,5 @@
 package tmsx.domain.model.emulator;
 
-import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.HashSet;
@@ -70,10 +69,6 @@ public class MsxEmulator {
 	/** The psg register select. */
 	/* PSG write register value */
 	protected byte psg_RegisterSelect;
-
-	/** The screen component. */
-	/* Component to repaint after vSync interrupt */
-	private Component screenComponent;
 
 	/** The screen. */
 	private Screen screen;
@@ -384,8 +379,7 @@ public class MsxEmulator {
 				
 				/* Trigger interrupt */
 				vdp.setStatusINT(true);
-
-				updateScreen();
+				screen.refresh();
 
 				/* Keep track of interrupt rate and correct delay if necessary */
 				int checkInterval = 1;
@@ -448,7 +442,7 @@ public class MsxEmulator {
 					preStep = true;
 					while (preSP != cpu.getSP()) {
 						cpu.execute();
-						updateScreen();
+						screen.refresh();
 					}
 					cpu.printState();
 					continue;
@@ -528,23 +522,6 @@ public class MsxEmulator {
 		}
 	}
 	
-	/**
-	 * Register a screen panel, which will be repainted every time
-	 * a VSync interrupt is triggered.
-	 *
-	 * @param screenComponent the new screen panel
-	 */
-	public void setScreenPanel(Component screenComponent) {
-		this.screenComponent = screenComponent;
-	}
-	
-	/**
-	 * Repaint the screen component.
-	 */
-	private void updateScreen() {
-		if (screenComponent != null) screenComponent.repaint();
-	}
-
 	/**
 	 * Trigger a VSync interrupt. Will set the relevant status bits in the VDP
 	 * and calls cpu.interrupt() if interrupts are enabled.

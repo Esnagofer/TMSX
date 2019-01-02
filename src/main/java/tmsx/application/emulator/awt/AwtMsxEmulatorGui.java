@@ -17,7 +17,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import tmsx.domain.model.emulator.MsxEmulator;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoader;
@@ -29,9 +28,9 @@ import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
 
 /**
- * The Class TMSX.
+ * The Class AwtMsxEmulatorGui.
  */
-public class MsxGui extends JFrame {
+public class AwtMsxEmulatorGui extends JFrame {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -5724943280943859808L;
@@ -56,16 +55,22 @@ public class MsxGui extends JFrame {
 	
 	/** The screen. */
 	private Screen screen;
+
+	/** The screen panel. */
+	private JPanel screenPanel;
 	
 	/**
 	 * Instantiates a new msx gui.
 	 */
-	public MsxGui() {
+	public AwtMsxEmulatorGui() {
 		super();
 	}
 
+	/**
+	 * Start.
+	 */
 	public void start() {
-		screen = AwtScreen.newInstance(null);
+		createScreenPanel();
 		
 		/* Initialize MSX instance */
 		msx = MsxEmulator.newInstance(screen);
@@ -76,12 +81,8 @@ public class MsxGui extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(512,435);
 		setResizable(false);
+		setVisible(true);
 		pack();
-	    SwingUtilities.invokeLater(new Runnable() {
-	        public void run() {
-	          setVisible(true);
-	        }
-	      });
 		
 	    /* Load ROM */
 	    Preferences prefs = Preferences.userRoot().node("MSXEMU");
@@ -142,11 +143,9 @@ public class MsxGui extends JFrame {
 	private void buildFrame() {
 		
 		// Set up the main panel
-		JPanel screenPanel = createScreenPanel();
 		screenPanel.setFocusable(true);
 		screenPanel.setPreferredSize(new Dimension(512,384));
 		add(screenPanel, BorderLayout.PAGE_START);
-		msx.setScreenPanel(screenPanel);
 		screenPanel.addKeyListener(msx.getKeyBoard());
 		
 		// Button panel
@@ -207,7 +206,7 @@ public class MsxGui extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				/* Select file */
 				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(MsxGui.this);
+				int returnVal = fc.showOpenDialog(AwtMsxEmulatorGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 
@@ -218,7 +217,7 @@ public class MsxGui extends JFrame {
 		            	loader = new FlatMapper("cart1");
 		            } else {
 			            /* Manually select loader */
-			            String input = (String) JOptionPane.showInputDialog(MsxGui.this, "Choose cartridge loader",
+			            String input = (String) JOptionPane.showInputDialog(AwtMsxEmulatorGui.this, "Choose cartridge loader",
 			                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
 			            loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
 		            }
@@ -232,7 +231,7 @@ public class MsxGui extends JFrame {
 						msx.reset();
 
 		    		} catch (IOException ex) {
-		    			JOptionPane.showMessageDialog(MsxGui.this,
+		    			JOptionPane.showMessageDialog(AwtMsxEmulatorGui.this,
 		    				    ex.getMessage(),
 		    				    "Error loading ROM",
 		    				    JOptionPane.ERROR_MESSAGE);
@@ -251,7 +250,7 @@ public class MsxGui extends JFrame {
 			    Preferences prefs = Preferences.userRoot().node("MSXEMU");
 				JFileChooser fc = new JFileChooser();
 				fc.setSelectedFile(new File(prefs.get("msx_system_rom", "~/")));
-				int returnVal = fc.showOpenDialog(MsxGui.this);
+				int returnVal = fc.showOpenDialog(AwtMsxEmulatorGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 		            RomMemory bios = new RomMemory(0xC000, "system");
@@ -281,19 +280,20 @@ public class MsxGui extends JFrame {
 	 *
 	 * @return the j panel
 	 */
-	private JPanel createScreenPanel() {
-		JPanel msxPanel = new JPanel() {
-
+	private void createScreenPanel() {
+		screenPanel = new JPanel() {
+			
 			private static final long serialVersionUID = -6329538938559661623L;
 
 			@Override
-		    protected void paintComponent(Graphics g) {
-		        super.paintComponent(g);
-		        msx.getVDP().paint(g);
+		    protected void paintComponent(Graphics graphics) {
+		        super.paintComponent(graphics);
+				AwtScreen.class.cast(screen).setGraphics(graphics);
+				msx.getVDP().paint();		        	
 		    }
 
 		};
-		return msxPanel;
+		screen = AwtScreen.newInstance(screenPanel);
 	}
 
 	/**
@@ -301,8 +301,8 @@ public class MsxGui extends JFrame {
 	 *
 	 * @return the msx gui
 	 */
-	public static MsxGui newInstance() {
-		return new MsxGui();
+	public static AwtMsxEmulatorGui newInstance() {
+		return new AwtMsxEmulatorGui();
 	}
 
 }

@@ -1,11 +1,12 @@
 package tmsx.application.emulator.awt;
 
 import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import tmsx.domain.model.hardware.tms9918a.TMS9918A;
 import tmsx.domain.model.hardware.screen.Color;
 import tmsx.domain.model.hardware.screen.Screen;
+import tmsx.domain.model.hardware.tms9918a.TMS9918A;
 
 
 /**
@@ -15,6 +16,9 @@ public class AwtScreen implements Screen {
 
 	/** The component. */
 	private Component component;
+	
+	/** The graphics. */
+	private Graphics graphics;
 	
 	/** The img. */
 	private BufferedImage img;
@@ -34,6 +38,15 @@ public class AwtScreen implements Screen {
 		);
 	}
 
+	/**
+	 * Sets the graphics.
+	 *
+	 * @param graphics the new graphics
+	 */
+	public void setGraphics(Graphics graphics) {
+		this.graphics = graphics;
+	}
+	
 	/* (non-Javadoc)
 	 * @see tmsx.domain.model.hardware.tms9918a.TMS9918ACanvas#setPixel(int, int, int)
 	 */
@@ -53,14 +66,6 @@ public class AwtScreen implements Screen {
 	}
 
 	/* (non-Javadoc)
-	 * @see tmsx.domain.model.hardware.tms9918a.TMS9918ACanvas#paint()
-	 */
-	@Override
-	public void paint() {
-		component.getGraphics().drawImage(img, 0, 0, null);		
-	}
-
-	/* (non-Javadoc)
 	 * @see tmsx.domain.model.hardware.tms9918a.TMS9918ACanvas#refresh()
 	 */
 	@Override
@@ -68,6 +73,17 @@ public class AwtScreen implements Screen {
 		component.repaint();
 	}
 
+	/**
+	 * Paint.
+	 */
+	@Override
+	public void paint() {
+		if (graphics == null) {
+			throw new IllegalStateException("AwtScreen: 'graphics' not set");
+		}
+		graphics.drawImage(img, 0, 0, null);		
+	}
+	
 	/**
 	 * New instance.
 	 *

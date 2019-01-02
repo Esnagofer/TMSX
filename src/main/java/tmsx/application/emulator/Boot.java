@@ -1,6 +1,6 @@
 package tmsx.application.emulator;
 
-import tmsx.application.emulator.awt.MsxGui;
+import tmsx.application.emulator.awt.AwtMsxEmulatorGui;
 
 /**
  * The Class Boot.
@@ -13,7 +13,7 @@ public class Boot {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		MsxGui.newInstance().start();
+		AwtMsxEmulatorGui.newInstance().start();
 	}
 		
 }

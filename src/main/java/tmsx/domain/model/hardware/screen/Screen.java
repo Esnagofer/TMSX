@@ -18,13 +18,13 @@ public interface Screen {
 	public void setPixel(int px, int py, Color color);
 	
 	/**
-	 * Paint.
-	 */
-	public void paint();
-
-	/**
 	 * Refresh.
 	 */
 	public void refresh();
+
+	/**
+	 * Paint.
+	 */
+	public void paint();
 	
 }
