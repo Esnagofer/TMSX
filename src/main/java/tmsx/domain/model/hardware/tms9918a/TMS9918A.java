@@ -1,4 +1,4 @@
-package tmsx.domain.model.hardware.standard.tms9918a;
+package tmsx.domain.model.hardware.tms9918a;
 
 import java.awt.Color;
 import java.awt.Component;

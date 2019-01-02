@@ -1,4 +1,4 @@
-package tmsx.domain.model.hardware.standard.z80;
+package tmsx.domain.model.hardware.z80;
 
 import tmsx.infrastructure.Tools;
 

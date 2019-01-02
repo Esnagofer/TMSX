@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import tmsx.domain.model.hardware.standard.z80.Z80Memory;
+import tmsx.domain.model.hardware.z80.Z80Memory;
 
 /**
  * This class extends abstract slot and implements the logic behind the

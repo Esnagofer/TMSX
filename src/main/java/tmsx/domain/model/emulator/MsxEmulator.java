@@ -6,12 +6,12 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 
 import tmsx.application.emulator.KeyboardDecoder;
-import tmsx.domain.model.hardware.standard.ay38910.AY38910;
-import tmsx.domain.model.hardware.standard.tms9918a.TMS9918A;
-import tmsx.domain.model.hardware.standard.z80.Z80Memory;
-import tmsx.domain.model.hardware.standard.z80.Z80;
-import tmsx.domain.model.hardware.standard.z80.Z80InDevice;
-import tmsx.domain.model.hardware.standard.z80.Z80OutDevice;
+import tmsx.domain.model.hardware.ay38910.AY38910;
+import tmsx.domain.model.hardware.tms9918a.TMS9918A;
+import tmsx.domain.model.hardware.z80.Z80;
+import tmsx.domain.model.hardware.z80.Z80InDevice;
+import tmsx.domain.model.hardware.z80.Z80Memory;
+import tmsx.domain.model.hardware.z80.Z80OutDevice;
 import tmsx.infrastructure.Tools;
 
 /**

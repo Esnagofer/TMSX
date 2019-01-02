@@ -1,4 +1,4 @@
-package tmsx.domain.model.hardware.standard.ay38910;
+package tmsx.domain.model.hardware.ay38910;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;

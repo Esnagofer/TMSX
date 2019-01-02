@@ -1,6 +1,6 @@
 package tmsx.domain.model.emulator.cartridgeloaders;
 
-import tmsx.domain.model.hardware.standard.z80.Z80Memory;
+import tmsx.domain.model.hardware.z80.Z80Memory;
 
 /**
  * Implements cartridge loader and slot logic for cartridges that are 
