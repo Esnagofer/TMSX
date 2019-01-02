@@ -1,14 +1,18 @@
 /*
  * 
  */
-package tmsx.application.emulator;
+package tmsx.application.emulator.awt;
 
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+/**
+ * The Class KeyboardDecoder.
+ */
 public class KeyboardDecoder implements KeyListener {
 
+	/** The rows. */
 	/*
 	 * This array contains the MSX key matrix (11 rows of 8 bits each)
 	 * The array is updated by the pressKey and depressKey methods and
@@ -16,6 +20,7 @@ public class KeyboardDecoder implements KeyListener {
 	 */
 	private byte[] rows = new byte[11];
 	
+	/** The char matrix. */
 	/* 
 	 * Matrix for translating characters to key matrix codes. 
 	 * Every entry is of the form {character, row, column},
@@ -53,6 +58,7 @@ public class KeyboardDecoder implements KeyListener {
 
 	};
 
+	/** The key matrix. */
 	/* 
 	 * Matrix for translating special keys to key matrix codes. 
 	 * Every entry is of the form {KeyEvent, row, column},
@@ -90,23 +96,38 @@ public class KeyboardDecoder implements KeyListener {
 			/* We ignore row 9 and 10 (numeric pad keys) */
 	};
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
+	 */
 	@Override
 	public void keyTyped(KeyEvent e) {	}
 
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 		processKeyEvent(e, true);
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		processKeyEvent(e, false);
 	}
 
+	/**
+	 * Stop key pressed.
+	 */
 	public void stopKeyPressed() {
 		pressKey(7, 4);
 	}
 	
+	/**
+	 * Stop key depressed.
+	 */
 	public void stopKeyDepressed() {
 		depressKey(7, 4);
 	}
@@ -152,6 +173,9 @@ public class KeyboardDecoder implements KeyListener {
 
 	/**
 	 * Set value at given row/bit position to true.
+	 *
+	 * @param row the row
+	 * @param bit the bit
 	 */
 	private void pressKey(int row, int bit) {
 		rows[row] = (byte)((rows[row] & 0xff) | (1 << bit));
@@ -159,6 +183,9 @@ public class KeyboardDecoder implements KeyListener {
 
 	/**
 	 * Set value at given row/bit position to false.
+	 *
+	 * @param row the row
+	 * @param bit the bit
 	 */
 	private void depressKey(int row, int bit) {
 		rows[row] = (byte)((rows[row] & 0xff) & ~(1 << bit));
@@ -179,8 +206,8 @@ public class KeyboardDecoder implements KeyListener {
 
 	/**
 	 * This doesn't seem to work.
-	 * 
-	 * @param state
+	 *
+	 * @param state the new capslock
 	 */
 	public void setCapslock(boolean state) {
 		if (state != Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK)) {

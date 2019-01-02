@@ -24,7 +24,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>tmsx.application.emulator.MsxGui</mainClass>
+							<mainClass>tmsx.application.emulator.awt.MsxGui</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

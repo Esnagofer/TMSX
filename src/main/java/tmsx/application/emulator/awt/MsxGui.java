@@ -1,4 +1,4 @@
-package tmsx.application.emulator;
+package tmsx.application.emulator.awt;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -139,25 +139,14 @@ public class MsxGui extends JFrame {
 		this.msx = msx;
 		buildFrame();
 	}
-	
+
 	/**
 	 * Builds the frame.
 	 */
 	private void buildFrame() {
 		
 		// Set up the main panel
-		JPanel msxPanel = new JPanel() {
-		    /**
-			 * 
-			 */
-			private static final long serialVersionUID = -6329538938559661623L;
-
-			@Override
-		    protected void paintComponent(Graphics g) {
-		        super.paintComponent(g);
-		        msx.getVDP().paint(g);
-		    }
-		};
+		JPanel msxPanel = createScreenPanel();
 		msxPanel.setFocusable(true);
 		msxPanel.setPreferredSize(new Dimension(512,384));
 		add(msxPanel, BorderLayout.PAGE_START);
@@ -289,6 +278,21 @@ public class MsxGui extends JFrame {
 		});
 		
 		msxPanel.requestFocusInWindow();
+	}
+
+	private JPanel createScreenPanel() {
+		JPanel msxPanel = new JPanel() {
+
+			private static final long serialVersionUID = -6329538938559661623L;
+
+			@Override
+		    protected void paintComponent(Graphics g) {
+		        super.paintComponent(g);
+		        msx.getVDP().paint(g);
+		    }
+
+		};
+		return msxPanel;
 	}
 
 }

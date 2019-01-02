@@ -5,7 +5,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 
-import tmsx.application.emulator.KeyboardDecoder;
+import tmsx.application.emulator.awt.KeyboardDecoder;
 import tmsx.domain.model.hardware.ay38910.AY38910;
 import tmsx.domain.model.hardware.memory.AbstractMemory;
 import tmsx.domain.model.hardware.memory.Memory;

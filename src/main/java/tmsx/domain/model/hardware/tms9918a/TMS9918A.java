@@ -86,7 +86,7 @@ public class TMS9918A {
 	 */
 	private TMS9918A(Memory mem) {
 		this.mem = mem;
-		img = new BufferedImage(VDP_WIDTH*IMG_SCALE, VDP_HEIGHT*IMG_SCALE, BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(VDP_WIDTH * IMG_SCALE, VDP_HEIGHT * IMG_SCALE, BufferedImage.TYPE_INT_ARGB);
 	}
 		
 	/**
