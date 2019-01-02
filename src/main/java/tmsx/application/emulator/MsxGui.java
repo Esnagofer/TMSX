@@ -23,9 +23,9 @@ import tmsx.domain.model.emulator.MsxEmulator;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoader;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoaderRegistry;
 import tmsx.domain.model.emulator.cartridgeloaders.FlatMapper;
-import tmsx.domain.model.emulator.memory.EmptySlot;
-import tmsx.domain.model.emulator.memory.RAMSlot;
-import tmsx.domain.model.emulator.memory.ROMSlot;
+import tmsx.domain.model.hardware.memory.EmptyMemory;
+import tmsx.domain.model.hardware.memory.RamMemory;
+import tmsx.domain.model.hardware.memory.RomMemory;
 
 /**
  * The Class TMSX.
@@ -82,7 +82,7 @@ public class MsxGui extends JFrame {
 	    String romFile = prefs.get("msx_system_rom", "-");
 	    boolean romLoadOK = false;
 	    
-	    ROMSlot bios = new ROMSlot(0xC000, "system");
+	    RomMemory bios = new RomMemory(0xC000, "system");
 		try {
 			bios.load(romFile, (short)0x0000, 0x8000);
 			msx.getSlots()[0] = bios;
@@ -92,11 +92,11 @@ public class MsxGui extends JFrame {
 		}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		msx.getSlots()[1] = new EmptySlot("cart1 (empty)");
-		msx.getSlots()[2] = new EmptySlot("cart2 (empty)");
+		msx.getSlots()[1] = new EmptyMemory("cart1 (empty)");
+		msx.getSlots()[2] = new EmptyMemory("cart2 (empty)");
 
 		/* Slot 3 is RAM */
-		msx.getSlots()[3] = new RAMSlot("ram");
+		msx.getSlots()[3] = new RamMemory("ram");
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
@@ -269,7 +269,7 @@ public class MsxGui extends JFrame {
 				int returnVal = fc.showOpenDialog(MsxGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
-		            ROMSlot bios = new ROMSlot(0xC000, "system");
+		            RomMemory bios = new RomMemory(0xC000, "system");
 					boolean romLoadOK = false;
 				    try {
 				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);

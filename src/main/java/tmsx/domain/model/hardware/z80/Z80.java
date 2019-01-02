@@ -1,6 +1,7 @@
 package tmsx.domain.model.hardware.z80;
 
-import tmsx.infrastructure.Tools;
+import tmsx.domain.model.hardware.memory.Memory;
+import tmsx.domain.model.lib.Tools;
 
 /**
  * The Class Z80.
@@ -17,6 +18,7 @@ public class Z80 {
 	public /* Program counter */
 	short PC = 0;
 
+	/** The old PC. */
 	/* Program counter */
 	short oldPC = 0;
 
@@ -45,7 +47,7 @@ public class Z80 {
 
 	/** The mem. */
 	/* Memory instance */
-	private final Z80Memory mem;
+	private final Memory mem;
 
 	/** The out. */
 	/* Arrays to keep registered I/O devices */
@@ -70,7 +72,7 @@ public class Z80 {
 	 * 
 	 * @param mem Memory slot to run.
 	 */
-	public Z80(Z80Memory mem) {
+	protected Z80(Memory mem) {
 		this.mem = mem;
 		reset();
 	}
@@ -3732,6 +3734,16 @@ public class Z80 {
 	 */
 	public short getPC() {
 		return PC;
+	}
+	
+	/**
+	 * New instance.
+	 *
+	 * @param mem the mem
+	 * @return the z80
+	 */
+	public static Z80 newInstance(Memory mem) {
+		return new Z80(mem);
 	}
 	
 }

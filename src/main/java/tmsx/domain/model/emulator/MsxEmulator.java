@@ -7,12 +7,14 @@ import java.util.HashSet;
 
 import tmsx.application.emulator.KeyboardDecoder;
 import tmsx.domain.model.hardware.ay38910.AY38910;
+import tmsx.domain.model.hardware.memory.AbstractMemory;
+import tmsx.domain.model.hardware.memory.Memory;
+import tmsx.domain.model.hardware.memory.RamMemory;
 import tmsx.domain.model.hardware.tms9918a.TMS9918A;
 import tmsx.domain.model.hardware.z80.Z80;
 import tmsx.domain.model.hardware.z80.Z80InDevice;
-import tmsx.domain.model.hardware.z80.Z80Memory;
 import tmsx.domain.model.hardware.z80.Z80OutDevice;
-import tmsx.infrastructure.Tools;
+import tmsx.domain.model.lib.Tools;
 
 /**
  * The main class that ties all the elements of an MSX computer together: CPU, VDP,
@@ -45,10 +47,10 @@ public class MsxEmulator {
 	private AY38910 psg;
 	
 	/** The primary slot. */
-	private Z80Memory primarySlot;
+	private Memory primarySlot;
 	
 	/** The secondary slots. */
-	private Z80Memory[] secondarySlots;
+	private Memory[] secondarySlots;
 
 	/** The keyboard. */
 	private KeyboardDecoder keyboard;
@@ -134,10 +136,10 @@ public class MsxEmulator {
 	 */
 	public void initMemory() {
 		
-		secondarySlots = new Z80Memory[4];
+		secondarySlots = new AbstractMemory[4];
 		
 		/* Create primary slot object */
-		primarySlot = new Z80Memory("primary") {
+		primarySlot = new AbstractMemory("primary") {
 
 			@Override
 			public byte rdByte(short addr) {
@@ -173,7 +175,7 @@ public class MsxEmulator {
 	 * Initialize CPU.
 	 */
 	public void initCPU() {
-		cpu = new Z80(primarySlot);
+		cpu = Z80.newInstance(primarySlot);
 	}
 	
 	/**
@@ -181,7 +183,7 @@ public class MsxEmulator {
 	 * (i.e., port 0x98 for VRAM data read/write and port 0x99 for status register I/O).
 	 */
 	public void initVDP() {
-		vdp = new TMS9918A();
+		vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"));
 		
 		// VRAM data read/write port
 		cpu.registerInDevice(new Z80InDevice() {
@@ -283,7 +285,7 @@ public class MsxEmulator {
 	public void initPSG() {
 
 		/* Construct PSG */
-		psg = new AY38910();
+		psg = AY38910.newInstance();
 		
 		/* PSG register write port (port 0xA0) */
 		cpu.registerInDevice(new Z80InDevice() {
@@ -583,7 +585,7 @@ public class MsxEmulator {
 	 * @param slot the slot
 	 * @param s the s
 	 */
-	public void setSlot(int slot, Z80Memory s) {
+	public void setSlot(int slot, Memory s) {
 		secondarySlots[slot] = s;
 	}
 
@@ -610,7 +612,7 @@ public class MsxEmulator {
 	 *
 	 * @return Secondary slots.
 	 */
-	public Z80Memory[] getSlots() {
+	public Memory[] getSlots() {
 		return secondarySlots;
 	}
 

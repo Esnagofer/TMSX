@@ -1,6 +1,4 @@
-package tmsx.domain.model.hardware.z80;
-
-import tmsx.infrastructure.Tools;
+package tmsx.domain.model.hardware.memory;
 
 /**
  * 
@@ -12,30 +10,19 @@ import tmsx.infrastructure.Tools;
  * switching mechanism.
  * 
  * @author tjitze
+ * @author esnagofer
  *
  */
 
-public abstract class Z80Memory {
+public interface Memory {
 
-	/** The name. */
-	private final String name;
-	
-	/**
-	 * Instantiates a new abstract slot.
-	 *
-	 * @param name the name
-	 */
-	public Z80Memory(String name) {
-		this.name = name;
-	}
-	
 	/**
 	 * Abstract method for reading a byte at given address.
 	 * 
 	 * @param addr Address
 	 * @return Value
 	 */
-	public abstract byte rdByte(short addr);
+	public byte rdByte(short addr);
 
 	/**
 	 * Abstract method for writing a byte at given address.
@@ -43,7 +30,7 @@ public abstract class Z80Memory {
 	 * @param addr Address
 	 * @param value Value
 	 */
-	public abstract void wrtByte(short addr, byte value);
+	public void wrtByte(short addr, byte value);
 
 	/**
 	 * Returns true if given address can be written to (i.e. is RAM as opposed to ROM).
@@ -52,7 +39,7 @@ public abstract class Z80Memory {
 	 * @param addr the addr
 	 * @return true, if is writable
 	 */
-	public abstract boolean isWritable(short addr);
+	public boolean isWritable(short addr);
 
 	/**
 	 * Write a byte at given address (provided by lsb and msb bytes).
@@ -61,20 +48,15 @@ public abstract class Z80Memory {
 	 * @param msb MSB of address
 	 * @param value Value
 	 */
-	public final void writeByte(byte lsb, byte msb, byte value) {
-		wrtByte((short)((msb << 8) | (lsb & 0xff)), value);
-	}
-
+	public void writeByte(byte lsb, byte msb, byte value);
+	
 	/**
 	 * Write a short at given address (in LH order).
 	 *
 	 * @param addr Address
 	 * @param word Value
 	 */
-	public void writeShortLH(short addr, short word) {
-		wrtByte(addr, Tools.getLSB(word));
-		wrtByte((short)(addr + 1), Tools.getMSB(word));
-	}
+	public void writeShortLH(short addr, short word);
 
 	/**
 	 * Read a short at given address (LH order).
@@ -82,19 +64,13 @@ public abstract class Z80Memory {
 	 * @param addr the addr
 	 * @return the short
 	 */
-	public short readWordLH(short addr) {
-		byte fst = rdByte(addr);
-		byte snd = rdByte((short)(addr+1));
-		return (short) ((fst & 0xff) | (snd << 8));
-	}
+	public short readWordLH(short addr);
 	
 	/**
 	 * Gets the name.
 	 *
 	 * @return the name
 	 */
-	public String getName() {
-		return name;
-	}
+	public String getName();
 
 }

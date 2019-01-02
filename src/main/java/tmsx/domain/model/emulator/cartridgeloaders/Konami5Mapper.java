@@ -1,6 +1,6 @@
 package tmsx.domain.model.emulator.cartridgeloaders;
 
-import tmsx.domain.model.hardware.z80.Z80Memory;
+import tmsx.domain.model.hardware.memory.Memory;
 
 /**
  * Implements cartridge loader and slot logic for cartridges that are 
@@ -24,7 +24,7 @@ public class Konami5Mapper extends BlockMapper implements CartridgeLoader {
 	 * @see emu.cartridgeloaders.CartridgeLoader#getSlot()
 	 */
 	@Override
-	public Z80Memory getSlot() {
+	public Memory getSlot() {
 		return this;
 	}
 

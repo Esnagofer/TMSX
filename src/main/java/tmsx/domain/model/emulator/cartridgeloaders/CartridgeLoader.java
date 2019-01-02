@@ -2,7 +2,7 @@ package tmsx.domain.model.emulator.cartridgeloaders;
 
 import java.io.IOException;
 
-import tmsx.domain.model.hardware.z80.Z80Memory;
+import tmsx.domain.model.hardware.memory.Memory;
 
 /**
  * A cartridge loader implements a load method, to load ROM images,
@@ -28,5 +28,5 @@ public interface CartridgeLoader {
 	 *
 	 * @return the slot
 	 */
-	public Z80Memory getSlot();
+	public Memory getSlot();
 }

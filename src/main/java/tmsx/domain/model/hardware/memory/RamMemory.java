@@ -1,11 +1,9 @@
-package tmsx.domain.model.emulator.memory;
-
-import tmsx.domain.model.hardware.z80.Z80Memory;
+package tmsx.domain.model.hardware.memory;
 
 /**
  * The Class RAMSlot.
  */
-public class RAMSlot extends Z80Memory {
+public class RamMemory extends AbstractMemory {
 
 	/** The size. */
 	private int size = 0xFFFF + 1;
@@ -18,7 +16,7 @@ public class RAMSlot extends Z80Memory {
 	 *
 	 * @param name the name
 	 */
-	public RAMSlot(String name) {
+	public RamMemory(String name) {
 		super(name);
 		mem = new byte[size];
 		//for (int i = 0; i < size; i++) mem[i] = (byte)0xf0;
@@ -30,7 +28,7 @@ public class RAMSlot extends Z80Memory {
 	 * @param s the s
 	 * @param name the name
 	 */
-	public RAMSlot(int s, String name) {
+	public RamMemory(int s, String name) {
 		super(name);
 		this.size = s;
 		mem = new byte[size];

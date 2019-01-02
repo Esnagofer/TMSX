@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import tmsx.domain.model.hardware.z80.Z80Memory;
+import tmsx.domain.model.hardware.memory.AbstractMemory;
 
 /**
  * This class extends abstract slot and implements the logic behind the
@@ -15,9 +15,10 @@ import tmsx.domain.model.hardware.z80.Z80Memory;
  * setPageAddrOffset) causes a given page to map to a given block.
  * 
  * @author tjitze.rienstra
+ * @author esnagofer
  *
  */
-public class BlockMapper extends Z80Memory {
+public class BlockMapper extends AbstractMemory {
 
 	/** The page start. */
 	public short pageStart = 0x4000;

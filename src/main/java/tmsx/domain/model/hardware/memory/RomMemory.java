@@ -1,16 +1,15 @@
-package tmsx.domain.model.emulator.memory;
+package tmsx.domain.model.hardware.memory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import tmsx.domain.model.hardware.z80.Z80Memory;
-import tmsx.infrastructure.Tools;
+import tmsx.domain.model.lib.Tools;
 
 /**
  * The Class ROMSlot.
  */
-public class ROMSlot extends Z80Memory {
+public class RomMemory extends AbstractMemory {
 
 	/** The size. */
 	private int size = 0x10000;
@@ -23,7 +22,7 @@ public class ROMSlot extends Z80Memory {
 	 *
 	 * @param name the name
 	 */
-	public ROMSlot(String name) {
+	public RomMemory(String name) {
 		super(name);
 		mem = new byte[size];
 	}
@@ -34,7 +33,7 @@ public class ROMSlot extends Z80Memory {
 	 * @param s the s
 	 * @param name the name
 	 */
-	public ROMSlot(int s, String name) {
+	public RomMemory(int s, String name) {
 		super(name);
 		this.size = s;
 		mem = new byte[size];

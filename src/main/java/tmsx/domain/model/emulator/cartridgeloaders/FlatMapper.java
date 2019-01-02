@@ -2,8 +2,8 @@ package tmsx.domain.model.emulator.cartridgeloaders;
 
 import java.io.IOException;
 
-import tmsx.domain.model.emulator.memory.ROMSlot;
-import tmsx.domain.model.hardware.z80.Z80Memory;
+import tmsx.domain.model.hardware.memory.Memory;
+import tmsx.domain.model.hardware.memory.RomMemory;
 
 /**
  * Implements cartridge loader and slot logic for cartridges that are 
@@ -13,7 +13,7 @@ import tmsx.domain.model.hardware.z80.Z80Memory;
  * @author tjitze.rienstra
  *
  */
-public class FlatMapper extends ROMSlot implements CartridgeLoader {
+public class FlatMapper extends RomMemory implements CartridgeLoader {
 
 	/**
 	 * Instantiates a new flat mapper.
@@ -36,7 +36,7 @@ public class FlatMapper extends ROMSlot implements CartridgeLoader {
 	 * @see emu.cartridgeloaders.CartridgeLoader#getSlot()
 	 */
 	@Override
-	public Z80Memory getSlot() {
+	public Memory getSlot() {
 		return this;
 	}
 
