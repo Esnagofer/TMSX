@@ -10,6 +10,7 @@ import tmsx.domain.model.hardware.ay38910.AY38910;
 import tmsx.domain.model.hardware.memory.AbstractMemory;
 import tmsx.domain.model.hardware.memory.Memory;
 import tmsx.domain.model.hardware.memory.RamMemory;
+import tmsx.domain.model.hardware.screen.Screen;
 import tmsx.domain.model.hardware.tms9918a.TMS9918A;
 import tmsx.domain.model.hardware.z80.Z80;
 import tmsx.domain.model.hardware.z80.Z80InDevice;
@@ -74,6 +75,18 @@ public class MsxEmulator {
 	/* Component to repaint after vSync interrupt */
 	private Component screenComponent;
 
+	/** The screen. */
+	private Screen screen;
+
+	/**
+	 * Instantiates a new msx emulator.
+	 *
+	 * @param screen the screen
+	 */
+	protected MsxEmulator(Screen screen) {
+		super();
+		this.screen = screen;
+	}
 		
 	/**
 	 * This method must be called after construction, to set up all parts of the emulation 
@@ -183,7 +196,7 @@ public class MsxEmulator {
 	 * (i.e., port 0x98 for VRAM data read/write and port 0x99 for status register I/O).
 	 */
 	public void initVDP() {
-		vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"));
+		vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);
 		
 		// VRAM data read/write port
 		cpu.registerInDevice(new Z80InDevice() {
@@ -614,6 +627,16 @@ public class MsxEmulator {
 	 */
 	public Memory[] getSlots() {
 		return secondarySlots;
+	}
+
+	/**
+	 * New instance.
+	 *
+	 * @param screen the screen
+	 * @return the msx emulator
+	 */
+	public static MsxEmulator newInstance(Screen screen) {
+		return new MsxEmulator(screen);
 	}
 
 }

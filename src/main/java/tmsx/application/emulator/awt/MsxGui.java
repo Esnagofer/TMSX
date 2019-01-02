@@ -26,6 +26,7 @@ import tmsx.domain.model.emulator.cartridgeloaders.FlatMapper;
 import tmsx.domain.model.hardware.memory.EmptyMemory;
 import tmsx.domain.model.hardware.memory.RamMemory;
 import tmsx.domain.model.hardware.memory.RomMemory;
+import tmsx.domain.model.hardware.screen.Screen;
 
 /**
  * The Class TMSX.
@@ -53,27 +54,32 @@ public class MsxGui extends JFrame {
 	/** The break button. */
 	private JButton breakButton;
 	
+	/** The screen. */
+	private Screen screen;
+	
 	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
+	 * Instantiates a new msx gui.
 	 */
-	public static void main(String[] args) {
+	public MsxGui() {
+		super();
+	}
 
-		/* Initialize MSX instance */
-		MsxEmulator msx = new MsxEmulator();
-		msx.initHardware();
+	public void start() {
+		screen = AwtScreen.newInstance(null);
 		
-		/* Build frame */
-		MsxGui frame = new MsxGui(msx);
-		frame.setTitle("TMSX - MSX Emulator");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(512,435);
-		frame.setResizable(false);
-		frame.pack();
+		/* Initialize MSX instance */
+		msx = MsxEmulator.newInstance(screen);
+		msx.initHardware();
+		buildFrame();
+		
+		setTitle("TMSX - MSX Emulator");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(512,435);
+		setResizable(false);
+		pack();
 	    SwingUtilities.invokeLater(new Runnable() {
 	        public void run() {
-	          frame.setVisible(true);
+	          setVisible(true);
 	        }
 	      });
 		
@@ -100,14 +106,14 @@ public class MsxGui extends JFrame {
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
-			frame.activateROMLoadState();
+			activateROMLoadState();
 		}
 
 		/* Start MSX */
 		msx.startMSX();
-
-	}
 		
+	}
+
 	/**
 	 * Disable all buttons except Load System ROM.
 	 */
@@ -131,27 +137,17 @@ public class MsxGui extends JFrame {
 	}
 	
 	/**
-	 * Instantiates a new tmsx.
-	 *
-	 * @param msx the msx
-	 */
-	public MsxGui(MsxEmulator msx) {
-		this.msx = msx;
-		buildFrame();
-	}
-
-	/**
 	 * Builds the frame.
 	 */
 	private void buildFrame() {
 		
 		// Set up the main panel
-		JPanel msxPanel = createScreenPanel();
-		msxPanel.setFocusable(true);
-		msxPanel.setPreferredSize(new Dimension(512,384));
-		add(msxPanel, BorderLayout.PAGE_START);
-		msx.setScreenPanel(msxPanel);
-		msxPanel.addKeyListener(msx.getKeyBoard());
+		JPanel screenPanel = createScreenPanel();
+		screenPanel.setFocusable(true);
+		screenPanel.setPreferredSize(new Dimension(512,384));
+		add(screenPanel, BorderLayout.PAGE_START);
+		msx.setScreenPanel(screenPanel);
+		screenPanel.addKeyListener(msx.getKeyBoard());
 		
 		// Button panel
 		FlowLayout buttonLayout = new FlowLayout();
@@ -277,9 +273,14 @@ public class MsxGui extends JFrame {
 			
 		});
 		
-		msxPanel.requestFocusInWindow();
+		screenPanel.requestFocusInWindow();
 	}
 
+	/**
+	 * Creates the screen panel.
+	 *
+	 * @return the j panel
+	 */
 	private JPanel createScreenPanel() {
 		JPanel msxPanel = new JPanel() {
 
@@ -293,6 +294,15 @@ public class MsxGui extends JFrame {
 
 		};
 		return msxPanel;
+	}
+
+	/**
+	 * New instance.
+	 *
+	 * @return the msx gui
+	 */
+	public static MsxGui newInstance() {
+		return new MsxGui();
 	}
 
 }

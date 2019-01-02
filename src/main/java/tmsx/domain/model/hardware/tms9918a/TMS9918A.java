@@ -1,10 +1,11 @@
 package tmsx.domain.model.hardware.tms9918a;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import tmsx.domain.model.hardware.memory.Memory;
+import tmsx.domain.model.hardware.screen.Color;
+import tmsx.domain.model.hardware.screen.Screen;
 import tmsx.domain.model.lib.Tools;
 
 /**
@@ -58,6 +59,9 @@ public class TMS9918A {
 	
 	/** The write disabled. */
 	private volatile boolean writeDisabled = false; // Disable changing registers/vram
+
+	/** The screen. */
+	private Screen screen;
 	
 	/** The Constant colors. */
 	public static final Color[] colors = { 
@@ -83,9 +87,11 @@ public class TMS9918A {
 	 * Instantiates a new tms9918a.
 	 *
 	 * @param mem the mem
+	 * @param screen the screen
 	 */
-	private TMS9918A(Memory mem) {
+	private TMS9918A(Memory mem, Screen screen) {
 		this.mem = mem;
+		this.screen = screen;
 		img = new BufferedImage(VDP_WIDTH * IMG_SCALE, VDP_HEIGHT * IMG_SCALE, BufferedImage.TYPE_INT_ARGB);
 	}
 		
@@ -1052,10 +1058,11 @@ public class TMS9918A {
 	 * New instance.
 	 *
 	 * @param mem the mem
+	 * @param screen the screen
 	 * @return the tms9918a
 	 */
-	public static TMS9918A newInstance(Memory mem) {
-		return new TMS9918A(mem);
+	public static TMS9918A newInstance(Memory mem, Screen screen) {
+		return new TMS9918A(mem, screen);
 	}
 	
 }

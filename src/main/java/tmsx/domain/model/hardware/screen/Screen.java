@@ -1,4 +1,4 @@
-package tmsx.domain.model.hardware.tms9918a;
+package tmsx.domain.model.hardware.screen;
 
 /**
  * The Interface TMS9918ACanvas.
@@ -6,7 +6,7 @@ package tmsx.domain.model.hardware.tms9918a;
  * @author esnagofer
  * 
  */
-public interface TMS9918ACanvas {
+public interface Screen {
 
 	/**
 	 * Sets the pixel.
@@ -15,7 +15,7 @@ public interface TMS9918ACanvas {
 	 * @param py the py
 	 * @param color the color
 	 */
-	public void setPixel(int px, int py, int color);
+	public void setPixel(int px, int py, Color color);
 	
 	/**
 	 * Paint.
