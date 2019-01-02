@@ -1,16 +1,18 @@
 /*
  * 
  */
-package tmsx.application.emulator.awt;
+package tmsx.infrastructure.awt.domain.model.hardware.keyboard;
 
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import tmsx.domain.model.hardware.keyboard.Keyboard;
+
 /**
  * The Class KeyboardDecoder.
  */
-public class KeyboardDecoder implements KeyListener {
+public class AwtKeyboard implements KeyListener,  Keyboard {
 
 	/** The rows. */
 	/*
@@ -95,43 +97,14 @@ public class KeyboardDecoder implements KeyListener {
 	
 			/* We ignore row 9 and 10 (numeric pad keys) */
 	};
-	
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyTyped(KeyEvent e) {	}
-
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyPressed(KeyEvent e) {
-		processKeyEvent(e, true);
-	}
-	
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyReleased(KeyEvent e) {
-		processKeyEvent(e, false);
-	}
 
 	/**
-	 * Stop key pressed.
+	 * Instantiates a new keyboard decoder.
 	 */
-	public void stopKeyPressed() {
-		pressKey(7, 4);
+	protected AwtKeyboard() {
+		super();
 	}
 	
-	/**
-	 * Stop key depressed.
-	 */
-	public void stopKeyDepressed() {
-		depressKey(7, 4);
-	}
-
 	/**
 	 * Process key event.
      *
@@ -191,28 +164,69 @@ public class KeyboardDecoder implements KeyListener {
 		rows[row] = (byte)((rows[row] & 0xff) & ~(1 << bit));
 	}
 
-	/**
-	 * Get the byte value of the given row. If a bit
-	 * is set to true, it means that the key is pressed.
-	 * (Warning: this value must be inverted according
-	 * to MSX spec)
-	 * 
-	 * @param row Value of row to get.
-	 * @return Byte containing all bits of given row.
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
 	 */
+	@Override
+	public void keyTyped(KeyEvent e) {	}
+
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
+	 */
+	@Override
+	public void keyPressed(KeyEvent e) {
+		processKeyEvent(e, true);
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
+	 */
+	@Override
+	public void keyReleased(KeyEvent e) {
+		processKeyEvent(e, false);
+	}
+
+	/* (non-Javadoc)
+	 * @see tmsx.domain.model.hardware.keyboard.Keyboard#stopKeyPressed()
+	 */
+	@Override
+	public void stopKeyPressed() {
+		pressKey(7, 4);
+	}
+	
+	/* (non-Javadoc)
+	 * @see tmsx.domain.model.hardware.keyboard.Keyboard#stopKeyDepressed()
+	 */
+	@Override
+	public void stopKeyDepressed() {
+		depressKey(7, 4);
+	}
+
+	/* (non-Javadoc)
+	 * @see tmsx.domain.model.hardware.keyboard.Keyboard#getRowValue(int)
+	 */
+	@Override
 	public byte getRowValue(int row) {
 		return rows[row];
 	}
 
-	/**
-	 * This doesn't seem to work.
-	 *
-	 * @param state the new capslock
+	/* (non-Javadoc)
+	 * @see tmsx.domain.model.hardware.keyboard.Keyboard#setCapslock(boolean)
 	 */
+	@Override
 	public void setCapslock(boolean state) {
 		if (state != Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK)) {
 			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, state);
 		}
 	}
 
+	/**
+	 * New instance.
+	 *
+	 * @return the keyboard
+	 */
+	public static Keyboard newInstance() {
+		return new AwtKeyboard();
+	}
+	
 }

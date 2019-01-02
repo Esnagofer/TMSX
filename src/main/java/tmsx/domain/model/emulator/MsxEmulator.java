@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 
-import tmsx.application.emulator.awt.KeyboardDecoder;
 import tmsx.domain.model.hardware.ay38910.AY38910;
+import tmsx.domain.model.hardware.keyboard.Keyboard;
 import tmsx.domain.model.hardware.memory.AbstractMemory;
 import tmsx.domain.model.hardware.memory.Memory;
 import tmsx.domain.model.hardware.memory.RamMemory;
@@ -53,7 +53,7 @@ public class MsxEmulator {
 	private Memory[] secondarySlots;
 
 	/** The keyboard. */
-	private KeyboardDecoder keyboard;
+	private Keyboard keyboard;
 
 	/** The running. */
 	public boolean debugMode = false, debugEnabled = true, running = true;
@@ -77,10 +77,12 @@ public class MsxEmulator {
 	 * Instantiates a new msx emulator.
 	 *
 	 * @param screen the screen
+	 * @param keyboard the keyboard
 	 */
-	protected MsxEmulator(Screen screen) {
+	protected MsxEmulator(Screen screen, Keyboard keyboard) {
 		super();
 		this.screen = screen;
+		this.keyboard = keyboard;
 	}
 		
 	/**
@@ -225,7 +227,6 @@ public class MsxEmulator {
 	 * Initialize keyboard.
 	 */
 	public void initKeyboard() {
-		keyboard = new KeyboardDecoder();
 	}
 	
 	/**
@@ -563,9 +564,9 @@ public class MsxEmulator {
 	/**
 	 * Gets the key board.
 	 *
-	 * @return The keyboard decoder instance of this MSX.
+	 * @return the key board
 	 */
-	public KeyboardDecoder getKeyBoard() {
+	public Keyboard getKeyBoard() {
 		return keyboard;
 	}
 	
@@ -610,10 +611,11 @@ public class MsxEmulator {
 	 * New instance.
 	 *
 	 * @param screen the screen
+	 * @param keyboard the keyboard
 	 * @return the msx emulator
 	 */
-	public static MsxEmulator newInstance(Screen screen) {
-		return new MsxEmulator(screen);
+	public static MsxEmulator newInstance(Screen screen, Keyboard keyboard) {
+		return new MsxEmulator(screen, keyboard);
 	}
 
 }

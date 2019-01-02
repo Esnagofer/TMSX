@@ -1,4 +1,4 @@
-package tmsx.application.emulator.awt;
+package tmsx.infrastructure.awt.domain.model.hardware.screen;
 
 import java.awt.Component;
 import java.awt.Graphics;

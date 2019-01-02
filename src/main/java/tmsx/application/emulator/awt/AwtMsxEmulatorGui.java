@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -22,10 +23,13 @@ import tmsx.domain.model.emulator.MsxEmulator;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoader;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoaderRegistry;
 import tmsx.domain.model.emulator.cartridgeloaders.FlatMapper;
+import tmsx.domain.model.hardware.keyboard.Keyboard;
 import tmsx.domain.model.hardware.memory.EmptyMemory;
 import tmsx.domain.model.hardware.memory.RamMemory;
 import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
+import tmsx.infrastructure.awt.domain.model.hardware.keyboard.AwtKeyboard;
+import tmsx.infrastructure.awt.domain.model.hardware.screen.AwtScreen;
 
 /**
  * The Class AwtMsxEmulatorGui.
@@ -53,11 +57,14 @@ public class AwtMsxEmulatorGui extends JFrame {
 	/** The break button. */
 	private JButton breakButton;
 	
+	/** The screen panel. */
+	private JPanel screenPanel;
+	
 	/** The screen. */
 	private Screen screen;
 
-	/** The screen panel. */
-	private JPanel screenPanel;
+	/** The keyboard. */
+	private Keyboard keyboard;
 	
 	/**
 	 * Instantiates a new msx gui.
@@ -70,10 +77,11 @@ public class AwtMsxEmulatorGui extends JFrame {
 	 * Start.
 	 */
 	public void start() {
+		keyboard = AwtKeyboard.newInstance();
 		createScreenPanel();
 		
 		/* Initialize MSX instance */
-		msx = MsxEmulator.newInstance(screen);
+		msx = MsxEmulator.newInstance(screen, keyboard);
 		msx.initHardware();
 		buildFrame();
 		
@@ -146,7 +154,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 		screenPanel.setFocusable(true);
 		screenPanel.setPreferredSize(new Dimension(512,384));
 		add(screenPanel, BorderLayout.PAGE_START);
-		screenPanel.addKeyListener(msx.getKeyBoard());
+		screenPanel.addKeyListener(KeyListener.class.cast(msx.getKeyBoard()));
 		
 		// Button panel
 		FlowLayout buttonLayout = new FlowLayout();
