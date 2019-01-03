@@ -24,8 +24,6 @@ import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoader;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoaderRegistry;
 import tmsx.domain.model.emulator.cartridgeloaders.FlatMapper;
 import tmsx.domain.model.hardware.keyboard.Keyboard;
-import tmsx.domain.model.hardware.memory.EmptyMemory;
-import tmsx.domain.model.hardware.memory.RamMemory;
 import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
 import tmsx.infrastructure.awt.domain.model.hardware.keyboard.AwtKeyboard;
@@ -78,41 +76,44 @@ public class AwtMsxEmulatorGui extends JFrame {
 	 */
 	public void start() {
 		keyboard = AwtKeyboard.newInstance();
-		createScreenPanel();
+		
+		screenPanel = new JPanel() {
+			
+			private static final long serialVersionUID = -6329538938559661623L;
+
+			@Override
+		    protected void paintComponent(Graphics graphics) {
+		        super.paintComponent(graphics);
+				AwtScreen.class.cast(screen).setGraphics(graphics);
+				msx.paint();		        	
+		    }
+
+		};
+		screen = AwtScreen.newInstance(screenPanel);
+		
 		
 		/* Initialize MSX instance */
 		msx = MsxEmulator.newInstance(screen, keyboard);
+
 		buildFrame();
 		
 		setTitle("TMSX - MSX Emulator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(512,435);
-		setResizable(false);
+		setResizable(true);
 		setVisible(true);
 		pack();
-		
-	    /* Load ROM */
-	    Preferences prefs = Preferences.userRoot().node("MSXEMU");
-	    String romFile = prefs.get("msx_system_rom", "-");
-	    boolean romLoadOK = false;
 	    
 	    RomMemory bios = new RomMemory(0xC000, "system");
+	    Preferences prefs = Preferences.userRoot().node("MSXEMU");
+	    String romFile = prefs.get("msx_system_rom", "-");
 		try {
+			/* Load ROM */
 			bios.load(romFile, (short)0x0000, 0x8000);
 			msx.setSlot(MsxEmulator.SLOT_0, bios);
-			romLoadOK = true;
 		} catch (IOException e) {
-			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
-		}
-
-		/* We fill slot 1 and 2 with empty ROM */
-		msx.setSlot(MsxEmulator.SLOT_1, new EmptyMemory("cart1 (empty)"));
-		msx.setSlot(MsxEmulator.SLOT_2, new EmptyMemory("cart2 (empty)"));
-		msx.setSlot(MsxEmulator.SLOT_3, new RamMemory("ram"));
-
-		/* If ROM was not loaded, activate ROM load state */
-		if (!romLoadOK) {
 			activateROMLoadState();
+			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
 
 		/* Start MSX */
@@ -278,27 +279,6 @@ public class AwtMsxEmulatorGui extends JFrame {
 		});
 		
 		screenPanel.requestFocusInWindow();
-	}
-
-	/**
-	 * Creates the screen panel.
-	 *
-	 * @return the j panel
-	 */
-	private void createScreenPanel() {
-		screenPanel = new JPanel() {
-			
-			private static final long serialVersionUID = -6329538938559661623L;
-
-			@Override
-		    protected void paintComponent(Graphics graphics) {
-		        super.paintComponent(graphics);
-				AwtScreen.class.cast(screen).setGraphics(graphics);
-				msx.paint();		        	
-		    }
-
-		};
-		screen = AwtScreen.newInstance(screenPanel);
 	}
 
 	/**

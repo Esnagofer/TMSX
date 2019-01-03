@@ -7,8 +7,10 @@ import java.util.HashSet;
 import tmsx.domain.model.hardware.ay38910.AY38910;
 import tmsx.domain.model.hardware.keyboard.Keyboard;
 import tmsx.domain.model.hardware.memory.AbstractMemory;
+import tmsx.domain.model.hardware.memory.EmptyMemory;
 import tmsx.domain.model.hardware.memory.Memory;
 import tmsx.domain.model.hardware.memory.RamMemory;
+import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
 import tmsx.domain.model.hardware.tms9918a.TMS9918A;
 import tmsx.domain.model.hardware.z80.Z80;
@@ -96,8 +98,19 @@ public class MsxEmulator {
 		this.screen = screen;
 		this.keyboard = keyboard;
 		initHardware();
+		initSlots();
 	}
 		
+	/**
+	 * Inits the slots.
+	 */
+	private void initSlots() {
+		setSlot(SLOT_0, new RomMemory(0xC000, "system"));
+		setSlot(SLOT_1, new EmptyMemory("cart1 (empty)"));
+		setSlot(SLOT_2, new EmptyMemory("cart2 (empty)"));
+		setSlot(SLOT_3, new RamMemory("ram"));
+	}
+
 	/**
 	 * This method must be called after construction, to set up all parts of the emulation 
 	 * (memory, cpu, keyboard, ppi, vdp).
