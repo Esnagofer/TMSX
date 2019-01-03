@@ -24,7 +24,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>tmsx.application.emulator.Boot</mainClass>
+							<mainClass>tmsx.infrastructure.awt.Boot</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

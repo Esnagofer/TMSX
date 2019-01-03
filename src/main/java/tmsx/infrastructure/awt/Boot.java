@@ -1,6 +1,6 @@
-package tmsx.application.emulator;
+package tmsx.infrastructure.awt;
 
-import tmsx.application.emulator.awt.AwtMsxEmulatorGui;
+import tmsx.application.awt.AwtMsxEmulatorGui;
 
 /**
  * The Class Boot.

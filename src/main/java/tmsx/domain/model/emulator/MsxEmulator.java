@@ -25,6 +25,18 @@ import tmsx.domain.model.lib.Tools;
  */
 public class MsxEmulator {
 
+	/** The Constant BIOS_SLOT. */
+	private static final int BIOS_SLOT = 0;
+
+	/** The Constant SLOT_1. */
+	private static final int SLOT_1 = 1;
+
+	/** The Constant SLOT_2. */
+	private static final int SLOT_2 = 2;
+
+	/** The Constant RAM_SLOT. */
+	private static final int RAM_SLOT = 3;
+	
 	/** The breakpoints. */
 	private HashSet<Short> breakpoints = new HashSet<Short>();
 	
@@ -55,6 +67,9 @@ public class MsxEmulator {
 	/** The keyboard. */
 	private Keyboard keyboard;
 
+	/** The screen. */
+	private Screen screen;
+	
 	/** The running. */
 	public boolean debugMode = false, debugEnabled = true, running = true;
 	
@@ -70,26 +85,24 @@ public class MsxEmulator {
 	/* PSG write register value */
 	protected byte psg_RegisterSelect;
 
-	/** The screen. */
-	private Screen screen;
-
 	/**
 	 * Instantiates a new msx emulator.
 	 *
 	 * @param screen the screen
 	 * @param keyboard the keyboard
 	 */
-	protected MsxEmulator(Screen screen, Keyboard keyboard) {
+	private MsxEmulator(Screen screen, Keyboard keyboard) {
 		super();
 		this.screen = screen;
 		this.keyboard = keyboard;
+		initHardware();
 	}
 		
 	/**
 	 * This method must be called after construction, to set up all parts of the emulation 
 	 * (memory, cpu, keyboard, ppi, vdp).
 	 */
-	public void initHardware() {
+	private void initHardware() {
 		debug("Init memory");
 		initMemory();
 		debug("Init CPU");
@@ -110,7 +123,7 @@ public class MsxEmulator {
 	 * @param page the page
 	 * @return the slot for page
 	 */
-	public final int getSlotForPage(int page) {
+	private final int getSlotForPage(int page) {
 		switch (page) {
 		case 0:	return ppiA_SlotSelect & 0x03;
 		case 1:	return (ppiA_SlotSelect & 0x0C) >> 2;
@@ -128,7 +141,7 @@ public class MsxEmulator {
 	 * @param page the page
 	 * @param slot the slot
 	 */
-	public final void setSlotForPage(int page, int slot) {
+	private final void setSlotForPage(int page, int slot) {
 		switch (page) {
 		case 0:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x03) | slot); break;
 		case 1:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x0C) | slot << 2); break;
@@ -144,7 +157,7 @@ public class MsxEmulator {
 	 * the convenient getSlotForPage(...) and setSlotForPage(...) methods.
 	 *  
 	 */
-	public void initMemory() {
+	private void initMemory() {
 		
 		secondarySlots = new AbstractMemory[4];
 		
@@ -184,7 +197,7 @@ public class MsxEmulator {
 	/**
 	 * Initialize CPU.
 	 */
-	public void initCPU() {
+	private void initCPU() {
 		cpu = Z80.newInstance(primarySlot);
 	}
 	
@@ -192,7 +205,7 @@ public class MsxEmulator {
 	 * Initialize VDP. This method also sets up teh I/O ports that connect the VDP to the CPU
 	 * (i.e., port 0x98 for VRAM data read/write and port 0x99 for status register I/O).
 	 */
-	public void initVDP() {
+	private void initVDP() {
 		vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);
 		
 		// VRAM data read/write port
@@ -226,7 +239,7 @@ public class MsxEmulator {
 	/**
 	 * Initialize keyboard.
 	 */
-	public void initKeyboard() {
+	private void initKeyboard() {
 	}
 	
 	/**
@@ -234,7 +247,7 @@ public class MsxEmulator {
 	 * of I/O ports, namely those for keyboard I/O (0xA9, 0xAA and 0xAB) and slot select
 	 * I/O (port 0xA8).
 	 */
-	public void initPPI() {
+	private void initPPI() {
 
 		/* PPI register A (slot select) (port A8) */
 		cpu.registerInDevice(new Z80InDevice() {
@@ -291,7 +304,7 @@ public class MsxEmulator {
 	/**
 	 * Initialize PSG.
 	 */
-	public void initPSG() {
+	private void initPSG() {
 
 		/* Construct PSG */
 		psg = AY38910.newInstance();
@@ -332,83 +345,9 @@ public class MsxEmulator {
 	}
 
 	/**
-	 * Start MSX. Basically a while loop that executes CPU instructions,
-	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
-	 */
-	public void startMSX() {
-
-		/* Values used for delay and automatic correction of delay */
-		long previousInterruptCycle = System.currentTimeMillis();
-		int intCount = 0, delay = INITIAL_DELAY;
-		
-		/* Main loop */
-		while (true) {
-
-			/* Not running? Sleep and continue */
-			if (!running) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				continue;
-			}
-			
-			/* Check whether we should go into debug mode */
-			if (debugMode) debugMode();
-			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
-			
-			/* Trigger interrupt if GINT and INT are both set */
-			if (vdp.getGINT() && vdp.getStatusINT()) {
-				cpu.interrupt();
-			}
-			
-			/* Execute one instruction */
-			cpu.execute();
-			
-			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
-			if (cpu.s >= (SPEED/INTERRUPT_RATE)) {
-				cpu.s = (cpu.s - (SPEED/INTERRUPT_RATE));
-				long now = System.currentTimeMillis();
-								
-				/* Execute delay */
-				try {
-					Thread.sleep(delay);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
-				/* Trigger interrupt */
-				vdp.setStatusINT(true);
-				screen.refresh();
-
-				/* Keep track of interrupt rate and correct delay if necessary */
-				int checkInterval = 1;
-				intCount++;
-				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
-					if (Math.abs(intCount - (INTERRUPT_RATE / checkInterval)) > 1) {
-						if (intCount < INTERRUPT_RATE) {
-							if (delay > 0) { 
-								delay -= 1;
-								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Decreasing delay ("+delay+" ms).");
-							}
-						}
-						if (intCount > INTERRUPT_RATE) {
-							delay += 1;
-							//System.out.println("Running too fast: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
-						}
-					}
-					previousInterruptCycle = System.currentTimeMillis();
-					intCount = 0;
-				}
-			}
-		}
-	}
-	
-	/**
 	 * A very simple debug interface.
 	 */
-	public void debugMode() {
+	private void debugMode() {
 		
 		debugMode = true;
 		short preSP = 0;
@@ -496,13 +435,6 @@ public class MsxEmulator {
 					String s = "";
 					for (int i = 0; i < 0x3fff; i++) {
 						byte b = vdp.mem.rdByte((short)(i&0xffff));
-// 						@Deprecated
-//						char c = 0;
-//						if ((b & 0xff) <= 126 && (b & 0xff) >= 32) {
-//							c = (char)b;
-//						} else {
-//							c = '.';
-//						}
 						s += Tools.toHexString(b) + " ";
 						if (i % 4 == 0) s += " ";
 						if (i % 16 == 0) {
@@ -553,25 +485,14 @@ public class MsxEmulator {
 	}
 
 	/**
-	 * Gets the vdp.
-	 *
-	 * @return The VDP instance of this MSX.
+	 * Paint.
 	 */
-	public TMS9918A getVDP() {
-		return vdp;
+	public void paint() {
+		vdp.paint();
 	}
 	
 	/**
-	 * Gets the key board.
-	 *
-	 * @return the key board
-	 */
-	public Keyboard getKeyBoard() {
-		return keyboard;
-	}
-	
-	/**
-	 * Change content of a secondary slot.
+	 * Sets the slot.
 	 *
 	 * @param slot the slot
 	 * @param s the s
@@ -603,10 +524,84 @@ public class MsxEmulator {
 	 *
 	 * @return Secondary slots.
 	 */
-	public Memory[] getSlots() {
+	private Memory[] getSlots() {
 		return secondarySlots;
 	}
 
+	/**
+	 * Start MSX. Basically a while loop that executes CPU instructions,
+	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
+	 */
+	public void startMSX() {
+
+		/* Values used for delay and automatic correction of delay */
+		long previousInterruptCycle = System.currentTimeMillis();
+		int intCount = 0, delay = INITIAL_DELAY;
+		
+		/* Main loop */
+		while (true) {
+
+			/* Not running? Sleep and continue */
+			if (!running) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				continue;
+			}
+			
+			/* Check whether we should go into debug mode */
+			if (debugMode) debugMode();
+			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
+			
+			/* Trigger interrupt if GINT and INT are both set */
+			if (vdp.getGINT() && vdp.getStatusINT()) {
+				cpu.interrupt();
+			}
+			
+			/* Execute one instruction */
+			cpu.execute();
+			
+			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
+			if (cpu.s >= (SPEED/INTERRUPT_RATE)) {
+				cpu.s = (cpu.s - (SPEED/INTERRUPT_RATE));
+				long now = System.currentTimeMillis();
+								
+				/* Execute delay */
+				try {
+					Thread.sleep(delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				/* Trigger interrupt */
+				vdp.setStatusINT(true);
+				screen.refresh();
+
+				/* Keep track of interrupt rate and correct delay if necessary */
+				int checkInterval = 1;
+				intCount++;
+				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
+					if (Math.abs(intCount - (INTERRUPT_RATE / checkInterval)) > 1) {
+						if (intCount < INTERRUPT_RATE) {
+							if (delay > 0) { 
+								delay -= 1;
+								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Decreasing delay ("+delay+" ms).");
+							}
+						}
+						if (intCount > INTERRUPT_RATE) {
+							delay += 1;
+							//System.out.println("Running too fast: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
+						}
+					}
+					previousInterruptCycle = System.currentTimeMillis();
+					intCount = 0;
+				}
+			}
+		}
+	}
+	
 	/**
 	 * New instance.
 	 *

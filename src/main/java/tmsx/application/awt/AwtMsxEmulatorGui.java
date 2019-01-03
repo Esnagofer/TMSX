@@ -1,4 +1,4 @@
-package tmsx.application.emulator.awt;
+package tmsx.application.awt;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -39,9 +39,6 @@ public class AwtMsxEmulatorGui extends JFrame {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -5724943280943859808L;
 	
-	/** The msx. */
-	private MsxEmulator msx;
-	
 	/** The cartridge button. */
 	private JButton cartridgeButton;
 	
@@ -59,6 +56,9 @@ public class AwtMsxEmulatorGui extends JFrame {
 	
 	/** The screen panel. */
 	private JPanel screenPanel;
+	
+	/** The msx. */
+	private MsxEmulator msx;
 	
 	/** The screen. */
 	private Screen screen;
@@ -82,7 +82,6 @@ public class AwtMsxEmulatorGui extends JFrame {
 		
 		/* Initialize MSX instance */
 		msx = MsxEmulator.newInstance(screen, keyboard);
-		msx.initHardware();
 		buildFrame();
 		
 		setTitle("TMSX - MSX Emulator");
@@ -100,18 +99,16 @@ public class AwtMsxEmulatorGui extends JFrame {
 	    RomMemory bios = new RomMemory(0xC000, "system");
 		try {
 			bios.load(romFile, (short)0x0000, 0x8000);
-			msx.getSlots()[0] = bios;
+			msx.setSlot(0, bios);
 			romLoadOK = true;
 		} catch (IOException e) {
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		msx.getSlots()[1] = new EmptyMemory("cart1 (empty)");
-		msx.getSlots()[2] = new EmptyMemory("cart2 (empty)");
-
-		/* Slot 3 is RAM */
-		msx.getSlots()[3] = new RamMemory("ram");
+		msx.setSlot(1, new EmptyMemory("cart1 (empty)"));
+		msx.setSlot(2, new EmptyMemory("cart2 (empty)"));
+		msx.setSlot(3, new RamMemory("ram"));
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
@@ -154,7 +151,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 		screenPanel.setFocusable(true);
 		screenPanel.setPreferredSize(new Dimension(512,384));
 		add(screenPanel, BorderLayout.PAGE_START);
-		screenPanel.addKeyListener(KeyListener.class.cast(msx.getKeyBoard()));
+		screenPanel.addKeyListener(KeyListener.class.cast(keyboard));
 		
 		// Button panel
 		FlowLayout buttonLayout = new FlowLayout();
@@ -199,11 +196,11 @@ public class AwtMsxEmulatorGui extends JFrame {
 		breakButton.addMouseListener(new MouseAdapter() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
-	            msx.getKeyBoard().stopKeyPressed();
+	            keyboard.stopKeyPressed();
 	        }
 	        @Override
 	        public void mouseReleased(MouseEvent e) {
-	            msx.getKeyBoard().stopKeyDepressed();
+	            keyboard.stopKeyDepressed();
 	        }
 		});	
 		
@@ -265,7 +262,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 					boolean romLoadOK = false;
 				    try {
 				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);
-					    msx.getSlots()[0] = bios;
+					    msx.setSlot(0, bios);
 						romLoadOK = true;
 					} catch (IOException ex) {
 						System.out.println("Could not load system rom \"" + file.getAbsolutePath() + "\": " + ex.getMessage());
@@ -297,7 +294,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 		    protected void paintComponent(Graphics graphics) {
 		        super.paintComponent(graphics);
 				AwtScreen.class.cast(screen).setGraphics(graphics);
-				msx.getVDP().paint();		        	
+				msx.paint();		        	
 		    }
 
 		};
