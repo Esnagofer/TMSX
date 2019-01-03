@@ -99,16 +99,16 @@ public class AwtMsxEmulatorGui extends JFrame {
 	    RomMemory bios = new RomMemory(0xC000, "system");
 		try {
 			bios.load(romFile, (short)0x0000, 0x8000);
-			msx.setSlot(0, bios);
+			msx.setSlot(MsxEmulator.SLOT_0, bios);
 			romLoadOK = true;
 		} catch (IOException e) {
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
 
 		/* We fill slot 1 and 2 with empty ROM */
-		msx.setSlot(1, new EmptyMemory("cart1 (empty)"));
-		msx.setSlot(2, new EmptyMemory("cart2 (empty)"));
-		msx.setSlot(3, new RamMemory("ram"));
+		msx.setSlot(MsxEmulator.SLOT_1, new EmptyMemory("cart1 (empty)"));
+		msx.setSlot(MsxEmulator.SLOT_2, new EmptyMemory("cart2 (empty)"));
+		msx.setSlot(MsxEmulator.SLOT_3, new RamMemory("ram"));
 
 		/* If ROM was not loaded, activate ROM load state */
 		if (!romLoadOK) {
@@ -232,7 +232,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 		    			loader.load(file.getAbsolutePath(), (int)file.length());
 
 			    		/* Set slot and reset */
-			    		msx.setSlot(1, loader.getSlot());
+			    		msx.setSlot(MsxEmulator.SLOT_1, loader.getSlot());
 						msx.reset();
 
 		    		} catch (IOException ex) {
@@ -262,7 +262,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 					boolean romLoadOK = false;
 				    try {
 				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);
-					    msx.setSlot(0, bios);
+					    msx.setSlot(MsxEmulator.SLOT_0, bios);
 						romLoadOK = true;
 					} catch (IOException ex) {
 						System.out.println("Could not load system rom \"" + file.getAbsolutePath() + "\": " + ex.getMessage());

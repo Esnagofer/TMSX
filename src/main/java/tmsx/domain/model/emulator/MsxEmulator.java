@@ -25,17 +25,17 @@ import tmsx.domain.model.lib.Tools;
  */
 public class MsxEmulator {
 
-	/** The Constant BIOS_SLOT. */
-	private static final int BIOS_SLOT = 0;
+	/** The Constant SLOT_0. */
+	public static final int SLOT_0 = 0;
 
 	/** The Constant SLOT_1. */
-	private static final int SLOT_1 = 1;
+	public static final int SLOT_1 = 1;
 
 	/** The Constant SLOT_2. */
-	private static final int SLOT_2 = 2;
+	public static final int SLOT_2 = 2;
 
-	/** The Constant RAM_SLOT. */
-	private static final int RAM_SLOT = 3;
+	/** The Constant SLOT_3. */
+	public static final int SLOT_3 = 3;
 	
 	/** The breakpoints. */
 	private HashSet<Short> breakpoints = new HashSet<Short>();
@@ -517,15 +517,6 @@ public class MsxEmulator {
 	 */
 	public void pause(boolean f) {
 		running = !f;
-	}
-
-	/**
-	 * Gets the slots.
-	 *
-	 * @return Secondary slots.
-	 */
-	private Memory[] getSlots() {
-		return secondarySlots;
 	}
 
 	/**
