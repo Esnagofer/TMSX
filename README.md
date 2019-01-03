@@ -17,7 +17,7 @@ v1.1.0
 
 v1.2.0
 
-- Integration with SJASM Z80 compiler implementing a basic MSX source debugger environment.
+- Integration with SJASM Z80 compiler implementing a basic MSX source debugger environment (PROTO-IDE).
 
 
 
