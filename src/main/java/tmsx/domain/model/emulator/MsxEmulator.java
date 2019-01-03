@@ -17,6 +17,9 @@ import tmsx.domain.model.hardware.z80.Z80;
 import tmsx.domain.model.hardware.z80.Z80InDevice;
 import tmsx.domain.model.hardware.z80.Z80OutDevice;
 import tmsx.domain.model.lib.Tools;
+import tmsx.domain.model.lib.Validate;
+
+import javax.annotation.Generated;
 
 /**
  * The main class that ties all the elements of an MSX computer together: CPU, VDP,
@@ -60,6 +63,12 @@ public class MsxEmulator {
 	/** The psg. */
 	private AY38910 psg;
 	
+	/** The rom. */
+	private RomMemory rom;
+	
+	/** The ram. */
+	private RamMemory ram;
+	
 	/** The primary slot. */
 	private Memory primarySlot;
 	
@@ -76,16 +85,53 @@ public class MsxEmulator {
 	public boolean debugMode = false, debugEnabled = true, running = true;
 	
 	/** The ppi A slot select. */
-	/* PPI A register (primary slot select) */
 	private byte ppiA_SlotSelect = 0;
 
 	/** The ppi C keyboard. */
-	/* PPI C register (keyboard and cassette control) */
 	private byte ppiC_Keyboard;
 
 	/** The psg register select. */
-	/* PSG write register value */
 	protected byte psg_RegisterSelect;
+
+	/**
+	 * Instantiates a new msx emulator.
+	 *
+	 * @param builder the builder
+	 */
+	@Generated("SparkTools")
+	private MsxEmulator(Builder builder) {
+		super();
+		transferSatate(builder);
+		initHardware();
+		initSlots();
+		validateInvariants();
+	}
+
+	/**
+	 * Validate invariants.
+	 */
+	private void validateInvariants() {
+		Validate.notNull("MsxEmulator: 'cpu' not set", cpu);
+		Validate.notNull("MsxEmulator: 'psg' not set", psg);
+		Validate.notNull("MsxEmulator: 'vdp' not set", vdp);
+		Validate.notNull("MsxEmulator: 'screen' not set", screen);
+		Validate.notNull("MsxEmulator: 'keyboard' not set", keyboard);		
+	}
+
+	/**
+	 * Transfer satate.
+	 *
+	 * @param builder the builder
+	 */
+	private void transferSatate(Builder builder) {
+		this.cpu = builder.cpu;
+		this.vdp = builder.vdp;
+		this.psg = builder.psg;
+		this.keyboard = builder.keyboard;
+		this.screen = builder.screen;
+		this.rom = builder.rom;
+		this.ram = builder.ram;
+	}
 
 	/**
 	 * Instantiates a new msx emulator.
@@ -105,10 +151,18 @@ public class MsxEmulator {
 	 * Inits the slots.
 	 */
 	private void initSlots() {
-		setSlot(SLOT_0, new RomMemory(0xC000, "system"));
+		if (rom == null) {
+			setSlot(SLOT_0, new RomMemory(0xC000, "system"));
+		} else {
+			setSlot(SLOT_0, rom);
+		}
 		setSlot(SLOT_1, new EmptyMemory("cart1 (empty)"));
 		setSlot(SLOT_2, new EmptyMemory("cart2 (empty)"));
-		setSlot(SLOT_3, new RamMemory("ram"));
+		if (ram == null) {
+			setSlot(SLOT_3, new RamMemory("ram"));			
+		} else {
+			setSlot(SLOT_3, ram);
+		}
 	}
 
 	/**
@@ -211,7 +265,9 @@ public class MsxEmulator {
 	 * Initialize CPU.
 	 */
 	private void initCPU() {
-		cpu = Z80.newInstance(primarySlot);
+		if(cpu == null) {
+			cpu = Z80.newInstance(primarySlot);
+		}
 	}
 	
 	/**
@@ -219,34 +275,35 @@ public class MsxEmulator {
 	 * (i.e., port 0x98 for VRAM data read/write and port 0x99 for status register I/O).
 	 */
 	private void initVDP() {
-		vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);
-		
-		// VRAM data read/write port
-		cpu.registerInDevice(new Z80InDevice() {
-			public byte in(byte port) {
-				return vdp.readVRAMData();
-			}
-		}, 0x98);
-		cpu.registerOutDevice(new Z80OutDevice() {
-			public void out(byte port, byte value) {
-				vdp.writeVRAMData(value);
-			}
-		}, 0x98);
-		
-		// VDP register write port
-		cpu.registerOutDevice(new Z80OutDevice() {
-			public void out(byte port, byte value) {
-				vdp.writeRegister(value);
-			}
-		}, 0x99);
-		
-		// VDP status register read port
-		cpu.registerInDevice(new Z80InDevice() {
-			public byte in(byte port) {
-				return vdp.readStatus();
-			}
-		}, 0x99);
-		
+		if (vdp == null) {
+			vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);
+			
+			// VRAM data read/write port
+			cpu.registerInDevice(new Z80InDevice() {
+				public byte in(byte port) {
+					return vdp.readVRAMData();
+				}
+			}, 0x98);
+			cpu.registerOutDevice(new Z80OutDevice() {
+				public void out(byte port, byte value) {
+					vdp.writeVRAMData(value);
+				}
+			}, 0x98);
+			
+			// VDP register write port
+			cpu.registerOutDevice(new Z80OutDevice() {
+				public void out(byte port, byte value) {
+					vdp.writeRegister(value);
+				}
+			}, 0x99);
+			
+			// VDP status register read port
+			cpu.registerInDevice(new Z80InDevice() {
+				public byte in(byte port) {
+					return vdp.readStatus();
+				}
+			}, 0x99);
+		}
 	}
 
 	/**
@@ -261,7 +318,6 @@ public class MsxEmulator {
 	 * I/O (port 0xA8).
 	 */
 	private void initPPI() {
-
 		/* PPI register A (slot select) (port A8) */
 		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
@@ -318,43 +374,42 @@ public class MsxEmulator {
 	 * Initialize PSG.
 	 */
 	private void initPSG() {
+		if (psg == null) {
+			/* Construct PSG */
+			psg = AY38910.newInstance();
+			
+			/* PSG register write port (port 0xA0) */
+			cpu.registerInDevice(new Z80InDevice() {
+				public byte in(byte port) {
+					return psg_RegisterSelect;
+				}
+			}, 0xA0);
+			cpu.registerOutDevice(new Z80OutDevice() {
+				public void out(byte port, byte value) {
+					//System.out.println("Set psg register" + value);
+					psg_RegisterSelect = value;
+				}
+			}, 0xA0);
 
-		/* Construct PSG */
-		psg = AY38910.newInstance();
-		
-		/* PSG register write port (port 0xA0) */
-		cpu.registerInDevice(new Z80InDevice() {
-			public byte in(byte port) {
-				return psg_RegisterSelect;
-			}
-		}, 0xA0);
-		cpu.registerOutDevice(new Z80OutDevice() {
-			public void out(byte port, byte value) {
-				//System.out.println("Set psg register" + value);
-				psg_RegisterSelect = value;
-			}
-		}, 0xA0);
+			/* PSG value write port (port 0xA1) */
+			cpu.registerOutDevice(new Z80OutDevice() {
+				public void out(byte port, byte value) {
+					//if (psg_RegisterSelect != 15 && psg_RegisterSelect != 14) {
+					//	System.out.println("Writing port " + (psg_RegisterSelect & 0xff) + " value " + (value & 0xff));
+					//};
+					psg.out(psg_RegisterSelect & 0xff, value & 0xff);
+				}
+			}, 0xA1);
 
-		/* PSG value write port (port 0xA1) */
-		cpu.registerOutDevice(new Z80OutDevice() {
-			public void out(byte port, byte value) {
-				//if (psg_RegisterSelect != 15 && psg_RegisterSelect != 14) {
-				//	System.out.println("Writing port " + (psg_RegisterSelect & 0xff) + " value " + (value & 0xff));
-				//};
-				psg.out(psg_RegisterSelect & 0xff, value & 0xff);
-			}
-		}, 0xA1);
-
-		/* PSG value write read (port 0xA2) */
-		cpu.registerInDevice(new Z80InDevice() {
-			public byte in(byte port) {
-				return (byte)psg.in(psg_RegisterSelect & 0xff);
-			}
-		}, 0xA2);
-		
+			/* PSG value write read (port 0xA2) */
+			cpu.registerInDevice(new Z80InDevice() {
+				public byte in(byte port) {
+					return (byte)psg.in(psg_RegisterSelect & 0xff);
+				}
+			}, 0xA2);			
+		}
 		psg.init();
 		psg.start();
-		
 	}
 
 	/**
@@ -536,7 +591,7 @@ public class MsxEmulator {
 	 * Start MSX. Basically a while loop that executes CPU instructions,
 	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
 	 */
-	public void startMSX() {
+	public void start() {
 
 		/* Values used for delay and automatic correction of delay */
 		long previousInterruptCycle = System.currentTimeMillis();
@@ -615,6 +670,135 @@ public class MsxEmulator {
 	 */
 	public static MsxEmulator newInstance(Screen screen, Keyboard keyboard) {
 		return new MsxEmulator(screen, keyboard);
+	}
+
+	/**
+	 * Creates builder to build {@link MsxEmulator}.
+	 * @return created builder
+	 */
+	@Generated("SparkTools")
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
+	 * Builder to build {@link MsxEmulator}.
+	 */
+	@Generated("SparkTools")
+	public static final class Builder {
+		
+		/** The cpu. */
+		private Z80 cpu;
+		
+		/** The vdp. */
+		private TMS9918A vdp;
+		
+		/** The psg. */
+		private AY38910 psg;
+		
+		/** The keyboard. */
+		private Keyboard keyboard;
+		
+		/** The screen. */
+		private Screen screen;
+
+		/** The rom. */
+		private RomMemory rom;
+		
+		/** The ram. */
+		private RamMemory ram;
+		
+		/**
+		 * Instantiates a new builder.
+		 */
+		private Builder() {
+		}
+
+		/**
+		 * With cpu.
+		 *
+		 * @param cpu the cpu
+		 * @return the builder
+		 */
+		public Builder withCpu(Z80 cpu) {
+			this.cpu = cpu;
+			return this;
+		}
+
+		/**
+		 * With vdp.
+		 *
+		 * @param vdp the vdp
+		 * @return the builder
+		 */
+		public Builder withVdp(TMS9918A vdp) {
+			this.vdp = vdp;
+			return this;
+		}
+
+		/**
+		 * With psg.
+		 *
+		 * @param psg the psg
+		 * @return the builder
+		 */
+		public Builder withPsg(AY38910 psg) {
+			this.psg = psg;
+			return this;
+		}
+
+		/**
+		 * With keyboard.
+		 *
+		 * @param keyboard the keyboard
+		 * @return the builder
+		 */
+		public Builder withKeyboard(Keyboard keyboard) {
+			this.keyboard = keyboard;
+			return this;
+		}
+
+		/**
+		 * With screen.
+		 *
+		 * @param screen the screen
+		 * @return the builder
+		 */
+		public Builder withScreen(Screen screen) {
+			this.screen = screen;
+			return this;
+		}
+
+		/**
+		 * With rom.
+		 *
+		 * @param rom the rom
+		 * @return the builder
+		 */
+		public Builder withRom(RomMemory rom) {
+			this.rom = rom;
+			return this;
+		}
+
+		/**
+		 * With ram.
+		 *
+		 * @param ram the ram
+		 * @return the builder
+		 */
+		public Builder withRam(RamMemory ram) {
+			this.ram = ram;
+			return this;
+		}
+
+		/**
+		 * Builds the.
+		 *
+		 * @return the msx emulator
+		 */
+		public MsxEmulator build() {
+			return new MsxEmulator(this);
+		}
 	}
 
 }

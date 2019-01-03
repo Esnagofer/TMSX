@@ -93,5 +93,5 @@ public class AwtScreen implements Screen {
 	public static Screen newInstance(Component component) {
 		return new AwtScreen(component);
 	}
-
+	
 }

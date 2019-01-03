@@ -3,7 +3,6 @@ package tmsx.application.awt;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
@@ -27,12 +26,11 @@ import tmsx.domain.model.hardware.keyboard.Keyboard;
 import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
 import tmsx.infrastructure.awt.domain.model.hardware.keyboard.AwtKeyboard;
-import tmsx.infrastructure.awt.domain.model.hardware.screen.AwtScreen;
 
 /**
  * The Class AwtMsxEmulatorGui.
  */
-public class AwtMsxEmulatorGui extends JFrame {
+public class AwtEmulatorGui extends JFrame {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -5724943280943859808L;
@@ -52,61 +50,29 @@ public class AwtMsxEmulatorGui extends JFrame {
 	/** The break button. */
 	private JButton breakButton;
 	
-	/** The screen panel. */
-	private JPanel screenPanel;
+	/** The awt emulator component. */
+	private AwtEmulatorComponent awtEmulatorComponent;
 	
 	/** The msx. */
 	private MsxEmulator msx;
 	
-	/** The screen. */
-	private Screen screen;
-
 	/** The keyboard. */
 	private Keyboard keyboard;
 	
 	/**
 	 * Instantiates a new msx gui.
 	 */
-	public AwtMsxEmulatorGui() {
+	public AwtEmulatorGui() {
 		super();
 	}
 
 	/**
-	 * Start.
+	 * Inits the bios.
 	 */
-	public void start() {
-		keyboard = AwtKeyboard.newInstance();
-		
-		screenPanel = new JPanel() {
-			
-			private static final long serialVersionUID = -6329538938559661623L;
-
-			@Override
-		    protected void paintComponent(Graphics graphics) {
-		        super.paintComponent(graphics);
-				AwtScreen.class.cast(screen).setGraphics(graphics);
-				msx.paint();		        	
-		    }
-
-		};
-		screen = AwtScreen.newInstance(screenPanel);
-		
-		
-		/* Initialize MSX instance */
-		msx = MsxEmulator.newInstance(screen, keyboard);
-
-		buildFrame();
-		
-		setTitle("TMSX - MSX Emulator");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(512,435);
-		setResizable(true);
-		setVisible(true);
-		pack();
-	    
-	    RomMemory bios = new RomMemory(0xC000, "system");
-	    Preferences prefs = Preferences.userRoot().node("MSXEMU");
-	    String romFile = prefs.get("msx_system_rom", "-");
+	private void initBios() {
+		RomMemory bios = new RomMemory(0xC000, "system");
+		Preferences prefs = Preferences.userRoot().node("MSXEMU");
+		String romFile = prefs.get("msx_system_rom", "-");
 		try {
 			/* Load ROM */
 			bios.load(romFile, (short)0x0000, 0x8000);
@@ -115,16 +81,12 @@ public class AwtMsxEmulatorGui extends JFrame {
 			activateROMLoadState();
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
 		}
-
-		/* Start MSX */
-		msx.startMSX();
-		
 	}
-
+	
 	/**
 	 * Disable all buttons except Load System ROM.
 	 */
-	public void activateROMLoadState() {
+	private void activateROMLoadState() {
 		cartridgeButton.setEnabled(false);
 		sysRomButton.setEnabled(true);
 		pauseButton.setEnabled(false);
@@ -135,7 +97,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 	/**
 	 * Enable all buttons. Use after ROM is loaded
 	 */
-	public void romLoaded() {
+	private void romLoaded() {
 		cartridgeButton.setEnabled(true);
 		sysRomButton.setEnabled(true);
 		pauseButton.setEnabled(true);
@@ -146,13 +108,13 @@ public class AwtMsxEmulatorGui extends JFrame {
 	/**
 	 * Builds the frame.
 	 */
-	private void buildFrame() {
+	private void initGui() {
 		
 		// Set up the main panel
-		screenPanel.setFocusable(true);
-		screenPanel.setPreferredSize(new Dimension(512,384));
-		add(screenPanel, BorderLayout.PAGE_START);
-		screenPanel.addKeyListener(KeyListener.class.cast(keyboard));
+		awtEmulatorComponent.setFocusable(true);
+		awtEmulatorComponent.setPreferredSize(new Dimension(512,384));
+		add(awtEmulatorComponent, BorderLayout.PAGE_START);
+		awtEmulatorComponent.addKeyListener(KeyListener.class.cast(keyboard));
 		
 		// Button panel
 		FlowLayout buttonLayout = new FlowLayout();
@@ -212,7 +174,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				/* Select file */
 				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(AwtMsxEmulatorGui.this);
+				int returnVal = fc.showOpenDialog(AwtEmulatorGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 
@@ -223,7 +185,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 		            	loader = new FlatMapper("cart1");
 		            } else {
 			            /* Manually select loader */
-			            String input = (String) JOptionPane.showInputDialog(AwtMsxEmulatorGui.this, "Choose cartridge loader",
+			            String input = (String) JOptionPane.showInputDialog(AwtEmulatorGui.this, "Choose cartridge loader",
 			                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
 			            loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
 		            }
@@ -237,7 +199,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 						msx.reset();
 
 		    		} catch (IOException ex) {
-		    			JOptionPane.showMessageDialog(AwtMsxEmulatorGui.this,
+		    			JOptionPane.showMessageDialog(AwtEmulatorGui.this,
 		    				    ex.getMessage(),
 		    				    "Error loading ROM",
 		    				    JOptionPane.ERROR_MESSAGE);
@@ -256,7 +218,7 @@ public class AwtMsxEmulatorGui extends JFrame {
 			    Preferences prefs = Preferences.userRoot().node("MSXEMU");
 				JFileChooser fc = new JFileChooser();
 				fc.setSelectedFile(new File(prefs.get("msx_system_rom", "~/")));
-				int returnVal = fc.showOpenDialog(AwtMsxEmulatorGui.this);
+				int returnVal = fc.showOpenDialog(AwtEmulatorGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
 		            RomMemory bios = new RomMemory(0xC000, "system");
@@ -277,8 +239,44 @@ public class AwtMsxEmulatorGui extends JFrame {
 			}
 			
 		});
-		
-		screenPanel.requestFocusInWindow();
+		awtEmulatorComponent.requestFocusInWindow();
+		setTitle("TMSX - MSX Emulator");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(512,435);
+		setResizable(true);
+		setVisible(true);
+		pack();
+	}
+
+	/**
+	 * Inits the components.
+	 */
+	private void initComponents() {
+		awtEmulatorComponent = AwtEmulatorComponent.newInstance();
+		keyboard = AwtKeyboard.newInstance();
+		Screen screen = awtEmulatorComponent.screen();
+		msx = MsxEmulator.builder()
+			.withScreen(screen)
+			.withKeyboard(keyboard)
+		.build();
+		awtEmulatorComponent.setMsxEmulator(msx);
+	}
+	
+	/**
+	 * Start.
+	 */
+	private void start() {
+		msx.start();
+	}
+	
+	/**
+	 * Boot.
+	 */
+	public void boot() {
+		initComponents();
+		initGui();
+	    initBios();
+		start();		
 	}
 
 	/**
@@ -286,8 +284,8 @@ public class AwtMsxEmulatorGui extends JFrame {
 	 *
 	 * @return the msx gui
 	 */
-	public static AwtMsxEmulatorGui newInstance() {
-		return new AwtMsxEmulatorGui();
+	public static AwtEmulatorGui newInstance() {
+		return new AwtEmulatorGui();
 	}
 
 }
