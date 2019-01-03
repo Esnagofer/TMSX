@@ -1,4 +1,4 @@
-package tmsx.infrastructure.awt;
+package tmsx.infrastructure;
 
 import tmsx.application.awt.AwtEmulatorGui;
 

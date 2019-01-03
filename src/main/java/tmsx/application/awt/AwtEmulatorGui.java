@@ -18,14 +18,13 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import tmsx.domain.model.emulator.MsxEmulator;
+import tmsx.domain.model.emulator.Emulator;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoader;
 import tmsx.domain.model.emulator.cartridgeloaders.CartridgeLoaderRegistry;
 import tmsx.domain.model.emulator.cartridgeloaders.FlatMapper;
 import tmsx.domain.model.hardware.keyboard.Keyboard;
 import tmsx.domain.model.hardware.memory.RomMemory;
 import tmsx.domain.model.hardware.screen.Screen;
-import tmsx.infrastructure.awt.domain.model.hardware.keyboard.AwtKeyboard;
 
 /**
  * The Class AwtMsxEmulatorGui.
@@ -54,7 +53,7 @@ public class AwtEmulatorGui extends JFrame {
 	private AwtEmulatorComponent awtEmulatorComponent;
 	
 	/** The msx. */
-	private MsxEmulator msx;
+	private Emulator msx;
 	
 	/** The keyboard. */
 	private Keyboard keyboard;
@@ -76,7 +75,7 @@ public class AwtEmulatorGui extends JFrame {
 		try {
 			/* Load ROM */
 			bios.load(romFile, (short)0x0000, 0x8000);
-			msx.setSlot(MsxEmulator.SLOT_0, bios);
+			msx.setSlot(Emulator.SLOT_0, bios);
 		} catch (IOException e) {
 			activateROMLoadState();
 			System.out.println("Could not load system rom \"" + romFile + "\": " + e.getMessage());
@@ -195,7 +194,7 @@ public class AwtEmulatorGui extends JFrame {
 		    			loader.load(file.getAbsolutePath(), (int)file.length());
 
 			    		/* Set slot and reset */
-			    		msx.setSlot(MsxEmulator.SLOT_1, loader.getSlot());
+			    		msx.setSlot(Emulator.SLOT_1, loader.getSlot());
 						msx.reset();
 
 		    		} catch (IOException ex) {
@@ -225,7 +224,7 @@ public class AwtEmulatorGui extends JFrame {
 					boolean romLoadOK = false;
 				    try {
 				    	bios.load(file.getAbsolutePath(), (short)0x0000, 0x8000);
-					    msx.setSlot(MsxEmulator.SLOT_0, bios);
+					    msx.setSlot(Emulator.SLOT_0, bios);
 						romLoadOK = true;
 					} catch (IOException ex) {
 						System.out.println("Could not load system rom \"" + file.getAbsolutePath() + "\": " + ex.getMessage());
@@ -255,7 +254,7 @@ public class AwtEmulatorGui extends JFrame {
 		awtEmulatorComponent = AwtEmulatorComponent.newInstance();
 		keyboard = AwtKeyboard.newInstance();
 		Screen screen = awtEmulatorComponent.screen();
-		msx = MsxEmulator.builder()
+		msx = Emulator.builder()
 			.withScreen(screen)
 			.withKeyboard(keyboard)
 		.build();

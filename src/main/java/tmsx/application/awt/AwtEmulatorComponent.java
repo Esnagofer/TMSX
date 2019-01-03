@@ -4,9 +4,8 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
-import tmsx.domain.model.emulator.MsxEmulator;
+import tmsx.domain.model.emulator.Emulator;
 import tmsx.domain.model.hardware.screen.Screen;
-import tmsx.infrastructure.awt.domain.model.hardware.screen.AwtScreen;
 
 /**
  * The Class AwtEmulatorComponent.
@@ -23,7 +22,7 @@ public class AwtEmulatorComponent extends JPanel {
 	private Screen screen;
 	
 	/** The msx. */
-	private MsxEmulator msx;
+	private Emulator msx;
 	
 	/**
 	 * Instantiates a new awt emulator component.
@@ -49,7 +48,7 @@ public class AwtEmulatorComponent extends JPanel {
 	 *
 	 * @param msx the new msx emulator
 	 */
-	public void setMsxEmulator(MsxEmulator msx) {
+	public void setMsxEmulator(Emulator msx) {
 		this.msx = msx;
 	}
 	

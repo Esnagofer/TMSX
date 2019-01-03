@@ -1,7 +1,7 @@
 /*
  * 
  */
-package tmsx.infrastructure.awt.domain.model.hardware.keyboard;
+package tmsx.application.awt;
 
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;

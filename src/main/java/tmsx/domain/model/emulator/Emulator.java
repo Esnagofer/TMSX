@@ -27,8 +27,10 @@ import javax.annotation.Generated;
  * 'primary slot' memory space with the underlying page switching mechanism.
  * 
  * @author tjitze.rienstra
+ * @author esnagofer
+ * 
  */
-public class MsxEmulator {
+public class Emulator {
 
 	/** The Constant SLOT_0. */
 	public static final int SLOT_0 = 0;
@@ -99,7 +101,7 @@ public class MsxEmulator {
 	 * @param builder the builder
 	 */
 	@Generated("SparkTools")
-	private MsxEmulator(Builder builder) {
+	private Emulator(Builder builder) {
 		super();
 		transferSatate(builder);
 		initHardware();
@@ -139,7 +141,7 @@ public class MsxEmulator {
 	 * @param screen the screen
 	 * @param keyboard the keyboard
 	 */
-	private MsxEmulator(Screen screen, Keyboard keyboard) {
+	private Emulator(Screen screen, Keyboard keyboard) {
 		super();
 		this.screen = screen;
 		this.keyboard = keyboard;
@@ -668,12 +670,12 @@ public class MsxEmulator {
 	 * @param keyboard the keyboard
 	 * @return the msx emulator
 	 */
-	public static MsxEmulator newInstance(Screen screen, Keyboard keyboard) {
-		return new MsxEmulator(screen, keyboard);
+	public static Emulator newInstance(Screen screen, Keyboard keyboard) {
+		return new Emulator(screen, keyboard);
 	}
 
 	/**
-	 * Creates builder to build {@link MsxEmulator}.
+	 * Creates builder to build {@link Emulator}.
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
@@ -682,7 +684,7 @@ public class MsxEmulator {
 	}
 
 	/**
-	 * Builder to build {@link MsxEmulator}.
+	 * Builder to build {@link Emulator}.
 	 */
 	@Generated("SparkTools")
 	public static final class Builder {
@@ -796,8 +798,8 @@ public class MsxEmulator {
 		 *
 		 * @return the msx emulator
 		 */
-		public MsxEmulator build() {
-			return new MsxEmulator(this);
+		public Emulator build() {
+			return new Emulator(this);
 		}
 	}
 

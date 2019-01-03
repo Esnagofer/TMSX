@@ -1,4 +1,4 @@
-package tmsx.infrastructure.awt.domain.model.hardware.screen;
+package tmsx.application.awt;
 
 import java.awt.Component;
 import java.awt.Graphics;
