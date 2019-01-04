@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -108,13 +107,8 @@ public class AwtEmulatorGui extends JFrame {
 	 * Builds the frame.
 	 */
 	private void initGui() {
-		
 		// Set up the main panel
-		awtEmulatorComponent.setFocusable(true);
-		awtEmulatorComponent.setPreferredSize(new Dimension(512,384));
 		add(awtEmulatorComponent, BorderLayout.PAGE_START);
-		awtEmulatorComponent.addKeyListener(KeyListener.class.cast(keyboard));
-		
 		// Button panel
 		FlowLayout buttonLayout = new FlowLayout();
 		JPanel buttonPanel = new JPanel(buttonLayout);
@@ -238,7 +232,6 @@ public class AwtEmulatorGui extends JFrame {
 			}
 			
 		});
-		awtEmulatorComponent.requestFocusInWindow();
 		setTitle("TMSX - MSX Emulator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(512,435);
@@ -248,17 +241,23 @@ public class AwtEmulatorGui extends JFrame {
 	}
 
 	/**
+	 * Paint.
+	 */
+	private void paint() {
+		msx.paint();
+	}
+	
+	/**
 	 * Inits the components.
 	 */
 	private void initComponents() {
-		awtEmulatorComponent = AwtEmulatorComponent.newInstance();
 		keyboard = AwtKeyboard.newInstance();
+		awtEmulatorComponent = AwtEmulatorComponent.newInstance(new Dimension(512,384), keyboard, this::paint);
 		Screen screen = awtEmulatorComponent.screen();
 		msx = Emulator.builder()
 			.withScreen(screen)
 			.withKeyboard(keyboard)
 		.build();
-		awtEmulatorComponent.setMsxEmulator(msx);
 	}
 	
 	/**

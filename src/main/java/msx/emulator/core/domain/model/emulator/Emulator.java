@@ -68,6 +68,12 @@ public class Emulator {
 	/** The rom. */
 	private RomMemory rom;
 	
+	/** The cart 1. */
+	private RomMemory cart1;
+	
+	/** The cart 2. */
+	private RomMemory cart2;
+	
 	/** The ram. */
 	private RamMemory ram;
 	
@@ -133,6 +139,8 @@ public class Emulator {
 		this.screen = builder.screen;
 		this.rom = builder.rom;
 		this.ram = builder.ram;
+		this.cart1 = builder.cart1;
+		this.cart2 = builder.cart2;
 	}
 
 	/**
@@ -164,6 +172,13 @@ public class Emulator {
 			setSlot(SLOT_3, new RamMemory("ram"));			
 		} else {
 			setSlot(SLOT_3, ram);
+		}
+		if (cart1 != null) {
+			setSlot(SLOT_1, cart1);
+		} else {
+			if (cart2 != null) {
+				setSlot(SLOT_2, cart2);
+			}
 		}
 	}
 
@@ -707,6 +722,12 @@ public class Emulator {
 		/** The rom. */
 		private RomMemory rom;
 		
+		/** The cart 1. */
+		private RomMemory cart1;
+		
+		/** The cart 2. */
+		private RomMemory cart2;
+		
 		/** The ram. */
 		private RamMemory ram;
 		
@@ -779,6 +800,28 @@ public class Emulator {
 		 */
 		public Builder withRom(RomMemory rom) {
 			this.rom = rom;
+			return this;
+		}
+
+		/**
+		 * With cart 1.
+		 *
+		 * @param cart1 the cart 1
+		 * @return the builder
+		 */
+		public Builder withCart1(RomMemory cart1) {
+			this.cart1 = cart1;
+			return this;
+		}
+
+		/**
+		 * With cart 2.
+		 *
+		 * @param cart2 the cart 2
+		 * @return the builder
+		 */
+		public Builder withCart2(RomMemory cart2) {
+			this.cart2 = cart2;
 			return this;
 		}
 

@@ -13,6 +13,7 @@ v1.0.0
 
 v1.1.0
 
+- Basic testing
 - Enhanced debugger capabilities: local API (keeping current implementation too).
 
 v1.2.0

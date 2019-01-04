@@ -1,10 +1,12 @@
 package msx.emulator.core.application.awt;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.KeyListener;
 
 import javax.swing.JPanel;
 
-import msx.emulator.core.domain.model.emulator.Emulator;
+import msx.emulator.core.domain.model.hardware.keyboard.Keyboard;
 import msx.emulator.core.domain.model.hardware.screen.Screen;
 
 /**
@@ -21,18 +23,36 @@ public class AwtEmulatorComponent extends JPanel {
 	/** The screen. */
 	private Screen screen;
 	
-	/** The msx. */
-	private Emulator msx;
+	/** The on paint. */
+	private OnPaint onPaint;
+
+	/** The keyboard. */
+	private Keyboard keyboard;
 	
 	/**
 	 * Instantiates a new awt emulator component.
+	 *
+	 * @param dimension the dimension
+	 * @param keyboard the keyboard
+	 * @param onPaint the on paint
 	 */
-	private AwtEmulatorComponent() {
+	private AwtEmulatorComponent(Dimension dimension, Keyboard keyboard, OnPaint onPaint) {
 		super();
 		awtScreen = AwtScreen.class.cast(AwtScreen.newInstance(this));
 		this.screen = awtScreen;
+		this.onPaint = onPaint;
+		this.keyboard = keyboard;
+		setFocusable(true);
+		setPreferredSize(dimension);
+		addKeyListener(KeyListener.class.cast(this.keyboard));
+		requestFocusInWindow();
 	}
 
+	/**
+	 * Paint component.
+	 *
+	 * @param graphics the graphics
+	 */
 	/* (non-Javadoc)
 	 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
 	 */
@@ -40,18 +60,9 @@ public class AwtEmulatorComponent extends JPanel {
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
 		AwtScreen.class.cast(screen).setGraphics(graphics);
-		msx.paint();		        	
+		onPaint.proceed();
     }
 
-	/**
-	 * Sets the msx emulator.
-	 *
-	 * @param msx the new msx emulator
-	 */
-	public void setMsxEmulator(Emulator msx) {
-		this.msx = msx;
-	}
-	
 	/**
 	 * Screen.
 	 *
@@ -64,10 +75,13 @@ public class AwtEmulatorComponent extends JPanel {
 	/**
 	 * New instance.
 	 *
+	 * @param dimension the dimension
+	 * @param keyboard the keyboard
+	 * @param onPaint the on paint
 	 * @return the awt emulator component
 	 */
-	public static AwtEmulatorComponent newInstance() {
-		return new AwtEmulatorComponent();
+	public static AwtEmulatorComponent newInstance(Dimension dimension, Keyboard keyboard, OnPaint onPaint) {
+		return new AwtEmulatorComponent(dimension, keyboard, onPaint);
 	}
 
 }
