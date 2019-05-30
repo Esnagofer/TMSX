@@ -2746,6 +2746,12 @@ public class Z80 {
 		return (short) ((P & 0xff) | (S << 8));
 	}
 
+	public final int getSpAsInt() {
+		int localS = (1 + S + 0xFF) & 0xFF;
+		int localP = (1 + P + 0xFF) & 0xFF;
+		return (int) ((localP & 0xff) | (localS << 8));
+	}
+
 	/**
 	 * Gets the af.
 	 *

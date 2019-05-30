@@ -13,7 +13,7 @@ public class Boot {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		AwtEmulatorGui.newInstance().boot();
+		AwtEmulatorGui.newInstance().debug(args[0]);
 	}
 		
 }

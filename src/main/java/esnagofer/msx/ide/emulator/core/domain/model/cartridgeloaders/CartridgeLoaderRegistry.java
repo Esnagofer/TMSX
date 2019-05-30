@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.domain.model.emulator.cartridgeloaders;
+package esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders;
 
 /**
  * The Class CartridgeLoaderRegistry.

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package esnagofer.msx.ide.emulator.core.application.awt;
 
 import java.awt.BorderLayout;
@@ -17,10 +20,10 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.CartridgeLoader;
+import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.CartridgeLoaderRegistry;
+import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.FlatMapper;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.Emulator;
-import esnagofer.msx.ide.emulator.core.domain.model.emulator.cartridgeloaders.CartridgeLoader;
-import esnagofer.msx.ide.emulator.core.domain.model.emulator.cartridgeloaders.CartridgeLoaderRegistry;
-import esnagofer.msx.ide.emulator.core.domain.model.emulator.cartridgeloaders.FlatMapper;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.keyboard.Keyboard;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.RomMemory;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Screen;
@@ -144,7 +147,7 @@ public class AwtEmulatorGui extends JFrame {
 		pauseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				msx.debugMode = true;
+				msx.debugger().start();
 			}
 		});
 
@@ -162,45 +165,15 @@ public class AwtEmulatorGui extends JFrame {
 		
 		// Slot load listeners
 		cartridgeButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				/* Select file */
 				JFileChooser fc = new JFileChooser();
 				int returnVal = fc.showOpenDialog(AwtEmulatorGui.this);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
-		            File file = fc.getSelectedFile();
-
-		            /* Select cartridge loader */
-		            CartridgeLoader loader;
-		            if (file.length() <= 0x8000) {
-		            	/* We default to flat mapper for roms < 32K */
-		            	loader = new FlatMapper("cart1");
-		            } else {
-			            /* Manually select loader */
-			            String input = (String) JOptionPane.showInputDialog(AwtEmulatorGui.this, "Choose cartridge loader",
-			                "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
-			            loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
-		            }
-		            
-		            /* Load */
-		    		try {
-		    			loader.load(file.getAbsolutePath(), (int)file.length());
-
-			    		/* Set slot and reset */
-			    		msx.setSlot(Emulator.SLOT_1, loader.getSlot());
-						msx.reset();
-
-		    		} catch (IOException ex) {
-		    			JOptionPane.showMessageDialog(AwtEmulatorGui.this,
-		    				    ex.getMessage(),
-		    				    "Error loading ROM",
-		    				    JOptionPane.ERROR_MESSAGE);
-		    		}
-			    		
+		            loadRomFromThisFile(fc.getSelectedFile());
 		        }
-			}
-			
+			}			
 		});
 		
 		// System rom button listener
@@ -239,6 +212,40 @@ public class AwtEmulatorGui extends JFrame {
 		setVisible(true);
 		pack();
 	}
+	
+	/**
+	 * Load rom from this file.
+	 *
+	 * @param file the file
+	 */
+	private void loadRomFromThisFile(File file) {
+		/* Select cartridge loader */
+		CartridgeLoader loader;
+		if (file.length() <= 0x8000) {
+			/* We default to flat mapper for roms < 32K */
+			loader = new FlatMapper("cart1");
+		} else {
+		    /* Manually select loader */
+		    String input = (String) JOptionPane.showInputDialog(AwtEmulatorGui.this, "Choose cartridge loader",
+		        "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
+		    loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
+		}
+		
+		/* Load */
+		try {
+			loader.load(file.getAbsolutePath(), (int)file.length());
+
+			/* Set slot and reset */
+			msx.setSlot(Emulator.SLOT_1, loader.getSlot());
+			msx.reset();
+
+		} catch (IOException ex) {
+			JOptionPane.showMessageDialog(AwtEmulatorGui.this,
+				    ex.getMessage(),
+				    "Error loading ROM",
+				    JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
 	/**
 	 * Paint.
@@ -262,19 +269,39 @@ public class AwtEmulatorGui extends JFrame {
 	
 	/**
 	 * Start.
+	 *
+	 * @param romFileName the rom file name
+	 * @param startInDebugMode the start in debug mode
 	 */
-	private void start() {
-		msx.start();
+	private void start(String romFileName, boolean startInDebugMode) {
+		File file = new File(romFileName);
+		loadRomFromThisFile(file);
+		msx.start(startInDebugMode);
 	}
 	
 	/**
-	 * Boot.
+	 * Inits the.
 	 */
-	public void boot() {
+	private void init() {
 		initComponents();
 		initGui();
 	    initBios();
-		start();		
+	}
+
+	/**
+	 * Boot.
+	 */
+	public void boot(String romFileName) {
+		init();
+		start(romFileName, false);		
+	}
+
+	/**
+	 * Debug.
+	 */
+	public void debug(String romFileName) {
+		init();
+		start(romFileName, true);		
 	}
 
 	/**

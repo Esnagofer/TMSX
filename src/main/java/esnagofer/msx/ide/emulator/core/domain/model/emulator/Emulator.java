@@ -1,11 +1,9 @@
 package esnagofer.msx.ide.emulator.core.domain.model.emulator;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.HashSet;
-
 import javax.annotation.Generated;
 
+import esnagofer.msx.ide.emulator.core.domain.model.debugger.Debugger;
+import esnagofer.msx.ide.emulator.core.domain.model.debugger.LocalDebugger;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.ay38910.AY38910;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.keyboard.Keyboard;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.AbstractMemory;
@@ -30,6 +28,10 @@ import esnagofer.msx.ide.lib.Validate;
  * @author esnagofer
  * 
  */
+/**
+ * @author user
+ *
+ */
 public class Emulator {
 
 	/** The Constant SLOT_0. */
@@ -44,9 +46,6 @@ public class Emulator {
 	/** The Constant SLOT_3. */
 	public static final int SLOT_3 = 3;
 	
-	/** The breakpoints. */
-	private HashSet<Short> breakpoints = new HashSet<Short>();
-	
 	/**  Interrupt rate (interrupts per second). */
 	public static final int INTERRUPT_RATE = 50;
 
@@ -57,40 +56,40 @@ public class Emulator {
 	public static final int INITIAL_DELAY = 20;
 
 	/** The cpu. */
-	private Z80 cpu;
+	Z80 cpu;
 	
 	/** The vdp. */
-	private TMS9918A vdp;
+	TMS9918A vdp;
 	
 	/** The psg. */
-	private AY38910 psg;
+	AY38910 psg;
 	
 	/** The rom. */
-	private RomMemory rom;
+	RomMemory rom;
 	
 	/** The cart 1. */
-	private RomMemory cart1;
+	RomMemory cart1;
 	
 	/** The cart 2. */
-	private RomMemory cart2;
+	RomMemory cart2;
 	
 	/** The ram. */
-	private RamMemory ram;
+	RamMemory ram;
 	
 	/** The primary slot. */
-	private Memory primarySlot;
+	Memory primarySlot;
 	
 	/** The secondary slots. */
-	private Memory[] secondarySlots;
+	Memory[] secondarySlots;
 
 	/** The keyboard. */
-	private Keyboard keyboard;
+	Keyboard keyboard;
 
 	/** The screen. */
-	private Screen screen;
+	Screen screen;
 	
 	/** The running. */
-	public boolean debugMode = false, debugEnabled = true, running = true;
+	public boolean /*debugMode = false, debugEnabled = true,*/ running = true;
 	
 	/** The ppi A slot select. */
 	private byte ppiA_SlotSelect = 0;
@@ -101,6 +100,21 @@ public class Emulator {
 	/** The psg register select. */
 	protected byte psg_RegisterSelect;
 
+	/** The debugger. */
+	private LocalDebugger debugger;
+
+	/** The previous interrupt cycle. */
+	private long previousInterruptCycle;
+
+	/** The int count. */
+	private int intCount;
+
+	/** The delay. */
+	private int delay;
+
+	/** The bios loaded. */
+	private boolean biosLoaded = false;
+
 	/**
 	 * Instantiates a new msx emulator.
 	 *
@@ -110,9 +124,17 @@ public class Emulator {
 	private Emulator(Builder builder) {
 		super();
 		transferSatate(builder);
+		init();
 		initHardware();
 		initSlots();
 		validateInvariants();
+	}
+
+	/**
+	 * Inits the.
+	 */
+	private void init() {
+		this.debugger = new LocalDebugger(this);
 	}
 
 	/**
@@ -144,20 +166,6 @@ public class Emulator {
 	}
 
 	/**
-	 * Instantiates a new msx emulator.
-	 *
-	 * @param screen the screen
-	 * @param keyboard the keyboard
-	 */
-	private Emulator(Screen screen, Keyboard keyboard) {
-		super();
-		this.screen = screen;
-		this.keyboard = keyboard;
-		initHardware();
-		initSlots();
-	}
-		
-	/**
 	 * Inits the slots.
 	 */
 	private void initSlots() {
@@ -187,53 +195,14 @@ public class Emulator {
 	 * (memory, cpu, keyboard, ppi, vdp).
 	 */
 	private void initHardware() {
-		debug("Init memory");
 		initMemory();
-		debug("Init CPU");
 		initCPU();
-		debug("Init keyboard");
 		initKeyboard();
-		debug("Init PPI");
 		initPPI();
-		debug("Init VDP");
 		initVDP();
-		debug("Init PSG");
 		initPSG();
 	}
-	
-	/**
-	 * Return the secondary slot that is selected for the given page.
-	 *
-	 * @param page the page
-	 * @return the slot for page
-	 */
-	private final int getSlotForPage(int page) {
-		switch (page) {
-		case 0:	return ppiA_SlotSelect & 0x03;
-		case 1:	return (ppiA_SlotSelect & 0x0C) >> 2;
-		case 2:	return (ppiA_SlotSelect & 0x30) >> 4;
-		case 3:	return (ppiA_SlotSelect & 0xC0) >> 6;
-		default: throw new IllegalArgumentException("Illegal page number " + page);
-		}
-	}	
 
-	/**
-	 * Set the secondary slot that is selected for the given page. Setting 
-	 * page 0 (resp. 1, 2, 3) will cause the address space 0000-4000 (resp.
-	 * 4000-8000, 8000-B000, B000-FFFF) to be mapped to the given secondary slot.
-	 *
-	 * @param page the page
-	 * @param slot the slot
-	 */
-	private final void setSlotForPage(int page, int slot) {
-		switch (page) {
-		case 0:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x03) | slot); break;
-		case 1:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x0C) | slot << 2); break;
-		case 2:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x30) | slot << 4); break;
-		case 3:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0xC0) | slot << 6); break;
-		}
-	}	
-	
 	/**
 	 * Initialize memory system. A 'Primary Slot' address space is created with an underlying
 	 * page switching mechanism. The selected secondary slot for each page is determined by the 
@@ -430,136 +399,69 @@ public class Emulator {
 	}
 
 	/**
-	 * A very simple debug interface.
+	 * Sleep delay.
+	 *
+	 * @param delay the delay
 	 */
-	private void debugMode() {
-		
-		debugMode = true;
-		short preSP = 0;
-		
+	private void sleepDelay(int delay) {
 		try {
-			preSP = cpu.getSP();
-			debug(cpu.getLastMsg());
-			cpu.printState();
-		
-			BufferedReader bi = new BufferedReader(new InputStreamReader(System.in));
-			boolean preStep = false;
-			String input = "";
-			while (true) {
-				if (preStep) {
-					preStep = false;
-					debug("Step ?");
-					input = bi.readLine();
-					if (input.equals("")) input = "step";
-				} else {
-					debug("? ");
-					input = bi.readLine();
-				}
-				if (input.equals("step")) {
-					preStep = true;
-					debug("ADDR = " + Tools.toHexString4(cpu.PC) + ", value = " + Tools.toHexString(primarySlot.rdByte((short)cpu.PC)) + ", T = " + cpu.s);
-					cpu.execute();
-					debug(cpu.getLastMsg());
-					cpu.printState();
-					continue;
-				}
-				if (input.equals("stepout")) {
-					preStep = true;
-					while (preSP != cpu.getSP()) {
-						cpu.execute();
-						screen.refresh();
-					}
-					cpu.printState();
-					continue;
-				}
-				if (input.startsWith("peek")) {
-					preStep = false;
-					String addrString = input.substring(5);
-					int addrInt = Integer.decode(addrString);
-					debug("Value at addr " + Tools.toHexString((short)addrInt) + " = " + Tools.toHexString(primarySlot.rdByte((short)addrInt)));
-					continue;
-				}
-				if (input.startsWith("brpt")) {
-					preStep = false;
-					String addrString = input.substring(5);
-					int addrInt = Integer.decode(addrString);
-					debug("Added break point at " + Tools.toHexString((short)addrInt));
-					breakpoints.add((short)addrInt);
-					continue;
-				}
-				if (input.startsWith("rbrp")) {
-					preStep = false;
-					String addrString = input.substring(5);
-					int addrInt = Integer.decode(addrString);
-					debug("Removed break point " + Tools.toHexString((short)addrInt));
-					breakpoints.remove((short)addrInt);
-					continue;
-				}
-				if (input.startsWith("set page")) {
-					preStep = false;
-					String pageString = input.substring(9, 10);
-					int page = Integer.decode(pageString);
-					String slotString = input.substring(11,12);
-					int slot = Integer.decode(slotString);
-					setSlotForPage(page, slot);
-					debug("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
-					continue;
-				}
-				if (input.equals("slot info")) {
-					preStep = false;
-					debug("Slot select: (" + getSlotForPage(0) + "/" + getSlotForPage(1) + "/" + getSlotForPage(2) + "/" +getSlotForPage(3) + ")");
-					continue;
-				}
-				if (input.equals("interrupt")) {
-					this.triggerVSyncInterrupt();
-					cpu.execute();
-					cpu.printState();
-					continue;
-				}
-				if (input.equals("vramdump")) {
-					String s = "";
-					for (int i = 0; i < 0x3fff; i++) {
-						byte b = vdp.mem.rdByte((short)(i&0xffff));
-						s += Tools.toHexString(b) + " ";
-						if (i % 4 == 0) s += " ";
-						if (i % 16 == 0) {
-							debug(s + " <- " + Tools.toHexString4(i-16));
-							s = "";
-						}
-					}
-					continue;
-				}
-
-				if (input.equals("continue")) return;
-				debug("Unknown command");
-			}
-		} catch (Exception e) {
+			Thread.sleep(delay);
+		} catch (InterruptedException e) {
 			e.printStackTrace();
-		} finally {
-			debugMode = false;
 		}
 	}
+	
+	/**
+	 * Return the secondary slot that is selected for the given page.
+	 *
+	 * @param page the page
+	 * @return the slot for page
+	 */
+	final int getSlotForPage(int page) {
+		switch (page) {
+		case 0:	return ppiA_SlotSelect & 0x03;
+		case 1:	return (ppiA_SlotSelect & 0x0C) >> 2;
+		case 2:	return (ppiA_SlotSelect & 0x30) >> 4;
+		case 3:	return (ppiA_SlotSelect & 0xC0) >> 6;
+		default: throw new IllegalArgumentException("Illegal page number " + page);
+		}
+	}	
+
+	/**
+	 * Set the secondary slot that is selected for the given page. Setting 
+	 * page 0 (resp. 1, 2, 3) will cause the address space 0000-4000 (resp.
+	 * 4000-8000, 8000-B000, B000-FFFF) to be mapped to the given secondary slot.
+	 *
+	 * @param page the page
+	 * @param slot the slot
+	 */
+	final void setSlotForPage(int page, int slot) {
+		switch (page) {
+		case 0:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x03) | slot); break;
+		case 1:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x0C) | slot << 2); break;
+		case 2:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0x30) | slot << 4); break;
+		case 3:	ppiA_SlotSelect = (byte)((ppiA_SlotSelect & ~0xC0) | slot << 6); break;
+		}
+	}	
 	
 	/**
 	 * Trigger a VSync interrupt. Will set the relevant status bits in the VDP
 	 * and calls cpu.interrupt() if interrupts are enabled.
 	 */
-	private void triggerVSyncInterrupt() {
+	void triggerVSyncInterrupt() {
 		vdp.setStatusINT(true);
 		if (vdp.getStatusINT() && vdp.getGINT()) {
 			cpu.interrupt();
 		}
 	}
-	
+
 	/**
-	 * Print a debug message (only if debug is enabled or if in debug mode).
+	 * Cpu.
 	 *
-	 * @param msg Message to print on console.
+	 * @return the z80
 	 */
-	private void debug(String msg) {
-		if (debugEnabled || debugMode) {
-			System.out.println(msg);
-		}
+	public Z80 cpu() {
+		return cpu;
 	}
 
 	/**
@@ -605,88 +507,84 @@ public class Emulator {
 	}
 
 	/**
-	 * Start MSX. Basically a while loop that executes CPU instructions,
-	 * triggers VSync interrupts, adjusts delay timing and stops when halted. 
+	 * Execute.
 	 */
-	public void start() {
+	private void execute() {
+		if (vdp.getGINT() && vdp.getStatusINT()) {
+			cpu.interrupt();
+		}
+		debugger.beforeExecute();
+		cpu.execute();
+		debugger.afterExecute();
+	}
 
-		/* Values used for delay and automatic correction of delay */
-		long previousInterruptCycle = System.currentTimeMillis();
-		int intCount = 0, delay = INITIAL_DELAY;
-		
-		/* Main loop */
-		while (true) {
-
-			/* Not running? Sleep and continue */
-			if (!running) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				continue;
-			}
-			
-			/* Check whether we should go into debug mode */
-			if (debugMode) debugMode();
-			if (breakpoints.contains((short)cpu.getPC())) { debug("Breakpoint found"); debugMode(); }
-			
-			/* Trigger interrupt if GINT and INT are both set */
-			if (vdp.getGINT() && vdp.getStatusINT()) {
-				cpu.interrupt();
-			}
-			
-			/* Execute one instruction */
-			cpu.execute();
-			
-			/* Trigger interrupt if 1/INTERRUPT_RATE seconds has passed according to CPU cycle count */
-			if (cpu.s >= (SPEED/INTERRUPT_RATE)) {
-				cpu.s = (cpu.s - (SPEED/INTERRUPT_RATE));
-				long now = System.currentTimeMillis();
-								
-				/* Execute delay */
-				try {
-					Thread.sleep(delay);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
-				/* Trigger interrupt */
-				vdp.setStatusINT(true);
-				screen.refresh();
-
-				/* Keep track of interrupt rate and correct delay if necessary */
-				int checkInterval = 1;
-				intCount++;
-				if (now - previousInterruptCycle >= (1000 / checkInterval)) {
-					if (Math.abs(intCount - (INTERRUPT_RATE / checkInterval)) > 1) {
-						if (intCount < INTERRUPT_RATE) {
-							if (delay > 0) { 
-								delay -= 1;
-								//System.out.println("Running too slow: " + (intCount * checkInterval) + " interrupts/sec" + ". Decreasing delay ("+delay+" ms).");
-							}
-						}
-						if (intCount > INTERRUPT_RATE) {
-							delay += 1;
-							//System.out.println("Running too fast: " + (intCount * checkInterval) + " interrupts/sec" + ". Increasing delay ("+delay+" ms).");
-						}
-					}
-					previousInterruptCycle = System.currentTimeMillis();
-					intCount = 0;
-				}
-			}
+	/**
+	 * Inits the start state.
+	 *
+	 * @param startInDebugMode the start in debug mode
+	 */
+	private void initStartState(boolean startInDebugMode) {
+		previousInterruptCycle = System.currentTimeMillis();
+		intCount = 0;
+		delay = INITIAL_DELAY;
+		if (startInDebugMode) {
+			debugger.start();
 		}
 	}
 	
 	/**
-	 * New instance.
-	 *
-	 * @param screen the screen
-	 * @param keyboard the keyboard
-	 * @return the msx emulator
+	 * Adjust rate.
 	 */
-	public static Emulator newInstance(Screen screen, Keyboard keyboard) {
-		return new Emulator(screen, keyboard);
+	private void adjustRate() {
+		if (cpu.s >= (SPEED/INTERRUPT_RATE)) {
+			cpu.s = (cpu.s - (SPEED/INTERRUPT_RATE));
+			long now = System.currentTimeMillis();
+			biosLoaded = biosLoaded || cpu.getPC() >= 0x4000; 
+			if (biosLoaded) {
+				sleepDelay(delay);
+			}
+			/* Trigger interrupt */
+			vdp.setStatusINT(true);
+			screen.refresh();
+			/* Keep track of interrupt rate and correct delay if necessary */
+			int checkInterval = 1;
+			intCount++;
+			if (now - previousInterruptCycle >= (1000 / checkInterval)) {
+				if (Math.abs(intCount - (INTERRUPT_RATE / checkInterval)) > 1) {
+					if ((intCount < INTERRUPT_RATE) && (delay > 0)) {
+						delay -= 1;
+					}
+					if (intCount > INTERRUPT_RATE) {
+						delay += 1;
+					}
+				}
+				previousInterruptCycle = System.currentTimeMillis();
+				intCount = 0;
+			}
+		}		
+	}
+	
+	/**
+	 * Start MSX. Basically a while loop that executes CPU instructions,
+	 * triggers VSync interrupts, adjusts delay timing and stops when halted.
+	 *
+	 * @param startInDebugMode the start in debug mode
+	 */
+	public void start(boolean startInDebugMode) {
+		initStartState(startInDebugMode);
+		while (true) {
+			execute();
+			adjustRate();
+		}
+	}
+
+	/**
+	 * Debugger.
+	 *
+	 * @return the debugger
+	 */
+	public Debugger debugger() {
+		return debugger;
 	}
 
 	/**

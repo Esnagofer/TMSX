@@ -1,23 +1,23 @@
-package esnagofer.msx.ide.emulator.core.domain.model.emulator.cartridgeloaders;
+package esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders;
 
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.Memory;
 
 /**
  * Implements cartridge loader and slot logic for cartridges that are 
- * of type "Konami4" (see http://bifi.msxnet.org/msxnet/tech/megaroms).
+ * of type "Konami5" (see http://bifi.msxnet.org/msxnet/tech/megaroms).
  * 
  * @author tjitze.rienstra
  *
  */
-public class Konami4Mapper extends BlockMapper implements CartridgeLoader {
+public class Konami5Mapper extends BlockMapper implements CartridgeLoader {
 
 	/**
-	 * Instantiates a new konami 4 mapper.
+	 * Instantiates a new konami 5 mapper.
 	 *
 	 * @param name the name
 	 */
-	public Konami4Mapper(String name) {
-		super(name, (short)0x4000, (short)0x2000, 4, 32, 1, (short)0);
+	public Konami5Mapper(String name) {
+		super(name, (short)0x4000, (short)0x2000, 4, 32, 0, (short)0x1000);
 	}
 
 	/* (non-Javadoc)
