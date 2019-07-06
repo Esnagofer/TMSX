@@ -59,6 +59,9 @@ public class AwtEmulatorGui extends JFrame {
 	
 	/** The keyboard. */
 	private Keyboard keyboard;
+
+	/** The screen. */
+	private Screen screen;
 	
 	/**
 	 * Instantiates a new msx gui.
@@ -147,7 +150,7 @@ public class AwtEmulatorGui extends JFrame {
 		pauseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				msx.debugger().start();
+				msx.debugger().startDebugger();
 			}
 		});
 
@@ -260,7 +263,7 @@ public class AwtEmulatorGui extends JFrame {
 	private void initComponents() {
 		keyboard = AwtKeyboard.newInstance();
 		awtEmulatorComponent = AwtEmulatorComponent.newInstance(new Dimension(512,384), keyboard, this::paint);
-		Screen screen = awtEmulatorComponent.screen();
+		screen = awtEmulatorComponent.screen();
 		msx = Emulator.builder()
 			.withScreen(screen)
 			.withKeyboard(keyboard)
@@ -290,6 +293,8 @@ public class AwtEmulatorGui extends JFrame {
 
 	/**
 	 * Boot.
+	 *
+	 * @param romFileName the rom file name
 	 */
 	public void boot(String romFileName) {
 		init();
@@ -298,6 +303,8 @@ public class AwtEmulatorGui extends JFrame {
 
 	/**
 	 * Debug.
+	 *
+	 * @param romFileName the rom file name
 	 */
 	public void debug(String romFileName) {
 		init();

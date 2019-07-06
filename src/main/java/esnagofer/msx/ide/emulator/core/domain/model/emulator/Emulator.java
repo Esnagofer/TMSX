@@ -528,7 +528,7 @@ public class Emulator {
 		intCount = 0;
 		delay = INITIAL_DELAY;
 		if (startInDebugMode) {
-			debugger.start();
+			debugger.startDebugger();
 		}
 	}
 	

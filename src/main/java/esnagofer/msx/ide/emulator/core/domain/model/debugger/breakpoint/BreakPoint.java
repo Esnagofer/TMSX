@@ -24,8 +24,10 @@ public interface BreakPoint {
 	
 	/**
 	 * Compute break flow.
+	 *
+	 * @return true, if successful
 	 */
-	void computeBreakFlow();
+	boolean computeBreakFlow();
 
 	/**
 	 * Must break flow.

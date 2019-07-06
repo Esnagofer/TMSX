@@ -1,35 +1,26 @@
 package esnagofer.msx.ide.emulator.core.domain.model.debugger;
 
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPointService;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.execute.ExecuteService;
+import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPointManager;
 
 /**
  * The Interface Debugger.
  */
 public interface Debugger {
 
-	/**
-	 * Start.
-	 */
-	void start();
+	void startDebugger();
 	
-	/**
-	 * Stop.
-	 */
-	void stop();
+	void stopDebugger();
+
+	DebuggerStatus status();
+
+	void run();
 	
-	/**
-	 * Break point.
-	 *
-	 * @return the break point service
-	 */
-	BreakPointService breakPoint();
+	void stepInto();
 	
-	/**
-	 * Execute.
-	 *
-	 * @return the execute service
-	 */
-	ExecuteService execute();
-		
+	void stepOut();
+	
+	void stepOver();
+
+	BreakPointManager breakPoint();
+	
 }

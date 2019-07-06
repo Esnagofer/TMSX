@@ -1,15 +1,10 @@
 package esnagofer.msx.ide.emulator.core.domain.model.debugger;
 
-import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPoint;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPointService;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPointStatus;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.ProgramCounter;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.execute.ExecuteService;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.execute.ExecuteStatus;
+import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPointManager;
+import esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.DefaultBreakPointManager;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.Emulator;
 
 /**
@@ -17,7 +12,7 @@ import esnagofer.msx.ide.emulator.core.domain.model.emulator.Emulator;
  *
  * @author user
  */
-public class LocalDebugger implements Debugger, BreakPointService, ExecuteService {
+public class LocalDebugger implements Debugger {
 
 	/** The status. */
 	private DebuggerStatus status;
@@ -30,6 +25,9 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 
 	/** The previous SP. */
 	private int initSP;
+	
+	/** The break point manager. */
+	private DefaultBreakPointManager breakPointManager;
 
 	/** The barrier. */
 	CyclicBarrier barrier = new CyclicBarrier(2);
@@ -42,6 +40,7 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	public LocalDebugger(Emulator emulator) {
 		this.emulator = emulator;
 		status = DebuggerStatus.DS_INACTIVE;
+		breakPointManager = new DefaultBreakPointManager();
 	}
 	
 	/**
@@ -58,13 +57,15 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	/**
 	 * Ds running.
 	 * 
-	 * Determina si existen BP para detener la ejecución: si así es 
+	 * Determina si existen BP para detener la ejecuciÃ³n: si asÃ­ es 
 	 * para a modo DS_WAITING.
 	 * 
 	 */
 	private void dsBeforeRunning() {
-//		status = DebuggerStatus.DS_RUNNING;
-//		dsBeforeWaiting();
+		if (breakPointManager.mustBreakFlow()) {
+			status = DebuggerStatus.DS_WAITING;
+			dsBeforeWaiting();			
+		}
 	}
 
 	/**
@@ -150,12 +151,8 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	 */
 	public void afterExecute() {
 		switch (status) {
-		case DS_EXEC_FOR_STEP_OUT:
-			dsAfterExecForStepOut();
-			break;
-		case DS_EXEC_FOR_STEP_OVER: 			
-			dsAfterExecForStepOver();
-			break;
+		case DS_EXEC_FOR_STEP_OUT: dsAfterExecForStepOut(); break;
+		case DS_EXEC_FOR_STEP_OVER: dsAfterExecForStepOver(); break;
 		default:
 			return;
 		}	
@@ -165,25 +162,16 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger#breakPoint()
 	 */
 	@Override
-	public BreakPointService breakPoint() {
-		return this;
-	}
-
-	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger#execute()
-	 */
-	@Override
-	public ExecuteService execute() {
-		return this;
+	public BreakPointManager breakPoint() {
+		return breakPointManager;
 	}
 
 	/* (non-Javadoc)
 	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.execute.ExecuteService#status()
 	 */
 	@Override
-	public ExecuteStatus status() {
-		// TODO Auto-generated method stub
-		return null;
+	public DebuggerStatus status() {
+		return status;
 	}
 
 	/* (non-Javadoc)
@@ -223,55 +211,10 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	}
 
 	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointService#breakPoints()
-	 */
-	@Override
-	public List<BreakPoint> breakPoints() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointService#get(esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.ProgramCounter)
-	 */
-	@Override
-	public BreakPoint get(ProgramCounter pc) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointService#add(esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPoint)
-	 */
-	@Override
-	public void add(BreakPoint bp) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointService#remove(esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.ProgramCounter)
-	 */
-	@Override
-	public void remove(ProgramCounter pc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointService#status(esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.ProgramCounter, esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint.BreakPointStatus)
-	 */
-	@Override
-	public void status(ProgramCounter pc, BreakPointStatus status) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
 	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger#start()
 	 */
 	@Override
-	public void start() {
+	public void startDebugger() {
 		status = DebuggerStatus.DS_RUNNING;
 	}
 	
@@ -279,7 +222,7 @@ public class LocalDebugger implements Debugger, BreakPointService, ExecuteServic
 	 * @see esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger#stop()
 	 */
 	@Override
-	public void stop() {
+	public void stopDebugger() {
 		status = DebuggerStatus.DS_INACTIVE;
 	}
 

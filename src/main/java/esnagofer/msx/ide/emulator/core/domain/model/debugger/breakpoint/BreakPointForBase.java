@@ -48,7 +48,7 @@ public class BreakPointForBase implements BreakPoint {
 	 * @see esnagofer.msx.ide.emulator.core.domain.model.debugger.breakpoint.BreakPoint#computeBreakFlow()
 	 */
 	@Override
-	public void computeBreakFlow() {
+	public boolean computeBreakFlow() {
 		throw new UnsupportedOperationException();
 	}
 
