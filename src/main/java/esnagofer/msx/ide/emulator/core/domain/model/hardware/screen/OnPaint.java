@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.application.awt;
+package esnagofer.msx.ide.emulator.core.domain.model.hardware.screen;
 
 /**
  * The Interface OnPaint.

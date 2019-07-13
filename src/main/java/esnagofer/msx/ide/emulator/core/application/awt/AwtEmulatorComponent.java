@@ -7,6 +7,7 @@ import java.awt.event.KeyListener;
 import javax.swing.JPanel;
 
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.keyboard.Keyboard;
+import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.OnPaint;
 import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Screen;
 
 /**
