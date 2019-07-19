@@ -15,8 +15,6 @@ public class MainController {
 	@FXML
 	private Canvas emulatorCanvas;
 
-	private Main main;
-
 	@FXML
 	public void btnClickmeClicked(Event e) {
 		txtEdit1.setText("Clicked!!!!");

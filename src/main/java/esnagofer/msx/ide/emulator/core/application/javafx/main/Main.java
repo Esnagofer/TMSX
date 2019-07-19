@@ -21,12 +21,12 @@ public class Main extends Application {
 		MainController controller = new MainController();
 		loader.setController(controller);
 		Parent root = loader.load(getClass().getResourceAsStream("/fxml/main.fxml"));
-		Scene scene = new Scene(root, 300, 275);
+		Scene scene = new Scene(root, 640, 480);
 		stage.setTitle("FXML Welcome");
 		stage.setScene(scene);
 		stage.show();
 		Emulator emulator = JavafxEmulatorFactory.valueOf(
-			JavafxEmulator.valueOf(scene, controller.emulatorCanvas(), 1)
+			JavafxEmulator.valueOf(scene, controller.emulatorCanvas(), 2)
 		);
 		EmulatorCartLoader.loadRomWithLoaderFromThisFile(
 			emulator, 

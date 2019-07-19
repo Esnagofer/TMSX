@@ -30,18 +30,22 @@ public class JavafxScreen implements Screen {
 	@Override
 	public void setPixel(int px, int py, Color color) {
 		if (color.alpha() == 0) return;
-		int x = px * scale;
-		int y = py * scale;
-		imageToRenderScene.getPixelWriter().setColor(
-			px, 
-			py, 
-			new javafx.scene.paint.Color(
-				color.red()/255, 
-				color.green()/255, 
-				color.blue()/255, 
-				color.alpha()/255
-			)
+		javafx.scene.paint.Color blockColor = new javafx.scene.paint.Color(
+			color.red()/255, 
+			color.green()/255, 
+			color.blue()/255, 
+			color.alpha()/255
 		);
+		imageToRenderScene.getPixelWriter().setColor(px, py, blockColor);				
+
+//		int xOrigin = px * scale;
+//		int yOrigin = py * scale;
+//		for (int x = xOrigin; x <= xOrigin + scale; x++) {			
+//			for (int y = yOrigin; y <= yOrigin + scale; y++) {
+//				imageToRenderScene.getPixelWriter().setColor(x, y, blockColor);				
+//			}
+//		}
+		
 	}
 
 	private void resetTemporalGC() {
