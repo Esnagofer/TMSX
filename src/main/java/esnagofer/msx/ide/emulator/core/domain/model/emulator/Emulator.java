@@ -2,20 +2,19 @@ package esnagofer.msx.ide.emulator.core.domain.model.emulator;
 
 import javax.annotation.Generated;
 
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.Debugger;
-import esnagofer.msx.ide.emulator.core.domain.model.debugger.LocalDebugger;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.ay38910.AY38910;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.keyboard.Keyboard;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.AbstractMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.EmptyMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.Memory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.RamMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.RomMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Screen;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.tms9918a.TMS9918A;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.z80.Z80;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.z80.Z80InDevice;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.z80.Z80OutDevice;
+import esnagofer.msx.ide.emulator.core.domain.model.components.ay38910.AY38910;
+import esnagofer.msx.ide.emulator.core.domain.model.components.keyboard.Keyboard;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.AbstractMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.EmptyMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.Memory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RamMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RomMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.tms9918a.TMS9918A;
+import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80;
+import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80InDevice;
+import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80OutDevice;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.LocalDebugger;
 import esnagofer.msx.ide.lib.Tools;
 import esnagofer.msx.ide.lib.Validate;
 
@@ -85,9 +84,6 @@ public class Emulator {
 	/** The keyboard. */
 	Keyboard keyboard;
 
-	/** The screen. */
-	Screen screen;
-	
 	/** The running. */
 	public boolean /*debugMode = false, debugEnabled = true,*/ running = true;
 	
@@ -144,7 +140,6 @@ public class Emulator {
 		Validate.notNull("MsxEmulator: 'cpu' not set", cpu);
 		Validate.notNull("MsxEmulator: 'psg' not set", psg);
 		Validate.notNull("MsxEmulator: 'vdp' not set", vdp);
-		Validate.notNull("MsxEmulator: 'screen' not set", screen);
 		Validate.notNull("MsxEmulator: 'keyboard' not set", keyboard);		
 	}
 
@@ -154,11 +149,9 @@ public class Emulator {
 	 * @param builder the builder
 	 */
 	private void transferSatate(Builder builder) {
-		this.cpu = builder.cpu;
 		this.vdp = builder.vdp;
 		this.psg = builder.psg;
 		this.keyboard = builder.keyboard;
-		this.screen = builder.screen;
 		this.rom = builder.rom;
 		this.ram = builder.ram;
 		this.cart1 = builder.cart1;
@@ -262,34 +255,34 @@ public class Emulator {
 	 */
 	private void initVDP() {
 		if (vdp == null) {
-			vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);
-			
-			// VRAM data read/write port
-			cpu.registerInDevice(new Z80InDevice() {
-				public byte in(byte port) {
-					return vdp.readVRAMData();
-				}
-			}, 0x98);
-			cpu.registerOutDevice(new Z80OutDevice() {
-				public void out(byte port, byte value) {
-					vdp.writeVRAMData(value);
-				}
-			}, 0x98);
-			
-			// VDP register write port
-			cpu.registerOutDevice(new Z80OutDevice() {
-				public void out(byte port, byte value) {
-					vdp.writeRegister(value);
-				}
-			}, 0x99);
-			
-			// VDP status register read port
-			cpu.registerInDevice(new Z80InDevice() {
-				public byte in(byte port) {
-					return vdp.readStatus();
-				}
-			}, 0x99);
+			throw new IllegalStateException("VDP not set!");
 		}
+		
+		// VRAM data read/write port
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return vdp.readVRAMData();
+			}
+		}, 0x98);
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				vdp.writeVRAMData(value);
+			}
+		}, 0x98);
+		
+		// VDP register write port
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				vdp.writeRegister(value);
+			}
+		}, 0x99);
+		
+		// VDP status register read port
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return vdp.readStatus();
+			}
+		}, 0x99);
 	}
 
 	/**
@@ -304,12 +297,14 @@ public class Emulator {
 	 * I/O (port 0xA8).
 	 */
 	private void initPPI() {
+		
 		/* PPI register A (slot select) (port A8) */
 		cpu.registerInDevice(new Z80InDevice() {
 			public byte in(byte port) {
 				return ppiA_SlotSelect;
 			}
 		}, 0xA8);
+		
 		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				ppiA_SlotSelect = value;
@@ -331,6 +326,7 @@ public class Emulator {
 				return ppiC_Keyboard;
 			}
 		}, 0xAA);
+		
 		cpu.registerOutDevice(new Z80OutDevice() {
 			public void out(byte port, byte value) {
 				ppiC_Keyboard = value;
@@ -363,37 +359,38 @@ public class Emulator {
 		if (psg == null) {
 			/* Construct PSG */
 			psg = AY38910.newInstance();
-			
-			/* PSG register write port (port 0xA0) */
-			cpu.registerInDevice(new Z80InDevice() {
-				public byte in(byte port) {
-					return psg_RegisterSelect;
-				}
-			}, 0xA0);
-			cpu.registerOutDevice(new Z80OutDevice() {
-				public void out(byte port, byte value) {
-					//System.out.println("Set psg register" + value);
-					psg_RegisterSelect = value;
-				}
-			}, 0xA0);
-
-			/* PSG value write port (port 0xA1) */
-			cpu.registerOutDevice(new Z80OutDevice() {
-				public void out(byte port, byte value) {
-					//if (psg_RegisterSelect != 15 && psg_RegisterSelect != 14) {
-					//	System.out.println("Writing port " + (psg_RegisterSelect & 0xff) + " value " + (value & 0xff));
-					//};
-					psg.out(psg_RegisterSelect & 0xff, value & 0xff);
-				}
-			}, 0xA1);
-
-			/* PSG value write read (port 0xA2) */
-			cpu.registerInDevice(new Z80InDevice() {
-				public byte in(byte port) {
-					return (byte)psg.in(psg_RegisterSelect & 0xff);
-				}
-			}, 0xA2);			
 		}
+		
+		/* PSG register write port (port 0xA0) */
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return psg_RegisterSelect;
+			}
+		}, 0xA0);
+		
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				//System.out.println("Set psg register" + value);
+				psg_RegisterSelect = value;
+			}
+		}, 0xA0);
+		
+		/* PSG value write port (port 0xA1) */
+		cpu.registerOutDevice(new Z80OutDevice() {
+			public void out(byte port, byte value) {
+				//if (psg_RegisterSelect != 15 && psg_RegisterSelect != 14) {
+				//	System.out.println("Writing port " + (psg_RegisterSelect & 0xff) + " value " + (value & 0xff));
+				//};
+				psg.out(psg_RegisterSelect & 0xff, value & 0xff);
+			}
+		}, 0xA1);
+		
+		/* PSG value write read (port 0xA2) */
+		cpu.registerInDevice(new Z80InDevice() {
+			public byte in(byte port) {
+				return (byte)psg.in(psg_RegisterSelect & 0xff);
+			}
+		}, 0xA2);			
 		psg.init();
 		psg.start();
 	}
@@ -545,7 +542,8 @@ public class Emulator {
 			}
 			/* Trigger interrupt */
 			vdp.setStatusINT(true);
-			screen.refresh();
+			//vdp.refresh();
+			vdp.paint();
 			/* Keep track of interrupt rate and correct delay if necessary */
 			int checkInterval = 1;
 			intCount++;
@@ -602,9 +600,6 @@ public class Emulator {
 	@Generated("SparkTools")
 	public static final class Builder {
 		
-		/** The cpu. */
-		private Z80 cpu;
-		
 		/** The vdp. */
 		private TMS9918A vdp;
 		
@@ -614,9 +609,6 @@ public class Emulator {
 		/** The keyboard. */
 		private Keyboard keyboard;
 		
-		/** The screen. */
-		private Screen screen;
-
 		/** The rom. */
 		private RomMemory rom;
 		
@@ -633,17 +625,6 @@ public class Emulator {
 		 * Instantiates a new builder.
 		 */
 		private Builder() {
-		}
-
-		/**
-		 * With cpu.
-		 *
-		 * @param cpu the cpu
-		 * @return the builder
-		 */
-		public Builder withCpu(Z80 cpu) {
-			this.cpu = cpu;
-			return this;
 		}
 
 		/**
@@ -676,17 +657,6 @@ public class Emulator {
 		 */
 		public Builder withKeyboard(Keyboard keyboard) {
 			this.keyboard = keyboard;
-			return this;
-		}
-
-		/**
-		 * With screen.
-		 *
-		 * @param screen the screen
-		 * @return the builder
-		 */
-		public Builder withScreen(Screen screen) {
-			this.screen = screen;
 			return this;
 		}
 

@@ -4,9 +4,9 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Color;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Screen;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.tms9918a.TMS9918A;
+import esnagofer.msx.ide.emulator.core.domain.model.components.screen.Color;
+import esnagofer.msx.ide.emulator.core.domain.model.components.screen.Screen;
+import esnagofer.msx.ide.emulator.core.domain.model.components.tms9918a.TMS9918A;
 
 
 /**
@@ -52,7 +52,7 @@ public class AwtScreen implements Screen {
 	 */
 	@Override
 	public void setPixel(int px, int py, Color color) {
-		if (color.getAlpha() == 0) return;
+		if (color.alpha() == 0) return;
 		px <<= TMS9918A.IMG_SCALE - 1; py <<= TMS9918A.IMG_SCALE - 1;
 		if (px + 1 >= TMS9918A.VDP_WIDTH * TMS9918A.IMG_SCALE || 
 			py + 1 >= TMS9918A.VDP_HEIGHT * TMS9918A.IMG_SCALE || 

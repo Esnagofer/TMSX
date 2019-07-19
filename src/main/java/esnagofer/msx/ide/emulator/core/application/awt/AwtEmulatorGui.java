@@ -14,13 +14,15 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.CartridgeLoader;
-import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.CartridgeLoaderRegistry;
-import esnagofer.msx.ide.emulator.core.domain.model.cartridgeloaders.FlatMapper;
+import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.CartridgeLoader;
+import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.CartridgeLoaderRegistry;
+import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.FlatMapper;
+import esnagofer.msx.ide.emulator.core.domain.model.components.keyboard.Keyboard;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RamMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RomMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.components.screen.Screen;
+import esnagofer.msx.ide.emulator.core.domain.model.components.tms9918a.TMS9918A;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.Emulator;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.keyboard.Keyboard;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.memory.RomMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.hardware.screen.Screen;
 
 /**
  * The Class AwtMsxEmulatorGui.
@@ -102,15 +104,17 @@ public class AwtEmulatorGui extends JFrame {
 	 * @param file the file
 	 */
 	private void loadRomFromThisFile(File file) {
-		/* Select cartridge loader */
 		CartridgeLoader loader;
 		if (file.length() <= 0x8000) {
-			/* We default to flat mapper for roms < 32K */
 			loader = new FlatMapper("cart1");
 		} else {
-		    /* Manually select loader */
 		    String input = (String) JOptionPane.showInputDialog(AwtEmulatorGui.this, "Choose cartridge loader",
-		        "Cartridge loader", JOptionPane.QUESTION_MESSAGE, null, CartridgeLoaderRegistry.getCartridgeLoaders(), CartridgeLoaderRegistry.getCartridgeLoaders()[0]); // Initial choice
+		        "Cartridge loader", 
+		        JOptionPane.QUESTION_MESSAGE, 
+		        null, 
+		        CartridgeLoaderRegistry.getCartridgeLoaders(), 
+		        CartridgeLoaderRegistry.getCartridgeLoaders()[0]
+    		); // Initial choice
 		    loader = CartridgeLoaderRegistry.getInstance(input, "cart1");
 		}
 		
@@ -144,8 +148,9 @@ public class AwtEmulatorGui extends JFrame {
 		keyboard = AwtKeyboard.newInstance();
 		awtEmulatorComponent = AwtEmulatorComponent.newInstance(new Dimension(512,384), keyboard, this::paint);
 		screen = awtEmulatorComponent.screen();
+		TMS9918A vdp = TMS9918A.newInstance(new RamMemory(0xFFFF, "vram"), screen);	
 		msx = Emulator.builder()
-			.withScreen(screen)
+			.withVdp(vdp)
 			.withKeyboard(keyboard)
 		.build();
 	}

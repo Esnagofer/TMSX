@@ -1,18 +1,19 @@
 /*
  * 
  */
-package esnagofer.msx.ide.emulator.core.application.awt;
+package esnagofer.msx.ide.emulator.core.application.javafx.emulator;
 
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.util.Optional;
 
 import esnagofer.msx.ide.emulator.core.domain.model.components.keyboard.Keyboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+
 
 /**
  * The Class KeyboardDecoder.
  */
-public class AwtKeyboard implements KeyListener,  Keyboard {
+public class JavafxKeyboard implements Keyboard {
 
 	/** The rows. */
 	/*
@@ -67,42 +68,65 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 	 * meaning that KeyEvent is mapped to the matrix at position
 	 * row/column.
 	 */
-	private int[][] keyMatrix = {
-			{KeyEvent.VK_SHIFT, 		6, 0},
-			{KeyEvent.VK_CONTROL,		6, 1},
-			{KeyEvent.VK_ALT_GRAPH, 	6, 2}, // GRAPH ??
-			{KeyEvent.VK_CAPS_LOCK,		6, 3},
-			{KeyEvent.VK_CODE_INPUT, 	6, 4}, // CODE ??
-			{KeyEvent.VK_F1, 			6, 5},
-			{KeyEvent.VK_F2, 			6, 6},
-			{KeyEvent.VK_F3, 			6, 7},
-			
-			{KeyEvent.VK_F4, 			7, 0},
-			{KeyEvent.VK_F5,			7, 1},
-			{KeyEvent.VK_ESCAPE, 		7, 2}, 
-			{KeyEvent.VK_TAB,			7, 3},
-			{KeyEvent.VK_STOP, 			7, 4}, // STOP ??
-			{KeyEvent.VK_BACK_SPACE,	7, 5},
-			{KeyEvent.VK_F6, 			7, 6}, // SELECT ??
-			{KeyEvent.VK_ENTER, 		7, 7},
-			
-			{KeyEvent.VK_SPACE,			8, 0},
-			{KeyEvent.VK_HOME,			8, 1},
-			{KeyEvent.VK_INSERT, 		8, 2}, 
-			{KeyEvent.VK_DELETE,		8, 3},
-			{KeyEvent.VK_LEFT, 			8, 4}, 
-			{KeyEvent.VK_UP,			8, 5},
-			{KeyEvent.VK_DOWN, 			8, 6}, 
-			{KeyEvent.VK_RIGHT, 		8, 7},
-	
-			/* We ignore row 9 and 10 (numeric pad keys) */
-	};
 
+	
+	private Optional<RowBit> rowBitFromKeyCode(KeyCode keyCode) {
+		RowBit rowBit = null;
+		
+		switch (keyCode) {
+		
+		// 6.0 to 6.7
+		case SHIFT: rowBit = 		RowBit.valueOf(6,0); break;
+		case CONTROL: rowBit = 		RowBit.valueOf(6,1); break;
+		case ALT_GRAPH: rowBit = 	RowBit.valueOf(6,2); break;
+		case CAPS: rowBit = 		RowBit.valueOf(6,3); break;
+		case CODE_INPUT: rowBit = 	RowBit.valueOf(6,4); break;
+		case F1: rowBit = 			RowBit.valueOf(6,5); break;
+		case F2: rowBit = 			RowBit.valueOf(6,6); break;
+		case F3: rowBit = 			RowBit.valueOf(6,7); break;
+
+		// 7.0 to 7.7
+		case F4: rowBit = 			RowBit.valueOf(7,0); break;
+		case F5: rowBit = 			RowBit.valueOf(7,1); break;
+		case ESCAPE: rowBit = 		RowBit.valueOf(7,2); break;
+		case TAB: rowBit = 			RowBit.valueOf(7,3); break;
+		case STOP: rowBit = 		RowBit.valueOf(7,4); break;
+		case BACK_SPACE: rowBit = 	RowBit.valueOf(7,5); break;
+		case F6: rowBit = 			RowBit.valueOf(7,6); break;
+		case ENTER: rowBit = 		RowBit.valueOf(7,7); break;
+
+		// 8.0 to 8.7
+		case SPACE: rowBit = 		RowBit.valueOf(8,0); break;
+		case HOME: rowBit = 		RowBit.valueOf(8,1); break;
+		case INSERT: rowBit = 		RowBit.valueOf(8,2); break;
+		case DELETE: rowBit = 		RowBit.valueOf(8,3); break;
+		case LEFT: rowBit = 		RowBit.valueOf(8,4); break;
+		case UP: rowBit = 			RowBit.valueOf(8,5); break;
+		case DOWN: rowBit = 		RowBit.valueOf(8,6); break;
+		case RIGHT: rowBit = 		RowBit.valueOf(8,7); break;
+		
+		/* We ignore row 9 and 10 (numeric pad keys) */
+
+		default:
+			break;
+		}
+		return Optional.ofNullable(rowBit);
+	}
+	
 	/**
 	 * Instantiates a new keyboard decoder.
+	 * @param scene 
 	 */
-	protected AwtKeyboard() {
+	protected JavafxKeyboard() {
 		super();
+	}
+	
+	public void keyPressedEventListener(KeyEvent keyEvent) {
+		processKeyEvent(keyEvent, true);		
+	}
+	
+	public void keyReleasedEventListener(KeyEvent keyEvent) {
+		processKeyEvent(keyEvent, false);		
 	}
 	
 	/**
@@ -112,9 +136,8 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 	 * @param state true if key pressed, false if key depressed
 	 */
 	private void processKeyEvent(KeyEvent e, boolean state) {
-		
 		/* Try to match character and translate it to a pressKey/depressKey call */
-		int c = (int)e.getKeyChar();
+		int c = e.getCharacter().charAt(0);
 		boolean success = false;
 		keySearchLoop:
 		for (int i = 0; i < charMatrix.length; i++) {
@@ -131,14 +154,13 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 		
 		/* Try to match key and translate it to a pressKey/depressKey call */
 		if (!success) {
-			int k = e.getKeyCode();
-			for (int i = 0; i < keyMatrix.length; i++) {
-				if (k == keyMatrix[i][0]) {
-					if (state) {
-						pressKey(keyMatrix[i][1], keyMatrix[i][2]);
-					} else {
-						depressKey(keyMatrix[i][1], keyMatrix[i][2]);
-					}
+			Optional<RowBit> optionalRowBit = rowBitFromKeyCode(e.getCode());
+			if (optionalRowBit.isPresent()) {
+				RowBit rowBit = optionalRowBit.get();
+				if (state) {
+					pressKey(rowBit.row(), rowBit.bit());
+				} else {
+					depressKey(rowBit.row(), rowBit.bit());
 				}
 			}
 		}
@@ -162,28 +184,6 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 	 */
 	private void depressKey(int row, int bit) {
 		rows[row] = (byte)((rows[row] & 0xff) & ~(1 << bit));
-	}
-
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyTyped(KeyEvent e) {	}
-
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyPressed(KeyEvent e) {
-		processKeyEvent(e, true);
-	}
-	
-	/* (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
-	 */
-	@Override
-	public void keyReleased(KeyEvent e) {
-		processKeyEvent(e, false);
 	}
 
 	/* (non-Javadoc)
@@ -215,9 +215,9 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 	 */
 	@Override
 	public void setCapslock(boolean state) {
-		if (state != Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK)) {
-			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, state);
-		}
+//		if (state != Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK)) {
+//			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, state);
+//		}
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class AwtKeyboard implements KeyListener,  Keyboard {
 	 * @return the keyboard
 	 */
 	public static Keyboard newInstance() {
-		return new AwtKeyboard();
+		return new JavafxKeyboard();
 	}
 	
 }
