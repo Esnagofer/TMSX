@@ -111,6 +111,8 @@ public class Emulator {
 	/** The bios loaded. */
 	private boolean biosLoaded = false;
 
+	private boolean terminate = false;
+
 	/**
 	 * Instantiates a new msx emulator.
 	 *
@@ -570,10 +572,14 @@ public class Emulator {
 	 */
 	public void start(boolean startInDebugMode) {
 		initStartState(startInDebugMode);
-		while (true) {
+		while (!terminate) {
 			execute();
 			adjustRate();
 		}
+	}
+	
+	public void terminate() {
+		terminate  = true;
 	}
 
 	/**

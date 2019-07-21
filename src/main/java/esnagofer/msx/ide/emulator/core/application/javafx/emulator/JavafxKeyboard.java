@@ -70,40 +70,40 @@ public class JavafxKeyboard implements Keyboard {
 	 */
 
 	
-	private Optional<RowBit> rowBitFromKeyCode(KeyCode keyCode) {
-		RowBit rowBit = null;
+	private Optional<JavafxScreenRowBit> rowBitFromKeyCode(KeyCode keyCode) {
+		JavafxScreenRowBit rowBit = null;
 		
 		switch (keyCode) {
 		
 		// 6.0 to 6.7
-		case SHIFT: rowBit = 		RowBit.valueOf(6,0); break;
-		case CONTROL: rowBit = 		RowBit.valueOf(6,1); break;
-		case ALT_GRAPH: rowBit = 	RowBit.valueOf(6,2); break;
-		case CAPS: rowBit = 		RowBit.valueOf(6,3); break;
-		case CODE_INPUT: rowBit = 	RowBit.valueOf(6,4); break;
-		case F1: rowBit = 			RowBit.valueOf(6,5); break;
-		case F2: rowBit = 			RowBit.valueOf(6,6); break;
-		case F3: rowBit = 			RowBit.valueOf(6,7); break;
+		case SHIFT: rowBit = 		JavafxScreenRowBit.valueOf(6,0); break;
+		case CONTROL: rowBit = 		JavafxScreenRowBit.valueOf(6,1); break;
+		case ALT_GRAPH: rowBit = 	JavafxScreenRowBit.valueOf(6,2); break;
+		case CAPS: rowBit = 		JavafxScreenRowBit.valueOf(6,3); break;
+		case CODE_INPUT: rowBit = 	JavafxScreenRowBit.valueOf(6,4); break;
+		case F1: rowBit = 			JavafxScreenRowBit.valueOf(6,5); break;
+		case F2: rowBit = 			JavafxScreenRowBit.valueOf(6,6); break;
+		case F3: rowBit = 			JavafxScreenRowBit.valueOf(6,7); break;
 
 		// 7.0 to 7.7
-		case F4: rowBit = 			RowBit.valueOf(7,0); break;
-		case F5: rowBit = 			RowBit.valueOf(7,1); break;
-		case ESCAPE: rowBit = 		RowBit.valueOf(7,2); break;
-		case TAB: rowBit = 			RowBit.valueOf(7,3); break;
-		case STOP: rowBit = 		RowBit.valueOf(7,4); break;
-		case BACK_SPACE: rowBit = 	RowBit.valueOf(7,5); break;
-		case F6: rowBit = 			RowBit.valueOf(7,6); break;
-		case ENTER: rowBit = 		RowBit.valueOf(7,7); break;
+		case F4: rowBit = 			JavafxScreenRowBit.valueOf(7,0); break;
+		case F5: rowBit = 			JavafxScreenRowBit.valueOf(7,1); break;
+		case ESCAPE: rowBit = 		JavafxScreenRowBit.valueOf(7,2); break;
+		case TAB: rowBit = 			JavafxScreenRowBit.valueOf(7,3); break;
+		case STOP: rowBit = 		JavafxScreenRowBit.valueOf(7,4); break;
+		case BACK_SPACE: rowBit = 	JavafxScreenRowBit.valueOf(7,5); break;
+		case F6: rowBit = 			JavafxScreenRowBit.valueOf(7,6); break;
+		case ENTER: rowBit = 		JavafxScreenRowBit.valueOf(7,7); break;
 
 		// 8.0 to 8.7
-		case SPACE: rowBit = 		RowBit.valueOf(8,0); break;
-		case HOME: rowBit = 		RowBit.valueOf(8,1); break;
-		case INSERT: rowBit = 		RowBit.valueOf(8,2); break;
-		case DELETE: rowBit = 		RowBit.valueOf(8,3); break;
-		case LEFT: rowBit = 		RowBit.valueOf(8,4); break;
-		case UP: rowBit = 			RowBit.valueOf(8,5); break;
-		case DOWN: rowBit = 		RowBit.valueOf(8,6); break;
-		case RIGHT: rowBit = 		RowBit.valueOf(8,7); break;
+		case SPACE: rowBit = 		JavafxScreenRowBit.valueOf(8,0); break;
+		case HOME: rowBit = 		JavafxScreenRowBit.valueOf(8,1); break;
+		case INSERT: rowBit = 		JavafxScreenRowBit.valueOf(8,2); break;
+		case DELETE: rowBit = 		JavafxScreenRowBit.valueOf(8,3); break;
+		case LEFT: rowBit = 		JavafxScreenRowBit.valueOf(8,4); break;
+		case UP: rowBit = 			JavafxScreenRowBit.valueOf(8,5); break;
+		case DOWN: rowBit = 		JavafxScreenRowBit.valueOf(8,6); break;
+		case RIGHT: rowBit = 		JavafxScreenRowBit.valueOf(8,7); break;
 		
 		/* We ignore row 9 and 10 (numeric pad keys) */
 
@@ -154,9 +154,9 @@ public class JavafxKeyboard implements Keyboard {
 		
 		/* Try to match key and translate it to a pressKey/depressKey call */
 		if (!success) {
-			Optional<RowBit> optionalRowBit = rowBitFromKeyCode(e.getCode());
+			Optional<JavafxScreenRowBit> optionalRowBit = rowBitFromKeyCode(e.getCode());
 			if (optionalRowBit.isPresent()) {
-				RowBit rowBit = optionalRowBit.get();
+				JavafxScreenRowBit rowBit = optionalRowBit.get();
 				if (state) {
 					pressKey(rowBit.row(), rowBit.bit());
 				} else {

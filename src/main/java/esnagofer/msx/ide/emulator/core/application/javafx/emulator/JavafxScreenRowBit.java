@@ -8,9 +8,9 @@ import esnagofer.msx.ide.lib.Validate;
 /**
  * The Class RowBit.
  */
-class RowBit {
+class JavafxScreenRowBit {
 
-	private static Map<Integer, RowBit> cache = new HashMap<>();
+	private static Map<Integer, JavafxScreenRowBit> cache = new HashMap<>();
 	
 	/** The row. */
 	private Integer row;
@@ -24,7 +24,7 @@ class RowBit {
 	 * @param row the row
 	 * @param bit the bit
 	 */
-	protected RowBit(Integer row, Integer bit) {
+	protected JavafxScreenRowBit(Integer row, Integer bit) {
 		Validate.isNotNull(row);
 		Validate.isNotNull(bit);
 		this.row = row;
@@ -52,7 +52,7 @@ class RowBit {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RowBit other = (RowBit) obj;
+		JavafxScreenRowBit other = (JavafxScreenRowBit) obj;
 		if (bit != other.bit)
 			return false;
 		if (row != other.row)
@@ -85,10 +85,10 @@ class RowBit {
 	 * @param bit the bit
 	 * @return the row bit
 	 */
-	public static RowBit valueOf(Integer row, Integer bit) {
-		RowBit rowBit = cache.get(RowBit.hashCode(row, bit));
+	public static JavafxScreenRowBit valueOf(Integer row, Integer bit) {
+		JavafxScreenRowBit rowBit = cache.get(JavafxScreenRowBit.hashCode(row, bit));
 		if (rowBit == null) {
-			rowBit = new RowBit(row, bit);
+			rowBit = new JavafxScreenRowBit(row, bit);
 		}
 		return rowBit;
 	}

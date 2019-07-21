@@ -36,22 +36,22 @@ public class JavafxScreen implements Screen {
 			color.blue()/255, 
 			color.alpha()/255
 		);
-		imageToRenderScene.getPixelWriter().setColor(px, py, blockColor);				
+//		imageToRenderScene.getPixelWriter().setColor(px, py, blockColor);				
 
-//		int xOrigin = px * scale;
-//		int yOrigin = py * scale;
-//		for (int x = xOrigin; x <= xOrigin + scale; x++) {			
-//			for (int y = yOrigin; y <= yOrigin + scale; y++) {
-//				imageToRenderScene.getPixelWriter().setColor(x, y, blockColor);				
-//			}
-//		}
+		int xOrigin = px * scale;
+		int yOrigin = py * scale;
+		for (int y = yOrigin; y < yOrigin + scale; y++) {
+			for (int x = xOrigin; x < xOrigin + scale; x++) {			
+				imageToRenderScene.getPixelWriter().setColor(x, y, blockColor);				
+			}
+		}
 		
 	}
 
 	private void resetTemporalGC() {
 		imageToRenderScene = new WritableImage(
-			(int)Math.round(targetCanvas.getWidth()), 
-			(int)Math.round(targetCanvas.getHeight())
+			(int)Math.round(targetCanvas.getWidth() * scale), 
+			(int)Math.round(targetCanvas.getHeight() * scale)
 		);
 	}
 	

@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.application.javafx.main;
+package esnagofer.msx.ide.emulator.core.application.javafx.ide.main;
 
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -7,7 +7,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Paint;
 
-public class MainController {
+public class IdeMainController {
 
 	@FXML
 	private TextField txtEdit1;
