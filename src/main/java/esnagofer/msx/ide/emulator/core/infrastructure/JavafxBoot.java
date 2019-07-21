@@ -1,11 +1,11 @@
 package esnagofer.msx.ide.emulator.core.infrastructure;
 
-import esnagofer.msx.ide.emulator.core.application.javafx.ide.main.IdeMain;
+import esnagofer.msx.ide.emulator.core.application.javafx.ide.main.Main;
 
 public class JavafxBoot {
 
 	public static void main(String[] args) {
-		IdeMain.run();
+		Main.run();
 	}
 		
 }
