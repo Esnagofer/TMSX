@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import esnagofer.msx.ide.emulator.core.application.javafx.emulator.JavafxEmulator;
-import esnagofer.msx.ide.emulator.core.application.javafx.emulator.JavafxEmulatorFactory;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.Emulator;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.EmulatorCartLoader;
+import esnagofer.msx.ide.emulator.core.infrastructure.javafx.emulator.JavafxEmulator;
+import esnagofer.msx.ide.emulator.core.infrastructure.javafx.emulator.JavafxEmulatorFactory;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;

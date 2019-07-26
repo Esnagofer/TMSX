@@ -2,17 +2,17 @@ package esnagofer.msx.ide.emulator.core.domain.model.emulator;
 
 import javax.annotation.Generated;
 
-import esnagofer.msx.ide.emulator.core.domain.model.components.ay38910.AY38910;
-import esnagofer.msx.ide.emulator.core.domain.model.components.keyboard.Keyboard;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.AbstractMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.EmptyMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.Memory;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RamMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RomMemory;
-import esnagofer.msx.ide.emulator.core.domain.model.components.tms9918a.TMS9918A;
-import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80;
-import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80InDevice;
-import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80OutDevice;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.ay38910.AY38910;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.keyboard.Keyboard;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.AbstractMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.EmptyMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.Memory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.RamMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.RomMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.tms9918a.TMS9918A;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.z80.Z80;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.z80.Z80InDevice;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.z80.Z80OutDevice;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.Debugger;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.LocalDebugger;
 import esnagofer.msx.ide.lib.Tools;

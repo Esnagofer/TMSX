@@ -1,6 +1,6 @@
 package esnagofer.msx.ide.emulator.core.domain.model.emulator.debugger.breakpoint;
 
-import esnagofer.msx.ide.emulator.core.domain.model.components.z80.Z80;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.z80.Z80;
 import esnagofer.msx.ide.lib.Validate;
 
 /**

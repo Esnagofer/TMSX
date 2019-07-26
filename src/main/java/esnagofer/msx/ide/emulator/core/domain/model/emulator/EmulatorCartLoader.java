@@ -3,10 +3,10 @@ package esnagofer.msx.ide.emulator.core.domain.model.emulator;
 import java.io.File;
 import java.util.prefs.Preferences;
 
-import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.CartridgeLoader;
-import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.CartridgeLoaderRegistry;
-import esnagofer.msx.ide.emulator.core.domain.model.components.cartridgeloaders.FlatMapper;
-import esnagofer.msx.ide.emulator.core.domain.model.components.memory.RomMemory;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.cartridgeloaders.CartridgeLoader;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.cartridgeloaders.CartridgeLoaderRegistry;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.cartridgeloaders.FlatMapper;
+import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.memory.RomMemory;
 
 public class EmulatorCartLoader {
 

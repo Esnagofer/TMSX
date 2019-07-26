@@ -1,0 +1,2 @@
+https://github.com/FXMisc/RichTextFX
+	https://github.com/FXMisc/RichTextFX/tree/master/richtextfx-demos#rich-text-editor
