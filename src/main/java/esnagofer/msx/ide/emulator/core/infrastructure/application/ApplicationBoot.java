@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure;
+package esnagofer.msx.ide.emulator.core.infrastructure.application;
 
 import javax.inject.Inject;
 import javax.inject.Named;

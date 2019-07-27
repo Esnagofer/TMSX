@@ -1,7 +1,7 @@
 /*
  * 
  */
-package esnagofer.msx.ide.emulator.core.infrastructure.javafx.emulator;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.emulator;
 
 import java.util.Optional;
 

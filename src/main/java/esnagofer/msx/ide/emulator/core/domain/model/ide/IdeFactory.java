@@ -19,7 +19,7 @@ public class IdeFactory {
 		this.domainEventManager = domainEventManager;
 	}
 	
-	public synchronized Ide createIde() {
+	public synchronized Ide get() {
 		if (INSTANCE == null) {
 			INSTANCE = Ide.valueOf(domainEventManager);
 			domainEventManager.publish(IdeCreatedEvent.valueOf(INSTANCE));

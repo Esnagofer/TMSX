@@ -19,7 +19,7 @@ class CreateIdeCommandHandler implements CommandExecutionHandler<CreateIdeComman
 	
 	@Override
 	public void execute(CreateIdeCommand command) {
-		ideFactory.createIde();
+		ideFactory.get();
 	}
 
 }

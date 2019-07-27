@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.javafx.emulator;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.emulator;
 
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.screen.Color;
 import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.screen.Screen;
