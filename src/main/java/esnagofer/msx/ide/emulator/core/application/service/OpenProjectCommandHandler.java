@@ -4,7 +4,6 @@ import javax.inject.Inject;
 
 import esnagofer.msx.ide.emulator.core.application.usecase.OpenProjectCommand;
 import esnagofer.msx.ide.emulator.core.domain.model.ide.Ide;
-import esnagofer.msx.ide.emulator.core.domain.model.ide.IdeFactory;
 import esnagofer.msx.ide.emulator.core.domain.model.project.Project;
 import esnagofer.msx.ide.emulator.core.domain.model.project.ProjectId;
 import esnagofer.msx.ide.emulator.core.domain.model.project.ProjectNotFoundEvent;
@@ -15,7 +14,7 @@ import esnagofer.msx.ide.lib.domain.model.core.DomainEventManager;
 
 class OpenProjectCommandHandler implements CommandExecutionHandler<OpenProjectCommand> {
 
-	private IdeFactory ideFactory;
+	private Ide ide;
 	
 	private ProjectRepository projectRepository;
 
@@ -25,21 +24,20 @@ class OpenProjectCommandHandler implements CommandExecutionHandler<OpenProjectCo
 
 	@Inject
 	public OpenProjectCommandHandler(
-		IdeFactory ideFactory,
+		Ide ide,
 		ProjectRepository projectRepository,
 		DomainEventManager domainEventManager
 	) {
-		Validate.isNotNull(ideFactory);
+		Validate.isNotNull(ide);
 		Validate.isNotNull(projectRepository);
 		Validate.isNotNull(domainEventManager);
-		this.ideFactory = ideFactory;
+		this.ide = ide;
 		this.projectRepository = projectRepository;
 		this.domainEventManager = domainEventManager;
 	}
 	
 	@Override
 	public void execute(OpenProjectCommand command) {
-		Ide ide = ideFactory.get();
 		ProjectId projectId = ProjectId.valueOf(command.projectId());
 		if (!projectRepository.contains(projectId)) {
 			domainEventManager.publish(ProjectNotFoundEvent.valueOf(projectId));

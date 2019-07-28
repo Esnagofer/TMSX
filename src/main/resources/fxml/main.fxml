@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <top>
@@ -17,13 +22,19 @@
             <items>
                   <Menu mnemonicParsing="false" text="Project">
                      <items>
-                    <MenuItem fx:id="menuProjectOpen" mnemonicParsing="false" text="Open" onAction="#menuProjectOpenAction" />
+                    <MenuItem fx:id="menuProjectOpen" mnemonicParsing="false" onAction="#menuProjectOpenAction" text="Open" />
                      </items>
                   </Menu>
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="menuExit" mnemonicParsing="false" text="Exit" />
             </items>
           </Menu>
+            <Menu fx:id="menuProjectCompile" mnemonicParsing="false" text="Compile" />
+            <Menu fx:id="menuProjectDebug" mnemonicParsing="false" text="Debug">
+              <items>
+                <MenuItem mnemonicParsing="false" text="Action 1" />
+              </items>
+            </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem mnemonicParsing="false" text="About" />
@@ -35,7 +46,7 @@
    <bottom>
       <AnchorPane prefHeight="23.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
-            <TabPane layoutY="-188.0" prefHeight="211.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-188.0">
+            <TabPane fx:id="tabPaneHardwareDebug" layoutY="-188.0" prefHeight="211.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-188.0">
               <tabs>
                 <Tab text="CPU">
                   <content>
@@ -59,7 +70,40 @@
                   </Tab>
               </tabs>
             </TabPane>
+            <Separator prefHeight="1.0" prefWidth="600.0" valignment="TOP" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0" />
+            <Pane prefHeight="200.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <Label fx:id="lblStatus" text="Status" />
+               </children>
+            </Pane>
          </children>
       </AnchorPane>
    </bottom>
+   <center>
+      <AnchorPane BorderPane.alignment="CENTER">
+         <children>
+            <SplitPane dividerPositions="0.29797979797979796">
+              <items>
+                <AnchorPane>
+                     <children>
+                        <TreeView fx:id="treeViewProjectFiles" prefHeight="400.0" prefWidth="248.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+                <AnchorPane>
+                     <children>
+                        <TabPane fx:id="tabPaneSource" prefHeight="400.0" prefWidth="316.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children>
+                  </AnchorPane>
+              </items>
+            </SplitPane>
+         </children>
+      </AnchorPane>
+   </center>
+   <right>
+      <AnchorPane BorderPane.alignment="CENTER">
+         <children>
+            <Pane style="-fx-background-color: red;" />
+         </children>
+      </AnchorPane>
+   </right>
 </BorderPane>

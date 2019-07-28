@@ -19,8 +19,8 @@ public class ProjectDirectorySelectedUIEventListener {
 				OpenProjectCommand.valueOf(event.directoryProject().getCanonicalPath())
 			);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
     } 
     

@@ -1,6 +1,9 @@
 package esnagofer.msx.ide.emulator.core.infrastructure.domain.model.project;
 
+import java.io.File;
 import java.util.Set;
+
+import org.jboss.weld.exceptions.UnsupportedOperationException;
 
 import esnagofer.msx.ide.emulator.core.domain.model.project.Project;
 import esnagofer.msx.ide.emulator.core.domain.model.project.ProjectId;
@@ -8,38 +11,33 @@ import esnagofer.msx.ide.emulator.core.domain.model.project.ProjectRepository;
 
 public class DirectoryProjectRepository implements ProjectRepository {
 
-	public DirectoryProjectRepository() {
-		// TODO Auto-generated constructor stub
-	}
-
 	@Override
 	public void add(Project aggregate) {
-		// TODO Auto-generated method stub
-
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override
 	public void add(Set<Project> aggregate) {
-		// TODO Auto-generated method stub
-
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override
 	public Project get(ProjectId aggregateId) {
-		// TODO Auto-generated method stub
-		return null;
+		return Project.builder()
+			.withId(aggregateId)
+			.withSourceNodes(SourceNodeFactory.valueOf().get(aggregateId.value()))
+		.build();
 	}
 
 	@Override
 	public void remove(ProjectId aggregateId) {
-		// TODO Auto-generated method stub
-
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override
 	public boolean contains(ProjectId aggregateId) {
-		// TODO Auto-generated method stub
-		return false;
+		File file = new File(aggregateId.value());
+		return file.exists();
 	}
 
 }

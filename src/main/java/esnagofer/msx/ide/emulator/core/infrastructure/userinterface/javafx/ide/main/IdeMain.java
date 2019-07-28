@@ -65,7 +65,7 @@ public class IdeMain extends Application {
 		return stage;
 	}
 	
-	public UIEventManager eventManager() {
+	public static UIEventManager eventManager() {
 		return eventManager;
 	}
 	
