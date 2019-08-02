@@ -18,6 +18,8 @@ public class Project extends Aggregate<ProjectId> {
 	private Project(Builder builder) {
 		super(builder.id);
 		Validate.isNotNull(builder.sourceNodes);
+		sourceNodes = new ArrayList<>();
+		sourceNodes.addAll(builder.sourceNodes);
 	}
 	
 	/**

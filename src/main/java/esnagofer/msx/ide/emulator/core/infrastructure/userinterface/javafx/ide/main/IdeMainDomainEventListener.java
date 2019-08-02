@@ -12,7 +12,11 @@ public class IdeMainDomainEventListener {
     } 
     
     public void onIdeCurrentProjectAssignedEvent(@Observes IdeCurrentProjectAssignedEvent event) {
-    	
+    	IdeMainController.instance().assignProjectSource(
+			"Jander", 
+			event.project().sourceNodes
+		);
+    
     }
     
 }

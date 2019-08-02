@@ -13,17 +13,18 @@ import javafx.stage.Stage;
 
 public class IdeMain extends Application {
 	
-	private IdeMain instance;
-
 	private IdeMainController controller;
+	
+	private IdeMain instance;
 
 	private Stage stage;
 	
 	private static UIEventManager eventManager;
 	
 	@Inject
-	public IdeMain(UIEventManager eventManager) {
-		super();
+	public IdeMain(
+		UIEventManager eventManager
+	) {
 		Validate.isNotNull(eventManager);
 		this.eventManager = eventManager;
 	}
@@ -35,10 +36,11 @@ public class IdeMain extends Application {
 		Validate.isNotNull(stage);
 		this.stage = stage;
 		FXMLLoader loader = new FXMLLoader();
-		controller = new IdeMainController(this);
+		controller = new IdeMainController(eventManager, stage);
 		loader.setController(controller);
 		Parent root = loader.load(getClass().getResourceAsStream("/fxml/main.fxml"));
 		Scene scene = new Scene(root, 640, 480);
+		controller.init(scene);
 		stage.setTitle("FXML Welcome");
 		stage.setScene(scene);
 		stage.show();
