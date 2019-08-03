@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 import javax.inject.Named;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+
 import esnagofer.msx.ide.emulator.core.domain.model.project.SourceNode;
 import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project.ProjectDirectorySelectedUIEvent;
 import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project.ProjectDirectorySelector;
@@ -28,6 +31,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 @Named("ideMainController")
@@ -149,7 +153,12 @@ public class IdeMainController implements javafx.fxml.Initializable {
 		            Label tabLabel = new Label(item.sourceNode().name());
 		            tabdata.setGraphic(tabLabel);
 		            tabdata.setClosable(true);
-		            tabdata.setContent(Z80SjasmKeywordsFactory.create(scene, item.sourceNode().content().get()));
+		            CodeArea codeArea = Z80SjasmKeywordsFactory.create(scene, item.sourceNode().content().get());
+		            StackPane stackPage = new StackPane(new VirtualizedScrollPane<>(codeArea));
+//		            AnchorPane codeAreaAnchorPane = new AnchorPane();
+//		            codeAreaAnchorPane.getChildren().add(codeArea);
+//		            tabdata.setContent(codeAreaAnchorPane);
+		            tabdata.setContent(stackPage);
 		            tabPaneSource.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
 	            	tabPaneSource.getTabs().add(tabdata);
 		        }

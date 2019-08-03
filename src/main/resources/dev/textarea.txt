@@ -1,2 +1,4 @@
 https://github.com/FXMisc/RichTextFX
 	https://github.com/FXMisc/RichTextFX/tree/master/richtextfx-demos#rich-text-editor
+	https://stackoverflow.com/questions/28659716/show-breakpoint-at-line-number-in-richtextfx-codearea
+	
