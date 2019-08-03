@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.richtextfx.z80sjasm;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.richtextfx;
 
 
 import java.time.Duration;
@@ -23,31 +23,27 @@ public class Z80SjasmKeywordsFactory {
 
     private static final String[] COMPILER_KEYWORDS = new String[] {
         "IFNDEF", "ENDIF", "INCLUDE", "DEFINE", "MODULE", "ENDMODULE", 
-        "OUTPUT",
-        "EQU", "macro", "endmacro"
+        "OUTPUT", "EQU", "macro", "endmacro"
     };
 
     private static final String[] Z80_KEYWORDS = new String[] {
-        "call", "im",
-        "di", "ei", "add", "adc", "sub",
-        "sbc", "jp", "jr", "cp", "halt",
-        "and", "rr", "ret", "db", "import",
-        "instanceof", "int", "interface", "long", "native",
-        "new", "package", "private", "protected", "public",
-        "return", "short", "static", "strictfp", "super",
-        "or", "xor", "this", "throw", "throws",
-        "and", "pop", "inc", "ld", "push"
+        "call", "im", "di", "ei", "add", "adc", "sub", "sbc", "jp", "jr", "cp", "halt",
+        "and", "rr", "ret", "db", "import", "instanceof", "int", "interface", "long", "native",
+        "new", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super",
+        "or", "xor", "this", "throw", "throws", "and", "pop", "inc", "ld", "push"
     };
 
     private static final String[] Z80_REGISTERS = new String[] {
     	",a", "a,", "[\\s]*a[\\s]*", "a,[\\s]*\\(", "\\)[\\s]*,a",	
-    	",b", "b,", " b ",	
-    	",c", "c,", " c ",	
-    	",d", "d,", " d ",	
-    	",e", "e,", " e ",	
-    	",h", "h,", " h ",	
-    	",l", "l,", " l ",	
-    	",hl", "hl,", " hl ", "(hl)"
+    	",b", "b,", "[\\s]*b[\\s]*", "b,[\\s]*\\(", "\\)[\\s]*,b",	
+    	",c", "c,", "[\\s]*c[\\s]*", "c,[\\s]*\\(", "\\)[\\s]*,c",	
+    	",d", "d,", "[\\s]*d[\\s]*", "d,[\\s]*\\(", "\\)[\\s]*,d",	
+    	",e", "e,", "[\\s]*e[\\s]*", "e,[\\s]*\\(", "\\)[\\s]*,e",	
+    	",h", "h,", "[\\s]*h[\\s]*", "h,[\\s]*\\(", "\\)[\\s]*,h",	
+    	",l", "l,", "[\\s]*l[\\s]*", "l,[\\s]*\\(", "\\)[\\s]*,l",	
+    	",hl", "hl,", "[\\s]*hl[\\s]*", "hl,[\\s]*\\(", "\\)[\\s]*,hl",
+    	",de", "de,", "[\\s]*de[\\s]*", "de,[\\s]*\\(", "\\)[\\s]*,de",
+    	",bc", "bc,", "[\\s]*bc[\\s]*", "bc,[\\s]*\\(", "\\)[\\s]*,bc",
     };
 
     private static final String COMPILER_KEYWORD_PATTERN = "\\b(" + String.join("|", COMPILER_KEYWORDS) + ")\\b";
