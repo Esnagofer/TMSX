@@ -110,7 +110,7 @@ public class SourceCodeArea extends CodeArea {
 	        .multiPlainChanges()
 	        .successionEnds(Duration.ofMillis(10))
 	        .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(getText())));
-		
+        setStyle("-fx-font-family: consolas; -fx-font-size: 11pt;");
 	}
 
 	public static SourceCodeArea valueOf() {
