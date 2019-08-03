@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.main;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.main;
 
 import esnagofer.msx.ide.emulator.core.domain.model.project.SourceNode;
 import esnagofer.msx.ide.lib.Validate;

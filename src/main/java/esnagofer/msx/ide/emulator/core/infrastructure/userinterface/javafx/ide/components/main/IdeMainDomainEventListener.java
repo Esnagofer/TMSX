@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.main;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.main;
 
 import javax.enterprise.event.Observes;
 

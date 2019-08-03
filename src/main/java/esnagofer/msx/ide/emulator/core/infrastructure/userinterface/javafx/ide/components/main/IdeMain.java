@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.main;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.main;
 
 import javax.inject.Inject;
 
@@ -40,6 +40,7 @@ public class IdeMain extends Application {
 		loader.setController(controller);
 		Parent root = loader.load(getClass().getResourceAsStream("/fxml/main.fxml"));
 		Scene scene = new Scene(root, 640, 480);
+		IdeRegisterComponents.inScene(scene);
 		controller.init(scene);
 		stage.setTitle("FXML Welcome");
 		stage.setScene(scene);

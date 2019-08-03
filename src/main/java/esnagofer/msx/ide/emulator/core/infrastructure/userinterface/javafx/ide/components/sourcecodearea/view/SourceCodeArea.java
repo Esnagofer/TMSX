@@ -1,5 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.richtextfx;
-
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.sourcecodearea.view;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -7,19 +6,13 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.Subscription;
 
-import esnagofer.msx.ide.emulator.core.domain.model.emulator.components.z80.Z80;
-import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
-
-public class Z80SjasmKeywordsFactory {
+public class SourceCodeArea extends CodeArea {
 
     private static final String[] COMPILER_KEYWORDS = new String[] {
         "IFNDEF", "ENDIF", "INCLUDE", "DEFINE", "MODULE", "ENDMODULE", 
@@ -69,7 +62,22 @@ public class Z80SjasmKeywordsFactory {
             + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
             + "|(?<HEXNUMBER>" + HEX_NUMBER_PATTERN + ")"
     );
-    
+        
+	protected SourceCodeArea() {
+		init();
+	}
+
+	protected SourceCodeArea(EditableStyledDocument<Collection<String>, String, Collection<String>> document) {
+		super(document);
+		init();
+	}
+
+	protected SourceCodeArea(String text) {
+		super(text);
+		init();
+		replaceText(0, 0, text);
+	}
+	
     private static StyleSpans<Collection<String>> computeHighlighting(String text) {
     	Matcher matcher = PATTERN.matcher(text);
     	int lastKwEnd = 0;
@@ -95,27 +103,28 @@ public class Z80SjasmKeywordsFactory {
     	spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
     	return spansBuilder.create();
     }
-
-    public static CodeArea create(Scene scene, String text) {
-        CodeArea codeArea = new CodeArea();
-        // add line numbers to the left of area
-        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
-        // recompute the syntax highlighting 500 ms after user stops editing area
-        Subscription cleanupWhenNoLongerNeedIt = codeArea
-	        // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
-	        // multi plain changes = save computation by not rerunning the code multiple times
-	        //   when making multiple changes (e.g. renaming a method at multiple parts in file)
+	
+	private void init() {
+        setParagraphGraphicFactory(LineNumberFactory.get(this));
+        this
 	        .multiPlainChanges()
-	
-	        // do not emit an event until 500 ms have passed since the last emission of previous stream
 	        .successionEnds(Duration.ofMillis(10))
+	        .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(getText())));
+		
+	}
+
+	public static SourceCodeArea valueOf() {
+		return new SourceCodeArea();
+	}
+
+	public static SourceCodeArea valueOf(EditableStyledDocument<Collection<String>, String, Collection<String>> document) {
+		return new SourceCodeArea(document);
+	}
 	
-	        // run the following code block when previous stream emits an event
-	        .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
-	        // when no longer need syntax highlighting and wish to clean up memory leaks
-	        // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
-        codeArea.replaceText(0, 0, text);
-        scene.getStylesheets().add(Z80SjasmKeywordsFactory.class.getResource("/css/z80sjasm-keywords.css").toExternalForm());
-        return codeArea;
-    }
+
+	public static SourceCodeArea valueOf(String text) {
+		return new SourceCodeArea(text);
+	}
+
+	
 }

@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project;
 
 import java.io.File;
 

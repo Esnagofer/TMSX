@@ -1,31 +1,24 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.main;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.main;
 
 import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 import javax.inject.Named;
 
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
-
 import esnagofer.msx.ide.emulator.core.domain.model.project.SourceNode;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project.ProjectDirectorySelectedUIEvent;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project.ProjectDirectorySelector;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.richtextfx.JavafxBreakPointFactory;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.richtextfx.Z80SjasmKeywordsFactory;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.BreakPoint;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project.ProjectDirectorySelectedUIEvent;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project.ProjectDirectorySelector;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.sourcecodearea.SourceEditorComponent;
 import esnagofer.msx.ide.lib.Validate;
 import esnagofer.msx.ide.lib.userinterface.UIEventManager;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -36,8 +29,6 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 @Named("ideMainController")
@@ -148,6 +139,7 @@ public class IdeMainController implements javafx.fxml.Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		tabPaneSource.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
 		menuProjectCompile.setDisable(true);
 		menuProjectDebug.setDisable(true);
 		treeViewSources.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -159,25 +151,11 @@ public class IdeMainController implements javafx.fxml.Initializable {
 		            Label tabLabel = new Label(item.sourceNode().name());
 		            tabdata.setGraphic(tabLabel);
 		            tabdata.setClosable(true);
-		            CodeArea codeArea = Z80SjasmKeywordsFactory.create(scene, item.sourceNode().content().get());
-		            StackPane stackPage = new StackPane(new VirtualizedScrollPane<>(codeArea));
-            		//
-	            	// Break point testing
-		            IntFunction<Node> numberFactory = LineNumberFactory.get(codeArea);
-		            IntFunction<Node> arrowFactory = new JavafxBreakPointFactory(10);
-		            IntFunction<Node> graphicFactory = line -> {
-		                HBox hbox = new HBox(
-		                    numberFactory.apply(line),
-		                    arrowFactory.apply(line));
-		                hbox.setAlignment(Pos.CENTER_LEFT);
-		                return hbox;
-		            };
-		            codeArea.setParagraphGraphicFactory(graphicFactory);
-		            codeArea.setDisable(true);
-		            //
-		            //
-		            tabdata.setContent(stackPage);
-		            tabPaneSource.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+		            SourceEditorComponent sourceEditorComponent = SourceEditorComponent.valueOf(item.sourceNode().content().get());
+		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfEnabled(10));
+		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfDisabled(11));
+		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfInvalid(12));
+		            tabdata.setContent(sourceEditorComponent.root());
 	            	tabPaneSource.getTabs().add(tabdata);
 		        }
 		    }

@@ -5,7 +5,7 @@ import java.io.IOException;
 import javax.enterprise.event.Observes;
 
 import esnagofer.msx.ide.emulator.core.application.usecase.OpenProjectCommand;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.project.ProjectDirectorySelectedUIEvent;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project.ProjectDirectorySelectedUIEvent;
 import esnagofer.msx.ide.lib.cqs.CommandExecutionHandler;
 
 public class ProjectDirectorySelectedUIEventListener {
