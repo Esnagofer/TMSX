@@ -10,19 +10,17 @@ import java.util.stream.Collectors;
 import javax.inject.Named;
 
 import esnagofer.msx.ide.emulator.core.domain.model.project.SourceNode;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.BreakPoint;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.editor.tab.SourceTabPaneComponent;
 import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project.ProjectDirectorySelectedUIEvent;
 import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.project.ProjectDirectorySelector;
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.sourcecodearea.SourceEditorComponent;
 import esnagofer.msx.ide.lib.Validate;
 import esnagofer.msx.ide.lib.userinterface.UIEventManager;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -60,6 +58,8 @@ public class IdeMainController implements javafx.fxml.Initializable {
 	private MenuItem menuProjectDebug;
 
 	private Scene scene;
+
+	private SourceTabPaneComponent sourceTabPaneComponent;
 	
 	public IdeMainController(
 		UIEventManager eventManager,
@@ -139,24 +139,18 @@ public class IdeMainController implements javafx.fxml.Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		tabPaneSource.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
 		menuProjectCompile.setDisable(true);
 		menuProjectDebug.setDisable(true);
+		tabPaneSource.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+		sourceTabPaneComponent = SourceTabPaneComponent.valueOf(tabPaneSource);
 		treeViewSources.setOnMouseClicked(new EventHandler<MouseEvent>() {
 		    @Override
 		    public void handle(MouseEvent mouseEvent) {            
 		        if(mouseEvent.getClickCount() == 2) {
-		        	TreeItemSourceNode item = (TreeItemSourceNode) treeViewSources.getSelectionModel().getSelectedItem();
-		            Tab tabdata = new Tab();
-		            Label tabLabel = new Label(item.sourceNode().name());
-		            tabdata.setGraphic(tabLabel);
-		            tabdata.setClosable(true);
-		            SourceEditorComponent sourceEditorComponent = SourceEditorComponent.valueOf(item.sourceNode().content().get());
-		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfEnabled(10));
-		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfDisabled(11));
-		            sourceEditorComponent.addBreakPoint(BreakPoint.valueOfInvalid(12));
-		            tabdata.setContent(sourceEditorComponent.root());
-	            	tabPaneSource.getTabs().add(tabdata);
+		        	TreeItemSourceNode treeViewSourceItem = (TreeItemSourceNode) treeViewSources.getSelectionModel().getSelectedItem();
+		        	sourceTabPaneComponent.selectTab(treeViewSourceItem.sourceNode(), 35);		        		
+		        	Platform.runLater(() -> {
+		        	});
 		        }
 		    }
 		});

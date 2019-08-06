@@ -1,4 +1,4 @@
-package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.sourcecodearea.view;
+package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.editor.sourcecodearea.view;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -110,7 +110,7 @@ public class SourceCodeArea extends CodeArea {
 	        .multiPlainChanges()
 	        .successionEnds(Duration.ofMillis(10))
 	        .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(getText())));
-        setStyle("-fx-font-family: consolas; -fx-font-size: 11pt;");
+        setStyle("-fx-font-family: consolas; -fx-font-size: 10pt;");
 	}
 
 	public static SourceCodeArea valueOf() {

@@ -1,6 +1,6 @@
 package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.main;
 
-import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.sourcecodearea.SourceEditorComponent;
+import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.editor.sourcecodearea.SourceEditorComponent;
 import javafx.scene.Scene;
 
 public class IdeRegisterComponents {

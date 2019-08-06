@@ -35,6 +35,55 @@ public class SourceNode {
 		this.childNodes = childNodes;
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((childNodes == null) ? 0 : childNodes.hashCode());
+		result = prime * result + ((content == null) ? 0 : content.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((isContainer == null) ? 0 : isContainer.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SourceNode other = (SourceNode) obj;
+		if (childNodes == null) {
+			if (other.childNodes != null)
+				return false;
+		} else if (!childNodes.equals(other.childNodes))
+			return false;
+		if (content == null) {
+			if (other.content != null)
+				return false;
+		} else if (!content.equals(other.content))
+			return false;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (isContainer == null) {
+			if (other.isContainer != null)
+				return false;
+		} else if (!isContainer.equals(other.isContainer))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
+
 	public String name() {
 		return name;
 	}
