@@ -1,10 +1,8 @@
 package esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.components.editor.sourcecodearea;
 
 import java.util.Optional;
-import java.util.function.IntFunction;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.TwoDimensional.Position;
 
 import esnagofer.msx.ide.emulator.core.domain.model.project.SourceNode;
@@ -14,10 +12,7 @@ import esnagofer.msx.ide.emulator.core.infrastructure.userinterface.javafx.ide.c
 import esnagofer.msx.ide.lib.Validate;
 import esnagofer.msx.ide.lib.javafx.JavafxComponent;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
 public class SourceEditorComponent extends JavafxComponent {
@@ -45,24 +40,13 @@ public class SourceEditorComponent extends JavafxComponent {
 			finalText = text.get();
 		}
 		sourceCodeArea = SourceCodeArea.valueOf(finalText);
-//		sourceCodeArea.setDisable(true);
 		sourceCodeScrollPane = new VirtualizedScrollPane<>(sourceCodeArea);
 		stackPane = new StackPane(sourceCodeScrollPane);
 		setRoot(stackPane);		
 	}
 	
 	private void initBreakPointManager() {
-		breakPointManager = new SourceCodeAreaBreakPointManager();
-		IntFunction<Node> numberFactory = LineNumberFactory.get(sourceCodeArea);
-		IntFunction<Node> arrowFactory = breakPointManager;
-		IntFunction<Node> graphicFactory = editorLine -> {
-			HBox hbox = new HBox(
-				numberFactory.apply(editorLine),
-				arrowFactory.apply(editorLine));
-			hbox.setAlignment(Pos.CENTER_LEFT);
-			return hbox;
-		};
-		sourceCodeArea.setParagraphGraphicFactory(graphicFactory);
+		breakPointManager = new SourceCodeAreaBreakPointManager(sourceCodeArea);
 	}
 
 	public BreakPointManager breakPointManager() {

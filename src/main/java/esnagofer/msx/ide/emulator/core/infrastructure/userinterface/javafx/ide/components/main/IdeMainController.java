@@ -52,7 +52,7 @@ public class IdeMainController implements javafx.fxml.Initializable {
 	private MenuItem menuProjectCompile;
 	
 	@FXML
-	private TreeView treeViewSources;
+	private TreeView<String> treeViewSources;
 	
 	@FXML
 	private MenuItem menuProjectDebug;

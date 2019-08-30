@@ -33,7 +33,6 @@ public class ProjectDirectorySelector {
 	public static ProjectDirectorySelector valueOf(Stage stage) {
 		if (INSTANCE == null) {
 			INSTANCE = new ProjectDirectorySelector(stage);
-			
 		}
 		return INSTANCE;
 	}

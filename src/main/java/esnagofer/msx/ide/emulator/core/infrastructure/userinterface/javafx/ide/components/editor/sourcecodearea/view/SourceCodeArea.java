@@ -106,8 +106,7 @@ public class SourceCodeArea extends CodeArea {
 	
 	private void init() {
         setParagraphGraphicFactory(LineNumberFactory.get(this));
-        this
-	        .multiPlainChanges()
+        this.multiPlainChanges()
 	        .successionEnds(Duration.ofMillis(10))
 	        .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(getText())));
         setStyle("-fx-font-family: consolas; -fx-font-size: 10pt;");
