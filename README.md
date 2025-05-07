@@ -3,7 +3,7 @@
 TMSX is an emulator, written in Java, for the Z80-based [MSX](https://en.wikipedia.org/wiki/MSX) computer, a home computer standard from the eighties that was popular mainly in mainland Europe and Japan.
 Like many home computers from that era, the MSX came with a built-in BASIC interpreter. What makes the MSX great is that it has a huge library of games, many of these games are early varsions of games that later became famous for their game console versions (Metal Gear, Nemesis, Contra, Bubble Bobble).
 
-All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch, except for the PSG sound emulation (see [here](MSXEMU/src/emu/AY38910.java)).
+All parts of the emulator (such as the [Z80](https://en.wikipedia.org/wiki/Z80) and the [TMS9918 video display processor](https://en.wikipedia.org/wiki/TMS9918)) were written from scratch, except for the PSG sound emulation (see [here](src/main/java/emu/AY38910.java)).
 This project was undertaken mainly for personal recreational purposes. 
 Other emulators exist that are much better (such as [OpenMSX](http://openmsx.org)).
 That said, I believe the source code of TMSX is much simpler and therefore easier to understand than some of the other MSX emulators out there.

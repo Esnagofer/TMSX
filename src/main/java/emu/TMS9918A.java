@@ -1,14 +1,8 @@
 package emu;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 import emu.memory.RAMSlot;
 

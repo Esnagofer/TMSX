@@ -1,7 +1,5 @@
 package emu.cartridgeloaders;
 
-import java.util.List;
-
 public class CartridgeLoaderRegistry {
 
 	private static String[] loaders = {

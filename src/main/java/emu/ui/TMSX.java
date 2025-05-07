@@ -1,38 +1,24 @@
 package emu.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.GridLayout;
+import emu.MSX;
+import emu.cartridgeloaders.CartridgeLoader;
+import emu.cartridgeloaders.CartridgeLoaderRegistry;
+import emu.cartridgeloaders.FlatMapper;
+import emu.memory.EmptySlot;
+import emu.memory.RAMSlot;
+import emu.memory.ROMSlot;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.prefs.Preferences;
-
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import emu.MSX;
-import emu.cartridgeloaders.BlockMapper;
-import emu.cartridgeloaders.CartridgeLoader;
-import emu.cartridgeloaders.CartridgeLoaderRegistry;
-import emu.cartridgeloaders.FlatMapper;
-import emu.cartridgeloaders.Konami5Mapper;
-import emu.memory.EmptySlot;
-import emu.memory.RAMSlot;
-import emu.memory.ROMSlot;
 
 public class TMSX extends JFrame {
 
@@ -63,10 +49,13 @@ public class TMSX extends JFrame {
 	      });
 		
 	    /* Load ROM */
-	    Preferences prefs = Preferences.userRoot().node("MSXEMU");
-	    String romFile = prefs.get("msx_system_rom", "-");
+		URL romResourceUrl = TMSX.class.getClassLoader().getResource("cbios_main_msx1.rom");
+	    String romFile = romResourceUrl.getPath();
+		//Preferences prefs = Preferences.userRoot().node("MSXEMU");
+	    //String romFile = prefs.get("msx_system_rom", "-");
+
 	    boolean romLoadOK = false;
-	    
+
 	    ROMSlot bios = new ROMSlot(0xC000, "system");
 		try {
 			bios.load(romFile, (short)0x0000, 0x8000);

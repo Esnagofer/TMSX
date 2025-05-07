@@ -1,7 +1,5 @@
 package emu;
 
-import java.util.ArrayList;
-
 import emu.memory.AbstractSlot;
 
 public class Z80 {
